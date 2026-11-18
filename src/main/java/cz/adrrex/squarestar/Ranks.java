@@ -95,11 +95,10 @@ public final class Ranks implements Listener {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         String tn = String.format("ss_r%02d", r.ordinal());
         Team t = sb.getTeam(tn);
-        if (t == null) {
-            t = sb.registerNewTeam(tn);
-            t.prefix(glyphsEverywhere() ? glyphBadge(r) : textBadge(r));
-            t.color(r == Rank.HRAC ? NamedTextColor.GRAY : NamedTextColor.WHITE);
-        }
+        if (t == null) t = sb.registerNewTeam(tn);
+        // vždy přepsat (starý tým z dřívější verze by držel textový prefix)
+        t.prefix(g ? glyphBadge(r) : textBadge(r));
+        t.color(r == Rank.HRAC ? NamedTextColor.GRAY : NamedTextColor.WHITE);
         if (!t.hasEntry(p.getName())) t.addEntry(p.getName());
         PermissionAttachment old = perms.remove(p.getUniqueId());
         if (old != null) { try { p.removeAttachment(old); } catch (IllegalArgumentException ignored) {} }
