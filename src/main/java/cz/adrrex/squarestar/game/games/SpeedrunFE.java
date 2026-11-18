@@ -105,7 +105,9 @@ public final class SpeedrunFE extends Game {
         }
         startMs = System.currentTimeMillis();
         broadcast("&e&lSPEEDRUN: FREE EDITION! &7Svět je z vlny, moby jsou jen hlavy. Posbírej díly a odleť raketou &6uprostřed&7!");
+        broadcast("&7Úkoly vidíš &fvpravo&7: rozbíjej &8šedou&7, &ežlutou&7, &bsvětle modrou &7a &cčervenou &7vlnu, zabij &d3 hlavy &7a doběhni na &6zlatou rampu&7.");
         for (int k = 0; k < 6 + players.size() * 2; k++) spawnHead();
+        for (Player p : players) board(p);
     }
 
     // ---------------- „levní" moby: jen poskakující hlavy ----------------
@@ -146,7 +148,7 @@ public final class SpeedrunFE extends Game {
         while (heads.size() < 6 + players.size() * 2) spawnHead();
         // kontrola cíle
         for (Player p : new ArrayList<>(alive)) {
-            U.bar(p, progress(p));
+            board(p);
             if (done(p) && p.getLocation().getY() >= oy + 8.5 && Math.abs(p.getLocation().getX() - ox) < 4 && Math.abs(p.getLocation().getZ() - oz) < 4) {
                 win(p);
                 return;
@@ -171,6 +173,36 @@ public final class SpeedrunFE extends Game {
         sb.append(t >= TECH ? "&a✔" : "&7").append("Tech &f").append(t).append("/").append(TECH);
         if (done(p)) sb = new StringBuilder("&6&l➹ Máš vše! Běž na zlatou rampu k raketě!");
         return sb.toString();
+    }
+
+    /** přehledný seznam úkolů vpravo na obrazovce (sidebar) */
+    private final Map<Player, org.bukkit.scoreboard.Scoreboard> boards = new HashMap<>();
+    private void board(Player p) {
+        var sb = boards.computeIfAbsent(p, x -> {
+            var b = Bukkit.getScoreboardManager().getNewScoreboard();
+            p.setScoreboard(b);
+            return b;
+        });
+        var old = sb.getObjective("sr");
+        if (old != null) old.unregister();
+        var o = sb.registerNewObjective("sr", org.bukkit.scoreboard.Criteria.DUMMY, U.c("&e&lSPEEDRUN &7Free Edition"));
+        o.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
+        o.numberFormat(io.papermc.paper.scoreboard.numbers.NumberFormat.blank());
+        Map<Material, Integer> m = bag.getOrDefault(p, Map.of());
+        List<String> lines = new ArrayList<>();
+        lines.add("&7Čas: &f" + fmt(time));
+        lines.add(" ");
+        for (Object[] g : GOALS) {
+            int have = Math.min(m.getOrDefault((Material) g[0], 0), (int) g[1]);
+            String color = g[0] == ROCK ? "&8" : g[0] == GOLD ? "&e" : g[0] == CRYSTAL ? "&b" : "&c";
+            lines.add((have >= (int) g[1] ? "&a✔ " : color + "■ ") + "&f" + g[2] + " &7" + have + "/" + g[1]);
+        }
+        int t = Math.min(tech.getOrDefault(p, 0), TECH);
+        lines.add((t >= TECH ? "&a✔ " : "&d☠ ") + "&fZabij hlavy &7" + t + "/" + TECH);
+        lines.add("  ");
+        lines.add(done(p) ? "&6&l➹ Běž k raketě!" : "&7Rozbíjej barevnou vlnu");
+        int score = lines.size();
+        for (String l : lines) o.getScore(l.replace('&', '§')).setScore(score--);
     }
 
     private void win(Player p) {
@@ -200,8 +232,11 @@ public final class SpeedrunFE extends Game {
 
     @Override public boolean onPvp(Player victim, Player attacker, org.bukkit.event.entity.EntityDamageByEntityEvent e) { return true; }
     @Override protected void checkWin() { if (state == State.RUNNING && alive.isEmpty()) end(List.of()); }
-    @Override protected void onDestroy() { for (var e : heads.entrySet()) { e.getKey().remove(); e.getValue().remove(); } heads.clear(); }
-    @Override protected String status(Player p) { return "&eSpeedrun &8| &7Čas: &f" + fmt(time) + " &8| &7Zbývá: &e" + fmt(timeLimit() - time); }
+    @Override protected void onLeave(Player p) { boards.remove(p); p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard()); }
+    @Override protected void onDestroy() {
+        for (Player p : boards.keySet()) if (p.isOnline()) p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+        boards.clear(); for (var e : heads.entrySet()) { e.getKey().remove(); e.getValue().remove(); } heads.clear(); }
+    @Override protected String status(Player p) { return progress(p); }
     @Override protected void timeUp() {
         // nikdo nedoletěl: vyhrává ten, kdo má nejvíc posbíráno
         Player best = null; int bs = -1;

@@ -102,7 +102,6 @@ public final class Zombies extends Game {
         if (mobs.isEmpty()) {
             if (breakLeft == 8 && wave > 0) waveCleared();
             if (breakLeft-- <= 0) { nextWave(); breakLeft = 8; }
-            else if (wave < WAVES) for (Player p : players) U.bar(p, "&eDalší vlna za &f" + (breakLeft + 1) + " s &8| &bReaktor: &f" + reactor + "/" + REACTOR_HP);
         }
         // mobové jdou na reaktor, když u nich není hráč
         Location core = loc(0.5, 1, 0.5);
@@ -235,6 +234,7 @@ public final class Zombies extends Game {
     }
 
     @Override protected String status(Player p) {
+        if (mobs.isEmpty() && wave < WAVES) return "&eDalší vlna za &f" + Math.max(0, breakLeft + 1) + " s &8| &bReaktor &f" + Math.max(0, reactor) + "/" + REACTOR_HP;
         return "&eVlna &f" + wave + "/" + WAVES + " &8| &bReaktor &f" + Math.max(0, reactor) + " &8| &cZombíci &f" + mobs.size();
     }
 

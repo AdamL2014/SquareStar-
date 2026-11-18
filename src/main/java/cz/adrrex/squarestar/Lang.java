@@ -17,6 +17,8 @@ public final class Lang {
     public static final NamespacedKey KEY = new NamespacedKey("squarestar", "lang");
     private static final LegacyComponentSerializer LEG = LegacyComponentSerializer.legacyAmpersand();
     private static final List<String[]> D = new ArrayList<>();
+    /** fráze se nahrazuje jen jako celé slovo (aby se z „zlatou" nestalo „goldu") */
+    private static final List<java.util.regex.Pattern> P = new ArrayList<>();
 
     public static boolean chosen(Player p) { return p.getPersistentDataContainer().has(KEY, PersistentDataType.STRING); }
     public static boolean en(Player p) { return p != null && "en".equals(p.getPersistentDataContainer().get(KEY, PersistentDataType.STRING)); }
@@ -25,7 +27,7 @@ public final class Lang {
     /** přeloží text (s &-barvami) podle jazyka hráče */
     public static String t(Player p, String s) {
         if (s == null || !en(p)) return s;
-        for (String[] e : D) if (s.contains(e[0])) s = s.replace(e[0], e[1]);
+        for (int i = 0; i < D.size(); i++) if (s.contains(D.get(i)[0])) s = P.get(i).matcher(s).replaceAll(java.util.regex.Matcher.quoteReplacement(D.get(i)[1]));
         return s;
     }
 
@@ -161,5 +163,6 @@ public final class Lang {
         a("vyhráli!", "won!"); a("Tvůj tým", "Your team"); a("Přeskočit:", "Skip:"); a("Nízká gravitace", "Low gravity"); a("všude na Marsu", "everywhere on Mars");
         a("16 miniher", "16 minigames"); a("Bed Wars, SkyWars, Build Battle a další", "Bed Wars, SkyWars, Build Battle and more"); a("Vítej na Marsu!", "Welcome to Mars!");
         D.sort((x, y) -> y[0].length() - x[0].length()); // nejdelší fráze první
+        for (String[] e : D) P.add(java.util.regex.Pattern.compile("(?<!(?<!&)\\p{L})" + java.util.regex.Pattern.quote(e[0]) + "(?![\\p{L}])"));
     }
 }
