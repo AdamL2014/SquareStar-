@@ -40,6 +40,7 @@ public final class Ranks implements Listener {
 
     public Ranks(SquareStar pl) {
         this.pl = pl;
+        Bukkit.getScheduler().runTaskTimer(pl, () -> { for (Player p : Bukkit.getOnlinePlayers()) tab(p); }, 40, 40);
         file = new File(pl.getDataFolder(), "ranks.yml");
         data = YamlConfiguration.loadConfiguration(file);
     }
@@ -63,7 +64,6 @@ public final class Ranks implements Listener {
         return U.c("&8[" + r.color + r.name() + "&8] ");
     }
     private Component glyphBadge(Rank r) {
-        if (r == Rank.HRAC) return Component.empty();
         Component g = Component.text(String.valueOf(r.glyph())).font(FONT).color(NamedTextColor.WHITE);
         return (r == Rank.VIDRIFTER ? link(g) : g).append(Component.text(" "));
     }
@@ -75,15 +75,29 @@ public final class Ranks implements Listener {
     }
     private static String nameColor(Rank r) { return r == Rank.HRAC ? "&7" : r.color.replace("&l", ""); }
 
+    private boolean glyphsEverywhere() { return pl.getConfig().getBoolean("ranks.badges-in-tab", true); }
+
+    /** hezký tab: logo nahoře, info dole */
+    public void tab(Player p) {
+        int on = Bukkit.getOnlinePlayers().size();
+        Component logo = Component.text(String.valueOf((char) 0xE100)).font(FONT).color(NamedTextColor.WHITE);
+        Component header = Component.text("\n").append(packed.contains(p.getUniqueId()) ? logo : U.c("&c&l✦ &6&lSQUARE&c&lSTAR &c&l✦"))
+                .append(U.c("\n&7Minihry na Marsu &8• &bnízká gravitace\n"));
+        Component footer = U.c("\n&7Online: &a" + on + " &8• &7Ping: &e" + p.getPing() + " ms &8• &7Hra: &6" +
+                (pl.games.of(p) == null ? "Lobby" : pl.games.of(p).type.display) + "\n&8vidriftvideo.netlify.app\n");
+        p.sendPlayerListHeaderAndFooter(header, footer);
+    }
+
     public void apply(Player p) {
         Rank r = of(p);
-        p.playerListName(textBadge(r).append(U.c(nameColor(r) + p.getName())));
+        boolean g = glyphsEverywhere();
+        p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName())));
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         String tn = String.format("ss_r%02d", r.ordinal());
         Team t = sb.getTeam(tn);
         if (t == null) {
             t = sb.registerNewTeam(tn);
-            t.prefix(textBadge(r));
+            t.prefix(glyphsEverywhere() ? glyphBadge(r) : textBadge(r));
             t.color(r == Rank.HRAC ? NamedTextColor.GRAY : NamedTextColor.WHITE);
         }
         if (!t.hasEntry(p.getName())) t.addEntry(p.getName());

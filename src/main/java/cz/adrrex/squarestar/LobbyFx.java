@@ -28,6 +28,8 @@ public final class LobbyFx implements Listener {
     private final List<Pixel> title = new ArrayList<>();
     private final List<Display> rocket = new ArrayList<>();
     private final List<ItemDisplay> spinners = new ArrayList<>();
+    private ItemDisplay earth, clouds;
+    private float earthSpin, cloudSpin;
     private final Map<GameType, Mannequin> npcs = new EnumMap<>(GameType.class);
     private double phase, orbit;
     private float spin;
@@ -64,6 +66,7 @@ public final class LobbyFx implements Listener {
         if (pl.getConfig().getBoolean("lobby.fx.rocket", true)) spawnRocket();
         spawnNpcs();
         spawnSpinners();
+        if (pl.getConfig().getBoolean("lobby.fx.earth", true)) spawnEarth();
     }
 
     // ---------------- obří 3D nápis ----------------
@@ -98,6 +101,38 @@ public final class LobbyFx implements Listener {
         title.add(new Pixel(d, letter, base, scale));
     }
 
+    // ---------------- 3D Země (model z resource packu, točí se) ----------------
+    private void spawnEarth() {
+        float s = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 46);
+        Location at = new Location(pl.mars, 0.5, Lobby.Y + 62, 70.5);
+        earth = earthPart(at, "earth", s);
+        clouds = earthPart(at, "earth_clouds", s * 1.06f);
+    }
+
+    private ItemDisplay earthPart(Location at, String model, float s) {
+        ItemStack it = new ItemStack(Material.HEART_OF_THE_SEA);
+        var meta = it.getItemMeta();
+        meta.setItemModel(new NamespacedKey("squarestar", model));
+        it.setItemMeta(meta);
+        return pl.mars.spawn(at, ItemDisplay.class, e -> {
+            e.setItemStack(it);
+            e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+            e.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateZ((float) Math.toRadians(23)), new Vector3f(s, s, s), new Quaternionf()));
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setViewRange(8f);
+            e.setDisplayWidth(s); e.setDisplayHeight(s);
+            e.addScoreboardTag(TAG);
+            e.setPersistent(false);
+        });
+    }
+
+    private void rotate(ItemDisplay d, float angle, float s) {
+        if (d == null || !d.isValid()) return;
+        d.setInterpolationDelay(0);
+        d.setInterpolationDuration(40);
+        d.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateZ((float) Math.toRadians(23)).rotateY(angle), new Vector3f(s, s, s), new Quaternionf()));
+    }
+
     // ---------------- raketa ----------------
     private void spawnRocket() {
         Location c = new Location(pl.mars, 0.5, Lobby.Y + 30, 44.5);
@@ -110,6 +145,9 @@ public final class LobbyFx implements Listener {
         part(c, Material.RED_CONCRETE, 0.45f, -0.05f, -1.5f, 0.6f, 0.1f, 0.8f);
         part(c, Material.RED_CONCRETE, -1.05f, -0.05f, -1.5f, 0.6f, 0.1f, 0.8f);
         part(c, Material.SHROOMLIGHT, -0.3f, -0.3f, -2.1f, 0.6f, 0.6f, 0.6f);
+        part(c, Material.FIRE, -0.45f, -0.45f, -3.1f, 0.9f, 0.9f, 1.1f);
+        part(c, Material.SOUL_FIRE, 0.48f, -0.2f, -2.6f, 0.36f, 0.4f, 0.6f);
+        part(c, Material.SOUL_FIRE, -0.84f, -0.2f, -2.6f, 0.36f, 0.4f, 0.6f);
         part(c, Material.RED_CONCRETE, -0.47f, -0.47f, 0.9f, 0.94f, 0.94f, 0.15f);
         part(c, Material.RED_CONCRETE, -0.47f, -0.47f, -0.6f, 0.94f, 0.94f, 0.12f);
         part(c, Material.LIGHT_BLUE_STAINED_GLASS, -0.2f, 0.42f, -0.3f, 0.4f, 0.08f, 0.4f);
@@ -152,10 +190,19 @@ public final class LobbyFx implements Listener {
         m.setCollidable(false);
         m.setPersistent(false);
         Color col = switch (look) { case "npc_shop" -> Color.ORANGE; default -> Color.WHITE; };
-        suit(m, col, null);
+        if (!skin(m)) suit(m, col, null);
+    }
+
+    /** Vlastní skin NPC z resource packu (assets/squarestar/textures/entity/npc_skin.png). */
+    private static boolean skin(Mannequin m) {
+        if (!SquareStar.I.getConfig().getBoolean("lobby.npc-skin-from-pack", false)) return false;
+        m.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
+                .skinPatch(sp -> sp.body(net.kyori.adventure.key.Key.key("squarestar", "entity/npc_skin"))).build());
+        return true;
     }
 
     private static void suit(Mannequin m, Color col, Material hand) {
+        if (skin(m)) { if (hand != null) m.getEquipment().setItemInMainHand(new ItemStack(hand)); return; }
         var eq = m.getEquipment();
         eq.setHelmet(dye(Material.LEATHER_HELMET, Color.WHITE));
         eq.setChestplate(dye(Material.LEATHER_CHESTPLATE, col));
@@ -219,13 +266,24 @@ public final class LobbyFx implements Listener {
             if (pl.mars.getPlayers().isEmpty()) return;
             tick++;
             if (!rocket.isEmpty()) {
-                orbit += 0.012;
+                orbit += pl.getConfig().getDouble("lobby.fx.rocket-speed", 0.03);
                 Location p = orbitPos(orbit), next = orbitPos(orbit + 0.01);
                 p.setDirection(next.toVector().subtract(p.toVector()));
                 for (Display d : rocket) if (d.isValid()) d.teleport(p);
-                Vector back = p.getDirection().multiply(-4.6);
-                pl.mars.spawnParticle(Particle.FLAME, p.clone().add(back), 4, 0.15, 0.15, 0.15, 0.02);
-                if (tick % 2 == 0) pl.mars.spawnParticle(Particle.CLOUD, p.clone().add(back.multiply(1.3)), 2, 0.2, 0.2, 0.2, 0.01);
+                Vector dir = p.getDirection();
+                Location tail = p.clone().add(dir.clone().multiply(-6.5));
+                Vector push = dir.clone().multiply(-0.35);
+                for (int i = 0; i < 6; i++) pl.mars.spawnParticle(Particle.FLAME, tail, 0, push.getX() + (Math.random() - 0.5) * 0.15, push.getY() + (Math.random() - 0.5) * 0.15, push.getZ() + (Math.random() - 0.5) * 0.15, 1);
+                pl.mars.spawnParticle(Particle.SOUL_FIRE_FLAME, tail, 3, 0.25, 0.25, 0.25, 0.03);
+                pl.mars.spawnParticle(Particle.LARGE_SMOKE, tail.clone().add(dir.clone().multiply(-2)), 2, 0.3, 0.3, 0.3, 0.01);
+                if (tick % 4 == 0) pl.mars.spawnParticle(Particle.LAVA, tail, 1, 0.2, 0.2, 0.2, 0);
+            }
+            if (tick % 3 == 0) for (Mannequin m : npcs.values()) {
+                if (!m.isValid()) continue;
+                Player near = null; double best = 100;
+                for (Player p : pl.mars.getPlayers()) { double d = p.getLocation().distanceSquared(m.getLocation()); if (d < best) { best = d; near = p; } }
+                if (near != null) m.lookAt(near.getEyeLocation().getX(), near.getEyeLocation().getY(), near.getEyeLocation().getZ(), io.papermc.paper.entity.LookAnchor.EYES);
+                else m.setRotation((float) Math.toDegrees(Math.atan2(m.getLocation().getX(), -m.getLocation().getZ())), 0);
             }
             if (tick % 10 == 0 && !title.isEmpty()) {
                 phase += 0.55;
@@ -237,13 +295,28 @@ public final class LobbyFx implements Listener {
                     px.d().setTransformation(new Transformation(new Vector3f(px.base().x, px.base().y + off, px.base().z), new AxisAngle4f(), px.scale(), new AxisAngle4f()));
                 }
             }
+            if (tick % 20 == 0 && !npcs.isEmpty()) {
+                // NPC občas zamávají a kolem jiskří hvězdy
+                Mannequin m = new ArrayList<>(npcs.values()).get((int) (Math.random() * npcs.size()));
+                if (m.isValid()) { m.swingMainHand(); pl.mars.spawnParticle(Particle.HAPPY_VILLAGER, m.getLocation().add(0, 2.1, 0), 3, 0.3, 0.2, 0.3); }
+            }
+            if (tick % 5 == 0) {
+                for (int i = 0; i < 6; i++) {
+                    double ang = Math.random() * Math.PI * 2, r = 10 + Math.random() * 60;
+                    pl.mars.spawnParticle(Particle.END_ROD, Math.cos(ang) * r, Lobby.Y + 22 + Math.random() * 45, Math.sin(ang) * r + 20, 1, 0, 0, 0, 0);
+                }
+                for (ItemDisplay d : spinners) if (d.isValid()) pl.mars.spawnParticle(Particle.ENCHANT, d.getLocation(), 3, 0.3, 0.3, 0.3, 0.4);
+            }
             if (tick % 20 == 0) {
+                float es = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 46);
+                earthSpin += (float) Math.toRadians(8); cloudSpin += (float) Math.toRadians(11);
+                rotate(earth, earthSpin, es); rotate(clouds, cloudSpin, es * 1.06f);
                 spin += (float) Math.toRadians(120);
                 for (ItemDisplay d : spinners) {
                     if (!d.isValid()) continue;
                     d.setInterpolationDelay(0);
                     d.setInterpolationDuration(40);
-                    d.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateY(spin), new Vector3f(0.9f, 0.9f, 0.9f), new Quaternionf()));
+                    d.setTransformation(new Transformation(new Vector3f(0, (float) Math.sin(spin) * 0.25f, 0), new Quaternionf().rotateY(spin), new Vector3f(0.9f, 0.9f, 0.9f), new Quaternionf()));
                 }
                 for (var e : npcs.entrySet()) {
                     if (!e.getValue().isValid()) continue;

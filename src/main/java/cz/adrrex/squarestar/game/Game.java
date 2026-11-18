@@ -249,6 +249,20 @@ public abstract class Game {
             ItemStack k = pl.crates.key(keyType, amount);
             if (k != null) gm.pendingRewards.computeIfAbsent(p.getUniqueId(), x -> new ArrayList<>()).add(k);
             U.msg(p, "&aVyhrál jsi! Dostaneš &e" + amount + "x klíč &ana spawnu.");
+            for (int i = 0; i < 3; i++) {
+                final int d = i;
+                Bukkit.getScheduler().runTaskLater(pl, () -> {
+                    if (!p.isOnline() || p.getWorld() != w) return;
+                    Firework fw = w.spawn(p.getLocation().add(rnd.nextInt(5) - 2, 1, rnd.nextInt(5) - 2), Firework.class, f -> {
+                        var meta = f.getFireworkMeta();
+                        meta.addEffect(FireworkEffect.builder().with(FireworkEffect.Type.values()[(d + rnd.nextInt(3)) % FireworkEffect.Type.values().length])
+                                .withColor(Color.RED, Color.ORANGE, Color.YELLOW).withFade(Color.WHITE).trail(true).flicker(true).build());
+                        meta.setPower(1);
+                        f.setFireworkMeta(meta);
+                    });
+                    spawned.add(fw);
+                }, 10L + i * 15L);
+            }
         }
         Bukkit.getScheduler().runTaskLater(pl, () -> {
             for (Player p : new ArrayList<>(players)) removePlayer(p, true);

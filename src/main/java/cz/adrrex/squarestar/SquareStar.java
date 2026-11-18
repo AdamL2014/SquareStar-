@@ -23,6 +23,7 @@ public final class SquareStar extends JavaPlugin {
     public Lobby lobby;
     public Ranks ranks;
     public LobbyFx fx;
+    public Cosmetics cosmetics;
 
     @Override public void onEnable() {
         I = this;
@@ -37,6 +38,7 @@ public final class SquareStar extends JavaPlugin {
         lobby = new Lobby(this);
         ranks = new Ranks(this);
         fx = new LobbyFx(this);
+        cosmetics = new Cosmetics(this);
         var pm = getServer().getPluginManager();
         pm.registerEvents(items, this);
         pm.registerEvents(crates, this);
@@ -44,6 +46,7 @@ public final class SquareStar extends JavaPlugin {
         pm.registerEvents(lobby, this);
         pm.registerEvents(ranks, this);
         pm.registerEvents(fx, this);
+        pm.registerEvents(cosmetics, this);
         Commands cmd = new Commands(this);
         var pc = getCommand("ss");
         if (pc != null) { pc.setExecutor(cmd); pc.setTabCompleter(cmd); }

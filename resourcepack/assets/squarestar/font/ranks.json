@@ -98,6 +98,24 @@
    "chars": [
     "\ue00a"
    ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_hrac.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue00b"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/logo.png",
+   "ascent": 12,
+   "height": 13,
+   "chars": [
+    "\ue100"
+   ]
   }
  ]
 }

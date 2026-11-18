@@ -84,26 +84,9 @@ public final class Lobby implements Listener {
         b.submit(done);
     }
 
-    /** Planeta Země na obloze: oceány, kontinenty, ledové čepičky, mraky a atmosféra. */
+    /** Úklid staré blokové Země (od verze 2.2 je Země 3D model, který se točí). */
     private void earth(U.BlockQueue.Builder b) {
-        int ex = -34, ey = Y + 50, ez = 66, R = 13;
-        for (int x = -R - 3; x <= R + 3; x++) for (int y = -R - 3; y <= R + 3; y++) for (int z = -R - 3; z <= R + 3; z++) {
-            double d = Math.sqrt(x * x + y * y + z * z);
-            double lat = y / (double) R;
-            if (d <= R && d > R - 2) {
-                double n = Math.sin(x * 0.33 + 1.3) + Math.cos(z * 0.29) + Math.sin((x + y) * 0.21) + 0.6 * Math.cos((y - z) * 0.4);
-                Material m;
-                if (Math.abs(lat) > 0.82) m = Material.WHITE_CONCRETE;
-                else if (n > 0.35) m = n > 1.7 ? Material.YELLOW_TERRACOTTA : (n > 1.0 ? Material.GREEN_CONCRETE : Material.LIME_CONCRETE);
-                else m = n > 0.05 ? Material.LIGHT_BLUE_CONCRETE : Material.BLUE_CONCRETE;
-                b.set(ex + x, ey + y, ez + z, m);
-            } else if (d <= R + 1 && d > R) {
-                double c = Math.sin(x * 0.5 + y * 0.3) * Math.cos(z * 0.45 - y * 0.2);
-                if (c > 0.45) b.set(ex + x, ey + y, ez + z, Material.WHITE_STAINED_GLASS);
-            } else if (d <= R + 2.6 && d > R + 2 && ((x + y + z) & 3) == 0) {
-                b.set(ex + x, ey + y, ez + z, Material.LIGHT);
-            }
-        }
+        b.fill(-34 - 16, Y + 50 - 16, 66 - 16, -34 + 16, Y + 50 + 16, 66 + 16, Material.AIR);
     }
 
     public void spawnHolo() {
@@ -139,8 +122,18 @@ public final class Lobby implements Listener {
     }
 
     public void giveItems(Player p) {
-        p.getInventory().setItem(0, U.tag(U.item(Material.COMPASS, 1, "&6&l✦ Minihry &7(pravý klik)", "&7Vyber si minihru na Marsu"), "ss_lobby", "games"));
-        p.getInventory().setItem(8, U.tag(U.item(Material.ENDER_EYE, 1, "&b&lZpět na spawn", "&7Teleport na náměstí"), "ss_lobby", "spawn"));
+        place(p, 0, U.tag(U.item(Material.COMPASS, 1, "&6&l✦ Minihry &7(pravý klik)", "&7Vyber si minihru na Marsu"), "ss_lobby", "games"));
+        place(p, 4, pl.cosmetics.menuItem());
+        place(p, 8, U.tag(U.item(Material.ENDER_EYE, 1, "&b&lZpět na spawn", "&7Teleport na náměstí"), "ss_lobby", "spawn"));
+        pl.cosmetics.apply(p);
+    }
+
+    /** dá lobby item do slotu; co tam bylo (klíče, odměny), se jen přesune jinam */
+    private void place(Player p, int slot, org.bukkit.inventory.ItemStack it) {
+        var cur = p.getInventory().getItem(slot);
+        p.getInventory().setItem(slot, it);
+        if (cur != null && !cur.getType().isAir() && U.tagOf(cur, "ss_lobby") == null)
+            for (var left : p.getInventory().addItem(cur).values()) p.getWorld().dropItemNaturally(p.getLocation(), left);
     }
 
     boolean inLobby(Player p) { return p.getWorld() == pl.mars; }
@@ -148,6 +141,13 @@ public final class Lobby implements Listener {
     @EventHandler public void join(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         if (pl.getConfig().getBoolean("lobby.force-on-join", true)) Bukkit.getScheduler().runTask(pl, () -> send(p));
+        Bukkit.getScheduler().runTaskLater(pl, () -> {
+            if (!p.isOnline()) return;
+            p.showTitle(net.kyori.adventure.title.Title.title(U.c("&c&l✦ &6&lSQUARE&c&lSTAR &c&l✦"), U.c("&7Vítej na Marsu, &e" + p.getName() + "&7!"),
+                    net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(600), java.time.Duration.ofMillis(2500), java.time.Duration.ofMillis(800))));
+            p.playSound(p.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1.3f);
+            p.getWorld().spawnParticle(Particle.END_ROD, p.getLocation().add(0, 1, 0), 40, 0.6, 1, 0.6, 0.08);
+        }, 20);
     }
 
     @EventHandler public void respawn(PlayerRespawnEvent e) {
@@ -161,6 +161,7 @@ public final class Lobby implements Listener {
         e.setCancelled(true);
         if (t.equals("games")) pl.games.openMenu(e.getPlayer());
         else if (t.equals("spawn")) e.getPlayer().teleport(spawn());
+        else if (t.equals("cosmetics")) pl.cosmetics.open(e.getPlayer());
     }
 
     private boolean admin(Player p) { return p.hasPermission("squarestar.admin") && p.getGameMode() == GameMode.CREATIVE; }

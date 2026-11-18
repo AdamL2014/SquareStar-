@@ -47,5 +47,13 @@ mvn package
 Do `server.properties` dej:
 ```
 resource-pack=https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip
-resource-pack-sha1=2643744f3c1a4dad334a18802a1d84cc94af8aa1
+resource-pack-sha1=b090e81632850cf153dd57f686b1a467ef8dcfa5
 ```
+
+## ✨ Novinky 2.2
+- Obří **3D Země**, která se točí, s vrstvou mraků
+- Raketa má **oheň** a je rychlejší
+- **3D modely všech itemů** (boty, hvězda, helma, pistole, meč, jetpack, granát...)
+- **Kosmetika**: 8 stop za hráčem a 5 3D čepic (raketa, UFO, Země...)
+- NPC se **dívají na hráče** a mávají, ohňostroj při výhře, uvítací animace
+- Nové **ranky ve 2x rozlišení** i v tabu, hezký tab s logem
