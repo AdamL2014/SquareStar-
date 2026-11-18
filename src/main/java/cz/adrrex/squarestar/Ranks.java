@@ -35,6 +35,7 @@ public final class Ranks implements Listener {
     private final SquareStar pl;
     private final File file;
     private final YamlConfiguration data;
+    private final Set<UUID> declined = Collections.synchronizedSet(new HashSet<>());
     private final Set<UUID> packed = Collections.synchronizedSet(new HashSet<>());
     private final Map<UUID, PermissionAttachment> perms = new HashMap<>();
 
@@ -90,7 +91,7 @@ public final class Ranks implements Listener {
     public void tab(Player p) {
         int on = Bukkit.getOnlinePlayers().size();
         Component logo = Component.text(String.valueOf((char) 0xE100)).font(FONT).color(NamedTextColor.WHITE);
-        Component header = Component.text("\n").append(packed.contains(p.getUniqueId()) ? logo : U.c("&c&l✦ &6&lSQUARE&c&lSTAR &c&l✦"))
+        Component header = Component.text("\n").append(!declined.contains(p.getUniqueId()) ? logo : U.c("&c&l✦ &6&lSQUARE&c&lSTAR &c&l✦"))
                 .append(U.c("\n&7Minihry na Marsu &8• &bnízká gravitace\n"));
         Component footer = U.c("\n&7Online: &a" + on + " &8• &7Ping: &e" + p.getPing() + " ms &8• &7Hra: &6" +
                 (pl.games.of(p) == null ? "Lobby" : pl.games.of(p).type.display) + "\n&8vidriftvideo.netlify.app\n");
@@ -120,19 +121,21 @@ public final class Ranks implements Listener {
         if (r != Rank.HRAC) e.joinMessage(U.c(r.color + r.name() + " " + nameColor(r) + e.getPlayer().getName() + " &7přiletěl na Mars!"));
     }
 
-    @EventHandler public void quit(PlayerQuitEvent e) { packed.remove(e.getPlayer().getUniqueId()); perms.remove(e.getPlayer().getUniqueId()); }
+    @EventHandler public void quit(PlayerQuitEvent e) { packed.remove(e.getPlayer().getUniqueId()); declined.remove(e.getPlayer().getUniqueId()); perms.remove(e.getPlayer().getUniqueId()); }
 
     @EventHandler public void pack(PlayerResourcePackStatusEvent e) {
-        if (e.getStatus() == PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED) packed.add(e.getPlayer().getUniqueId());
-        else if (e.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED || e.getStatus() == PlayerResourcePackStatusEvent.Status.FAILED_DOWNLOAD || e.getStatus() == PlayerResourcePackStatusEvent.Status.DISCARDED) packed.remove(e.getPlayer().getUniqueId());
+        if (e.getStatus() == PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED) { packed.add(e.getPlayer().getUniqueId()); declined.remove(e.getPlayer().getUniqueId()); }
+        else if (e.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED || e.getStatus() == PlayerResourcePackStatusEvent.Status.FAILED_DOWNLOAD || e.getStatus() == PlayerResourcePackStatusEvent.Status.DISCARDED) { packed.remove(e.getPlayer().getUniqueId()); declined.add(e.getPlayer().getUniqueId()); }
     }
 
     @EventHandler(priority = EventPriority.HIGH) public void chat(AsyncChatEvent e) {
         Rank r = of(e.getPlayer());
         String name = e.getPlayer().getName();
         e.renderer((source, displayName, message, viewer) -> {
-            boolean glyph = viewer instanceof Player v && packed.contains(v.getUniqueId());
-            return (glyph ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + name + "&8: &f")).append(message);
+            // pack je povinný (require-resource-pack) -> obrázek ranku ukazuj vždy; jen kdo pack odmítl, vidí text
+            boolean glyph = !(viewer instanceof Player v) || !declined.contains(v.getUniqueId());
+            Component head = Component.object(net.kyori.adventure.text.object.ObjectContents.playerHead().id(source.getUniqueId()).name(name).hat(true).build());
+            return (glyph ? glyphBadge(r) : textBadge(r)).append(head).append(Component.text(" ")).append(U.c(nameColor(r) + name + "&8: &f")).append(message);
         });
     }
 }

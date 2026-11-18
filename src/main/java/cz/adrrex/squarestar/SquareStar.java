@@ -20,6 +20,8 @@ public final class SquareStar extends JavaPlugin {
     public GameManager games;
     public SpaceItems items;
     public Crates crates;
+    public Intro intro;
+    public Motd motd;
     public Lobby lobby;
     public Ranks ranks;
     public LobbyFx fx;
@@ -32,6 +34,8 @@ public final class SquareStar extends JavaPlugin {
         queue = new U.BlockQueue(getConfig().getInt("blocks-per-tick", 6000));
         queue.runTaskTimer(this, 1, 1);
         mars = makeWorld("ss_mars", 18000);
+        // herní svět se při každém startu smaže = vždy čisté mapy (žádné zbytky staveb)
+        if (Bukkit.getWorld("ss_arenas") == null) U.deleteDir(new java.io.File(Bukkit.getWorldContainer(), "ss_arenas"));
         arenas = makeWorld("ss_arenas", 18000);
         items = new SpaceItems(this);
         crates = new Crates(this);
@@ -48,6 +52,13 @@ public final class SquareStar extends JavaPlugin {
         pm.registerEvents(ranks, this);
         pm.registerEvents(fx, this);
         pm.registerEvents(cosmetics, this);
+        intro = new Intro(this);
+        pm.registerEvents(intro, this);
+        pm.registerEvents(new Gui(), this);
+        motd = new Motd(this);
+        pm.registerEvents(motd, this);
+        Emotes em = new Emotes(this);
+        var ec = getCommand("emote"); if (ec != null) { ec.setExecutor(em); ec.setTabCompleter(em); }
         Commands cmd = new Commands(this);
         var pc = getCommand("ss");
         if (pc != null) { pc.setExecutor(cmd); pc.setTabCompleter(cmd); }
@@ -60,6 +71,10 @@ public final class SquareStar extends JavaPlugin {
     }
 
     @Override public void onDisable() { if (games != null) games.stopAll(); }
+
+    public final java.util.Map<cz.adrrex.squarestar.game.GameType, World> gameWorlds = new java.util.EnumMap<>(cz.adrrex.squarestar.game.GameType.class);
+    public World world(cz.adrrex.squarestar.game.GameType t) { return gameWorlds.getOrDefault(t, arenas); }
+    public boolean isArena(World w) { return w == arenas || gameWorlds.containsValue(w); }
 
     private World makeWorld(String name, long time) {
         World w = Bukkit.getWorld(name);
@@ -83,7 +98,7 @@ public final class SquareStar extends JavaPlugin {
     }
 
     public boolean isSpaceWorld(World w) {
-        if (w == mars || w == arenas) return true;
+        if (w == mars || isArena(w)) return true;
         List<String> extra = getConfig().getStringList("gravity.extra-worlds");
         return extra.contains(w.getName());
     }

@@ -25,7 +25,7 @@ public abstract class Game {
     public final GameType type;
     public final int slot;
     public final World w;
-    public final int ox, oy = 100, oz = 0;
+    public final int ox, oy = 100, oz;
     public State state = State.BUILDING;
     public final List<Player> players = new ArrayList<>();
     public final Set<Player> alive = new LinkedHashSet<>();
@@ -41,7 +41,8 @@ public abstract class Game {
     private boolean destroyed;
 
     protected Game(GameManager gm, GameType type, int slot) {
-        this.pl = gm.pl; this.gm = gm; this.type = type; this.slot = slot; this.w = pl.arenas; this.ox = slot * 1000;
+        this.pl = gm.pl; this.gm = gm; this.type = type; this.slot = slot; this.w = pl.world(type); this.ox = slot * 1000; this.oz = type.ordinal() * 1000;
+        // každá minihra má vlastní oblast (řádek Z), takže se mapy různých her nikdy nepřekryjí
     }
 
     // ---------- co implementuje každá hra ----------
@@ -80,7 +81,7 @@ public abstract class Game {
     public boolean joinable() { return (state == State.BUILDING || state == State.WAITING || state == State.COUNTDOWN) && players.size() < type.max; }
     public boolean isPlaced(Block b) { return placed.contains(U.pack(b.getX(), b.getY(), b.getZ())); }
     public void markPlaced(Block b) { if (placed.add(U.pack(b.getX(), b.getY(), b.getZ()))) placedList.add(new int[]{b.getX(), b.getY(), b.getZ()}); }
-    public boolean owns(Location l) { return l.getWorld() == w && Math.abs(l.getBlockX() - ox) < 450; }
+    public boolean owns(Location l) { return l.getWorld() == w && Math.abs(l.getBlockX() - ox) < 450 && Math.abs(l.getBlockZ() - oz) < 450; }
 
     void build() {
         U.BlockQueue.Builder b = pl.queue.builder(w);
@@ -109,7 +110,7 @@ public abstract class Game {
 
     public void openVote(Player p) {
         GameManager.VoteHolder h = new GameManager.VoteHolder(this);
-        h.inv = Bukkit.createInventory(h, 9, cz.adrrex.squarestar.Gui.vote(9, "&f&lHlasování o mapě"));
+        h.inv = Bukkit.createInventory(h, 9, cz.adrrex.squarestar.Gui.vote(9, cz.adrrex.squarestar.Lang.t(p, "&f&lHlasování o mapě")));
         List<String> m = maps();
         Material[] icons = {Material.RED_TERRACOTTA, Material.LIGHT_BLUE_CONCRETE, Material.PURPLE_CONCRETE, Material.LIME_CONCRETE};
         for (int i = 0; i < m.size(); i++) {

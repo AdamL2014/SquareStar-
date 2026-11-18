@@ -25,6 +25,14 @@ public final class Commands implements CommandExecutor, TabCompleter {
             }
             case "leave" -> { if (p != null) pl.games.leave(p); }
             case "lobby", "spawn" -> { if (p != null) { if (pl.games.of(p) != null) pl.games.leave(p); else pl.lobby.send(p); } }
+            case "jazyk", "lang", "language" -> { if (p != null) pl.intro.openLang(p); }
+            case "udrzba", "maintenance" -> {
+                if (!s.hasPermission("squarestar.admin")) { s.sendMessage(U.c("&cNa tohle nemáš práva.")); return true; }
+                boolean on = a.length > 1 ? a[1].equalsIgnoreCase("on") || a[1].equalsIgnoreCase("zap") : !pl.motd.maintenance();
+                pl.motd.setMaintenance(on);
+                s.sendMessage(U.c(on ? "&c&lÚdržba ZAPNUTA &7- připojí se jen tým." : "&a&lÚdržba VYPNUTA &7- server je otevřený."));
+            }
+            case "intro" -> { if (p != null && pl.games.of(p) == null) pl.intro.play(p); }
             case "give" -> {
                 if (!admin(s)) return true;
                 if (a.length < 2) { s.sendMessage(U.c("&c/ss give <item> [hráč] [počet] &7Itemy: " + String.join(", ", pl.items.defs.keySet()))); return true; }

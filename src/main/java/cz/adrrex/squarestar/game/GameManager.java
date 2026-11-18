@@ -45,7 +45,7 @@ public final class GameManager implements Listener {
 
     public void openMenu(Player p) {
         MenuHolder h = new MenuHolder();
-        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.title(27, "&f&l✦ Minihry na Marsu"));
+        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.title(27, cz.adrrex.squarestar.Lang.t(p, "&f&l✦ Minihry na Marsu")));
         int[] pos = {10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24};
         GameType[] t = GameType.values();
         for (int i = 0; i < t.length; i++) {
@@ -101,7 +101,7 @@ public final class GameManager implements Listener {
     }
 
     private Game gameAt(Location l) {
-        if (l.getWorld() != pl.arenas) return null;
+        if (!pl.isArena(l.getWorld())) return null;
         for (Game g : games) if (g.owns(l)) return g;
         return null;
     }
@@ -173,13 +173,13 @@ public final class GameManager implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH) public void brk(BlockBreakEvent e) {
         Game g = map.get(e.getPlayer());
-        if (g == null) { if (e.getBlock().getWorld() == pl.arenas && !e.getPlayer().hasPermission("squarestar.admin")) e.setCancelled(true); return; }
+        if (g == null) { if (pl.isArena(e.getBlock().getWorld()) && !e.getPlayer().hasPermission("squarestar.admin")) e.setCancelled(true); return; }
         if (g.state != Game.State.RUNNING || !g.alive.contains(e.getPlayer()) || !g.canBreak(e.getPlayer(), e.getBlock())) e.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.HIGH) public void place(BlockPlaceEvent e) {
         Game g = map.get(e.getPlayer());
-        if (g == null) { if (e.getBlock().getWorld() == pl.arenas && !e.getPlayer().hasPermission("squarestar.admin")) e.setCancelled(true); return; }
+        if (g == null) { if (pl.isArena(e.getBlock().getWorld()) && !e.getPlayer().hasPermission("squarestar.admin")) e.setCancelled(true); return; }
         Block b = e.getBlock();
         if (g.state != Game.State.RUNNING || !g.alive.contains(e.getPlayer()) || !g.owns(b.getLocation()) || !g.canPlace(e.getPlayer(), b)) { e.setCancelled(true); return; }
         g.markPlaced(b);
@@ -219,15 +219,15 @@ public final class GameManager implements Listener {
     }
 
     @EventHandler public void explode(EntityExplodeEvent e) {
-        if (e.getLocation().getWorld() != pl.arenas) return;
+        if (!pl.isArena(e.getLocation().getWorld())) return;
         Game g = gameAt(e.getLocation());
         e.blockList().removeIf(b -> g == null || !g.isPlaced(b) || b.getType().name().endsWith("_BED") || b.getType() == Material.BARRIER || b.getType().name().contains("GLASS"));
     }
 
-    @EventHandler public void blockExplode(BlockExplodeEvent e) { if (e.getBlock().getWorld() == pl.arenas) e.blockList().clear(); }
+    @EventHandler public void blockExplode(BlockExplodeEvent e) { if (pl.isArena(e.getBlock().getWorld())) e.blockList().clear(); }
 
     @EventHandler public void creature(CreatureSpawnEvent e) {
-        if (e.getLocation().getWorld() == pl.arenas && e.getSpawnReason() != CreatureSpawnEvent.SpawnReason.CUSTOM) e.setCancelled(true);
+        if (pl.isArena(e.getLocation().getWorld()) && e.getSpawnReason() != CreatureSpawnEvent.SpawnReason.CUSTOM) e.setCancelled(true);
     }
 
     @EventHandler public void teleport(PlayerTeleportEvent e) {
@@ -244,7 +244,7 @@ public final class GameManager implements Listener {
     }
 
     @EventHandler public void flow(BlockFromToEvent e) {
-        if (e.getBlock().getWorld() != pl.arenas) return;
+        if (!pl.isArena(e.getBlock().getWorld())) return;
         Game g = gameAt(e.getToBlock().getLocation());
         if (g == null || !g.allowFlow(e.getToBlock())) { e.setCancelled(true); return; }
         g.markPlaced(e.getToBlock());

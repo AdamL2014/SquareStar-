@@ -5,10 +5,36 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 /** Hezké GUI: pozadí z resource packu + titulek.  = posun -8,  = posun -169 */
-public final class Gui {
+public final class Gui implements org.bukkit.event.Listener {
     private static final Key FONT = Key.key("squarestar", "ranks");
     public static boolean enabled = true;
-    private Gui() {}
+    public Gui() {}
+
+    /** ikonka s vlastním 3D/pixel modelem z resource packu */
+    public static org.bukkit.inventory.ItemStack icon(String model, String name, String... lore) {
+        org.bukkit.inventory.ItemStack it = U.item(org.bukkit.Material.PAPER, 1, name, lore);
+        var m = it.getItemMeta(); m.setItemModel(new org.bukkit.NamespacedKey("squarestar", model)); it.setItemMeta(m);
+        return it;
+    }
+    public static org.bukkit.inventory.ItemStack closeButton() { return U.tag(icon("icon_close", "&c&l✖ Zavřít"), "ss_btn", "close"); }
+
+    /** při otevření našeho menu: přeložit itemy + přidat tlačítko Zavřít */
+    @org.bukkit.event.EventHandler public void open(org.bukkit.event.inventory.InventoryOpenEvent e) {
+        var inv = e.getInventory();
+        var h = inv.getHolder();
+        if (h == null || !h.getClass().getName().startsWith("cz.adrrex.squarestar") || !(e.getPlayer() instanceof org.bukkit.entity.Player p)) return;
+        if (h instanceof Crates.Holder ch && ch.anim) return; // animace otevírání
+        int last = inv.getSize() - 1;
+        if (inv.getItem(last) == null) inv.setItem(last, closeButton());
+        for (int i = 0; i < inv.getSize(); i++) { var it = inv.getItem(i); if (it != null) inv.setItem(i, Lang.item(p, it)); }
+    }
+    @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST) public void click(org.bukkit.event.inventory.InventoryClickEvent e) {
+        if ("close".equals(U.tagOf(e.getCurrentItem(), "ss_btn"))) {
+            e.setCancelled(true);
+            e.getWhoClicked().closeInventory();
+            if (e.getWhoClicked() instanceof org.bukkit.entity.Player p) p.playSound(p.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.7f, 0.8f);
+        }
+    }
 
     /** vesmírný panel (minihry, kosmetika, hlasování, obchod) */
     public static Component title(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }

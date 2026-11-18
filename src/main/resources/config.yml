@@ -18,6 +18,8 @@ lobby:
   title: "SQUARESTAR"
   # dvojskok v lobby (2x mezernik)
   double-jump: true
+  # úvodní animace (kamera přeletí Mars) při každém připojení, přeskočit = Shift
+  intro: true
   fx:
     title: true
     title-scale: 1.4
@@ -90,3 +92,7 @@ crates:
 # hezké GUI pozadí z resource packu (false = obyčejné menu)
 gui:
   custom: true
+
+# údržba: připojí se jen tým (builder, helper, moderator, admin, owner). Příkaz: /ss udrzba on|off
+maintenance:
+  enabled: false

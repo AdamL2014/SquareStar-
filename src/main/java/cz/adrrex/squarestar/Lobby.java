@@ -131,7 +131,7 @@ public final class Lobby implements Listener {
     /** dá lobby item do slotu; co tam bylo (klíče, odměny), se jen přesune jinam */
     private void place(Player p, int slot, org.bukkit.inventory.ItemStack it) {
         var cur = p.getInventory().getItem(slot);
-        p.getInventory().setItem(slot, it);
+        p.getInventory().setItem(slot, Lang.item(p, it));
         if (cur != null && !cur.getType().isAir() && U.tagOf(cur, "ss_lobby") == null)
             for (var left : p.getInventory().addItem(cur).values()) p.getWorld().dropItemNaturally(p.getLocation(), left);
     }

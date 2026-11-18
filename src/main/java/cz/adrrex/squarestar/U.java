@@ -24,10 +24,10 @@ public final class U {
     public static final String PREFIX = "&8[&c✦ &6SquareStar&8] &7";
 
     public static Component c(String s) { return LEG.deserialize(s).decoration(TextDecoration.ITALIC, false); }
-    public static void msg(Player p, String s) { p.sendMessage(c(PREFIX + s)); }
-    public static void bar(Player p, String s) { p.sendActionBar(c(s)); }
+    public static void msg(Player p, String s) { p.sendMessage(c(PREFIX + Lang.t(p, s))); }
+    public static void bar(Player p, String s) { p.sendActionBar(c(Lang.t(p, s))); }
     public static void title(Player p, String t, String sub) {
-        p.showTitle(Title.title(c(t), c(sub), Title.Times.times(Duration.ofMillis(200), Duration.ofMillis(1800), Duration.ofMillis(400))));
+        p.showTitle(Title.title(c(Lang.t(p, t)), c(Lang.t(p, sub)), Title.Times.times(Duration.ofMillis(200), Duration.ofMillis(1800), Duration.ofMillis(400))));
     }
     public static NamespacedKey key(String k) { return new NamespacedKey(SquareStar.I, k); }
 
@@ -118,4 +118,12 @@ public final class U {
     public static <T> T pick(Random r, List<T> l) { return l.get(r.nextInt(l.size())); }
     public static Location center(World w, int x, int y, int z) { return new Location(w, x + 0.5, y, z + 0.5); }
     public static void sound(Player p, Sound s, float pitch) { p.playSound(p.getLocation(), s, 1f, pitch); }
+
+    /** smaže složku i s obsahem (jen nenačtené světy!) */
+    public static void deleteDir(java.io.File f) {
+        if (!f.exists()) return;
+        java.io.File[] k = f.listFiles();
+        if (k != null) for (java.io.File c : k) deleteDir(c);
+        f.delete();
+    }
 }

@@ -34,7 +34,7 @@ public final class Crates implements Listener {
         int total() { return rewards.stream().mapToInt(Reward::weight).sum(); }
     }
     public static final class Holder implements InventoryHolder {
-        Inventory inv; @Override public @NotNull Inventory getInventory() { return inv; }
+        Inventory inv; boolean anim; @Override public @NotNull Inventory getInventory() { return inv; }
     }
 
     private final SquareStar pl;
@@ -195,7 +195,7 @@ public final class Crates implements Listener {
     private void preview(Player p, Type t) {
         Holder h = new Holder();
         int size = Math.min(54, ((t.rewards().size() + 8) / 9) * 9);
-        h.inv = Bukkit.createInventory(h, Math.max(9, size), Gui.crate(Math.max(9, size), t.name() + " &f- náhled"));
+        h.inv = Bukkit.createInventory(h, Math.max(9, size), Gui.crate(Math.max(9, size), cz.adrrex.squarestar.Lang.t(p, t.name() + " &f- náhled")));
         for (Reward r : t.rewards()) {
             ItemStack it = rewardItem(r).clone();
             ItemMeta m = it.getItemMeta();
@@ -217,7 +217,8 @@ public final class Crates implements Listener {
 
     private void open(Player p, Type t) {
         Holder h = new Holder();
-        h.inv = Bukkit.createInventory(h, 27, Gui.crateOpen(t.name()));
+        h.anim = true;
+        h.inv = Bukkit.createInventory(h, 27, Gui.crateOpen(Lang.t(p, t.name())));
         p.openInventory(h.inv);
         Reward win = roll(t);
         ItemStack prizeShow = rewardItem(win);
