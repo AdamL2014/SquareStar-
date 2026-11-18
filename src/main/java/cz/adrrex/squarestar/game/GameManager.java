@@ -32,14 +32,21 @@ public final class GameManager implements Listener {
         Inventory inv; @Override public @NotNull Inventory getInventory() { return inv; }
     }
 
+    public static final class VoteHolder implements InventoryHolder {
+        final Game game; Inventory inv; VoteHolder(Game g) { game = g; } @Override public @NotNull Inventory getInventory() { return inv; }
+    }
+
     public GameManager(SquareStar pl) { this.pl = pl; }
+
+    public int playing(GameType t) { return games.stream().filter(x -> x.type == t).mapToInt(x -> x.players.size()).sum(); }
+    public int activeGames() { return games.size(); }
 
     public Game of(Player p) { return map.get(p); }
 
     public void openMenu(Player p) {
         MenuHolder h = new MenuHolder();
         h.inv = Bukkit.createInventory(h, 27, U.c("&c&l✦ &6Minihry na Marsu"));
-        int[] pos = {10, 11, 12, 13, 14, 15, 16, 22};
+        int[] pos = {10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24};
         GameType[] t = GameType.values();
         for (int i = 0; i < t.length; i++) {
             GameType g = t[i];
@@ -90,7 +97,7 @@ public final class GameManager implements Listener {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         Team t = sb.getTeam("ss_hidden");
         if (t == null) { t = sb.registerNewTeam("ss_hidden"); t.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.NEVER); }
-        if (hide) t.addEntry(p.getName()); else t.removeEntry(p.getName());
+        if (hide) t.addEntry(p.getName()); else { t.removeEntry(p.getName()); pl.ranks.apply(p); }
     }
 
     private Game gameAt(Location l) {
@@ -107,6 +114,12 @@ public final class GameManager implements Listener {
     }
 
     // ---------------- události ----------------
+    @EventHandler public void voteClick(InventoryClickEvent e) {
+        if (!(e.getInventory().getHolder() instanceof VoteHolder h)) return;
+        e.setCancelled(true);
+        if (e.getWhoClicked() instanceof Player p && e.getClickedInventory() == e.getInventory() && map.get(p) == h.game) h.game.vote(p, e.getSlot());
+    }
+
     @EventHandler public void menu(InventoryClickEvent e) {
         if (!(e.getInventory().getHolder() instanceof MenuHolder)) return;
         e.setCancelled(true);
@@ -175,7 +188,9 @@ public final class GameManager implements Listener {
     @EventHandler(priority = EventPriority.HIGH) public void interact(PlayerInteractEvent e) {
         Game g = map.get(e.getPlayer());
         if (g == null) return;
-        if ("leave".equals(U.tagOf(e.getItem(), "ss_game"))) { e.setCancelled(true); leave(e.getPlayer()); return; }
+        String tag = U.tagOf(e.getItem(), "ss_game");
+        if ("leave".equals(tag)) { e.setCancelled(true); leave(e.getPlayer()); return; }
+        if ("vote".equals(tag)) { e.setCancelled(true); g.openVote(e.getPlayer()); return; }
         if (g.state == Game.State.RUNNING) g.onInteract(e);
     }
 
@@ -231,7 +246,7 @@ public final class GameManager implements Listener {
     @EventHandler public void flow(BlockFromToEvent e) {
         if (e.getBlock().getWorld() != pl.arenas) return;
         Game g = gameAt(e.getToBlock().getLocation());
-        if (g == null) { e.setCancelled(true); return; }
+        if (g == null || !g.allowFlow(e.getToBlock())) { e.setCancelled(true); return; }
         g.markPlaced(e.getToBlock());
     }
 }

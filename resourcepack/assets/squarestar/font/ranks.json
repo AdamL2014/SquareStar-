@@ -1,0 +1,94 @@
+{
+ "providers": [
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_owner.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue000"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_admin.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue001"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_moderator.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue002"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_helper.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue003"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_builder.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue004"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_youtuber.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue005"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_streamer.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue006"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_legenda.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue007"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_mvp.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue008"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_vip.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue009"
+   ]
+  }
+ ]
+}

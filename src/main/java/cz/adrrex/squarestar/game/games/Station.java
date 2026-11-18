@@ -38,16 +38,22 @@ public final class Station extends Game {
         this.hide = hide;
     }
 
+    @Override public List<String> maps() { return List.of("Základna Alfa", "Temná základna"); }
+
     @Override protected void buildMap(U.BlockQueue.Builder b) {
         int y = oy;
+        boolean dark = map == 1;
+        Material light = dark ? Material.SHROOMLIGHT : Material.SEA_LANTERN, grid = dark ? Material.RED_NETHER_BRICKS : Material.LIGHT_GRAY_CONCRETE,
+                floor = dark ? Material.POLISHED_BLACKSTONE : Material.SMOOTH_QUARTZ, wallM = dark ? Material.DEEPSLATE_TILES : Material.WHITE_CONCRETE,
+                topM = dark ? Material.POLISHED_BLACKSTONE_BRICKS : Material.IRON_BLOCK, window = dark ? Material.RED_STAINED_GLASS : Material.CYAN_STAINED_GLASS;
         for (int x = -H; x <= H; x++) for (int z = -H; z <= H; z++) {
-            Material f = (x % 6 == 0 && z % 6 == 0) ? Material.SEA_LANTERN : (x % 6 == 0 || z % 6 == 0) ? Material.LIGHT_GRAY_CONCRETE : Material.SMOOTH_QUARTZ;
+            Material f = (x % 6 == 0 && z % 6 == 0) ? light : (x % 6 == 0 || z % 6 == 0) ? grid : floor;
             b.set(ox + x, y, oz + z, f);
-            b.set(ox + x, y + 7, oz + z, Material.LIGHT_GRAY_STAINED_GLASS);
+            b.set(ox + x, y + 7, oz + z, dark ? Material.GRAY_STAINED_GLASS : Material.LIGHT_GRAY_STAINED_GLASS);
             b.set(ox + x, y - 1, oz + z, Material.RED_TERRACOTTA);
         }
         for (int i = -H; i <= H; i++) for (int h = 1; h <= 6; h++) {
-            Material m = h == 3 && Math.abs(i) % 4 == 1 ? Material.CYAN_STAINED_GLASS : Material.WHITE_CONCRETE;
+            Material m = h == 3 && Math.abs(i) % 4 == 1 ? window : wallM;
             wall(b, ox + i, y + h, oz - H, m); wall(b, ox + i, y + h, oz + H, m);
             wall(b, ox - H, y + h, oz + i, m); wall(b, ox + H, y + h, oz + i, m);
         }
@@ -60,7 +66,7 @@ public final class Station extends Game {
                 for (int i = from; i <= to; i++) {
                     if (i >= door && i <= door + 2) continue;
                     for (int h = 1; h <= 5; h++) {
-                        Material m = h == 5 ? Material.IRON_BLOCK : Material.WHITE_CONCRETE;
+                        Material m = h == 5 ? topM : wallM;
                         wall(b, ox + l, y + h, oz + i, m);
                         wall(b, ox + i, y + h, oz + l, m);
                     }

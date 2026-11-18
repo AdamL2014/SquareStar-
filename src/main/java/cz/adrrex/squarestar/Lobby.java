@@ -26,9 +26,11 @@ public final class Lobby implements Listener {
 
     public void ensureBuilt() {
         pl.mars.setSpawnLocation(0, Y + 1, 0);
-        if (pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) { spawnHolo(); pl.crates.placeBlocks(); return; }
+        // lobby drž pořád načtenou, jinak by 3D nápis, raketa a NPC zmizely
+        for (int cx = -4; cx <= 4; cx++) for (int cz = -2; cz <= 5; cz++) pl.mars.addPluginChunkTicket(cx, cz, pl);
+        if (pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) { spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); return; }
         pl.getLogger().info("Stavim Mars lobby...");
-        build(() -> { pl.getLogger().info("Mars lobby hotova!"); spawnHolo(); pl.crates.placeBlocks(); });
+        build(() -> { pl.getLogger().info("Mars lobby hotova!"); spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); });
     }
 
     public void build(Runnable done) {
@@ -85,7 +87,7 @@ public final class Lobby implements Listener {
         for (var e : pl.mars.getEntities()) if (e.getScoreboardTags().contains("ss_holo_lobby")) e.remove();
         Location l = new Location(pl.mars, 0.5, Y + 4.2, 6.5);
         pl.mars.spawn(l, TextDisplay.class, t -> {
-            t.text(U.c("&c&l✦ SQUARESTAR ✦\n&6Minihry na Marsu\n&7Nízká gravitace všude!\n\n&eKompas &7= výběr miniher\n&dBedny &7jsou přímo před tebou"));
+            t.text(U.c("&c&l✦ SQUARESTAR ✦\n&6Minihry na Marsu\n&7Nízká gravitace všude!\n\n&eNPC za tebou &7nebo &eKompas &7= minihry\n&dBedny &7jsou přímo před tebou\n&bDvojskok: &7skoč 2x"));
             t.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
             t.addScoreboardTag("ss_holo_lobby");
             t.setPersistent(false);
@@ -151,6 +153,6 @@ public final class Lobby implements Listener {
     @EventHandler public void swap(PlayerSwapHandItemsEvent e) { if (inLobby(e.getPlayer()) && !admin(e.getPlayer())) e.setCancelled(true); }
 
     public static List<String> help() {
-        return List.of("&6/ss hry &7- menu miniher", "&6/ss join <hra> &7- připojit se", "&6/ss leave &7- opustit hru", "&6/ss lobby &7- zpět na Mars");
+        return List.of("&6/ss hry &7- menu miniher", "&6/ss join <hra> &7- připojit se", "&6/ss leave &7- opustit hru", "&6/ss lobby &7- zpět na Mars", "&6/ss lag &7- výkon serveru");
     }
 }

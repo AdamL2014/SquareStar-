@@ -2,10 +2,17 @@
 
 Minecraft minihry na **Marsu** s **nízkou gravitací**. Plugin pro **Paper 1.21.11** od **AdrrexStudio**.
 
-## 🎮 Minihry
-Mars Parkour · Spleef · TNT Run · SkyWars: Asteroidy · Bed Wars: Mars · Murder Mystery · Schovávaná · Lucky Tower
+## 🎮 Minihry (11)
+Mars Parkour · Spleef · TNT Run · SkyWars · Bed Wars · Murder Mystery · Schovávaná · Lucky Tower · **PvP Aréna** · **Sumo** · **Build Battle**
 
-Mapy se stavějí **automaticky**, Mars lobby taky.
+- Mapy se stavějí **automaticky**, většina her má **2 mapy a hlasování**.
+- Bed Wars: diamantové ostrovy, smaragdy uprostřed, obchodník astronaut.
+
+## 🌌 3D lobby
+Obří létající 3D nápis, kolem kterého obíhá raketa, NPC pro každou minihru, točící se ikony nad bednami a **dvojskok**.
+
+## 👑 Ranky
+OWNER, ADMIN, MODERATOR, HELPER, BUILDER, YOUTUBER, STREAMER, LEGENDA, MVP, VIP. S resource packem mají v chatu pixel-art odznaky.
 
 ## 🛰️ Vesmírné itemy
 Laserová pistole, jetpack, meteoritový granát, gravitační boty, kyslíková helma, plazmový meč, měsíční kámen, vesmírná porce, hvězdný úlomek. Textury jsou ve složce `resourcepack/`.
@@ -26,6 +33,10 @@ Obyčejná, vzácná a legendární. Zatím bez placení, klíče se získávaj�
 | `/ss leave` | opustit hru |
 | `/ss give <item>` | (admin) vesmírný item |
 | `/ss key <hráč> <typ>` | (admin) klíč od bedny |
+| `/ss rank <hráč> <rank>` | (admin) nastaví rank |
+| `/ss rebuild` | (admin) přestaví lobby + 3D efekty |
+| `/ss fx` | (admin) obnoví jen 3D nápis, raketu a NPC |
+| `/ss lag` | výkon serveru (TPS, MSPT, RAM) |
 
 ## 🔧 Sestavení
 ```
@@ -36,5 +47,5 @@ mvn package
 Do `server.properties` dej:
 ```
 resource-pack=https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip
-resource-pack-sha1=ec999e882a01cf89d6d33ddd01383c7a4efd8a11
+resource-pack-sha1=c203ea4a8a637bb511e62970f8329bb127ef3120
 ```

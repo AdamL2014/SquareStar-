@@ -14,6 +14,14 @@ gravity:
 lobby:
   # po pripojeni posle hrace na Mars lobby
   force-on-join: true
+  # obri 3D letajici napis (A-Z, 0-9, mezera, ! a -)
+  title: "SQUARESTAR"
+  # dvojskok v lobby (2x mezernik)
+  double-jump: true
+  fx:
+    title: true
+    title-scale: 1.4
+    rocket: true
 
 # odpocet pred startem hry (sekundy)
 countdown: 15
@@ -21,6 +29,10 @@ countdown: 15
 max-arenas: 4
 # kolik bloku za tick se stavi pri tvorbe map (mensi = mene lagu)
 blocks-per-tick: 6000
+
+build-battle:
+  # kolik sekund se stavi
+  build-seconds: 300
 
 # odmena za vyhru
 win-reward:

@@ -77,7 +77,7 @@ public final class Crates implements Listener {
         for (Type t : types.values()) {
             if (t.loc() == null) continue;
             t.loc().getBlock().setType(Material.ENDER_CHEST);
-            pl.mars.spawn(t.loc().clone().add(0.5, 1.4, 0.5), TextDisplay.class, d -> {
+            pl.mars.spawn(t.loc().clone().add(0.5, 2.6, 0.5), TextDisplay.class, d -> {
                 d.text(U.c(t.name() + "\n&7Pravý klik s klíčem\n&8Levý klik = náhled"));
                 d.setBillboard(Display.Billboard.CENTER);
                 d.addScoreboardTag("ss_holo_crate");

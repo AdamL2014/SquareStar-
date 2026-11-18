@@ -44,9 +44,31 @@ public final class Commands implements CommandExecutor, TabCompleter {
                 t.getInventory().addItem(k);
                 s.sendMessage(U.c("&aKlíč dán hráči " + t.getName()));
             }
-            case "rebuildlobby" -> {
+            case "rebuildlobby", "rebuild" -> {
                 if (!admin(s)) return true;
-                pl.lobby.build(() -> { pl.crates.placeBlocks(); pl.lobby.spawnHolo(); s.sendMessage(U.c("&aLobby přestavěna.")); });
+                s.sendMessage(U.c("&ePřestavuji Mars lobby, nápis, raketu a NPC..."));
+                pl.lobby.build(() -> { pl.crates.placeBlocks(); pl.lobby.spawnHolo(); pl.fx.spawnAll(); s.sendMessage(U.c("&aLobby přestavěna.")); });
+            }
+            case "fx" -> {
+                if (!admin(s)) return true;
+                pl.fx.spawnAll();
+                s.sendMessage(U.c("&a3D efekty (nápis, raketa, NPC) znovu vytvořeny."));
+            }
+            case "lag" -> {
+                double[] tps = Bukkit.getTPS();
+                double mspt = Bukkit.getAverageTickTime();
+                int ent = 0; for (var w : Bukkit.getWorlds()) ent += w.getEntityCount();
+                long used = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576, max = Runtime.getRuntime().maxMemory() / 1048576;
+                s.sendMessage(U.c(String.format("&6TPS: &f%.1f &7(1m) &8| &6MSPT: &f%.1f ms &8| &6RAM: &f%d/%d MB", tps[0], mspt, used, max)));
+                s.sendMessage(U.c("&6Entity: &f" + ent + " &8| &6Hry: &f" + pl.games.activeGames() + " &8| &7(20 TPS a pod 50 ms = server je OK)"));
+            }
+            case "rank" -> {
+                if (!admin(s)) return true;
+                if (a.length < 3) { s.sendMessage(U.c("&c/ss rank <hráč> <" + String.join("|", Arrays.stream(Ranks.Rank.values()).map(r -> r.name().toLowerCase(Locale.ROOT)).toList()) + ">")); return true; }
+                Player t = Bukkit.getPlayerExact(a[1]);
+                if (t == null) { s.sendMessage(U.c("&cHráč není online.")); return true; }
+                try { Ranks.Rank r = Ranks.Rank.valueOf(a[2].toUpperCase(Locale.ROOT)); pl.ranks.set(t, r); s.sendMessage(U.c("&a" + t.getName() + " má rank " + r.color + r.name())); }
+                catch (IllegalArgumentException ex) { s.sendMessage(U.c("&cNeznámý rank.")); }
             }
             default -> {
                 s.sendMessage(U.c("&c&l✦ SquareStar &7- příkazy"));
@@ -54,7 +76,10 @@ public final class Commands implements CommandExecutor, TabCompleter {
                 if (s.hasPermission("squarestar.admin")) {
                     s.sendMessage(U.c("&c/ss give <item> [hráč] [počet] &7- vesmírné itemy"));
                     s.sendMessage(U.c("&c/ss key <hráč> <typ> [počet] &7- klíče k bednám"));
-                    s.sendMessage(U.c("&c/ss rebuildlobby &7- znovu postaví Mars lobby"));
+                    s.sendMessage(U.c("&c/ss rebuild &7- znovu postaví Mars lobby + 3D efekty"));
+                    s.sendMessage(U.c("&c/ss fx &7- obnoví jen 3D nápis, raketu a NPC"));
+                    s.sendMessage(U.c("&c/ss rank <hráč> <rank> &7- nastaví rank (owner, admin...)"));
+                    s.sendMessage(U.c("&c/ss lag &7- výkon serveru (TPS, MSPT, RAM)"));
                 }
             }
         }
@@ -71,13 +96,15 @@ public final class Commands implements CommandExecutor, TabCompleter {
     @Override public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {
         List<String> out = new ArrayList<>();
         if (a.length == 1) {
-            out.addAll(List.of("hry", "join", "leave", "lobby"));
-            if (s.hasPermission("squarestar.admin")) out.addAll(List.of("give", "key", "rebuildlobby"));
+            out.addAll(List.of("hry", "join", "leave", "lobby", "lag"));
+            if (s.hasPermission("squarestar.admin")) out.addAll(List.of("give", "key", "rebuild", "fx", "rank"));
         } else if (a.length == 2 && a[0].equalsIgnoreCase("join")) out.addAll(names());
         else if (a.length == 2 && a[0].equalsIgnoreCase("give")) out.addAll(pl.items.defs.keySet());
         else if ((a.length == 3 && a[0].equalsIgnoreCase("give")) || (a.length == 2 && a[0].equalsIgnoreCase("key")))
             for (Player p : Bukkit.getOnlinePlayers()) out.add(p.getName());
         else if (a.length == 3 && a[0].equalsIgnoreCase("key")) out.addAll(pl.crates.types.keySet());
+        else if (a.length == 2 && a[0].equalsIgnoreCase("rank")) for (Player p : Bukkit.getOnlinePlayers()) out.add(p.getName());
+        else if (a.length == 3 && a[0].equalsIgnoreCase("rank")) for (Ranks.Rank r : Ranks.Rank.values()) out.add(r.name().toLowerCase(Locale.ROOT));
         String last = a[a.length - 1].toLowerCase(Locale.ROOT);
         out.removeIf(x -> !x.toLowerCase(Locale.ROOT).startsWith(last));
         return out;

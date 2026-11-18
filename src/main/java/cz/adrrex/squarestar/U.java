@@ -58,6 +58,8 @@ public final class U {
         p.setHealth(Objects.requireNonNull(p.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)).getValue());
         p.setFoodLevel(20); p.setSaturation(10); p.setFireTicks(0); p.setFallDistance(0);
         p.setLevel(0); p.setExp(0); p.setWalkSpeed(0.2f);
+        boolean fly = gm == GameMode.CREATIVE || gm == GameMode.SPECTATOR;
+        p.setAllowFlight(fly); if (!fly) p.setFlying(false);
         p.eject();
     }
 

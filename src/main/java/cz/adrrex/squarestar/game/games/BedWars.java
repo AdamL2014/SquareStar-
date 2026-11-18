@@ -38,10 +38,10 @@ public final class BedWars extends Game implements Listener {
     private record Offer(ItemStack item, Material currency, int price) {}
 
     private final List<Team> teams = List.of(
-            new Team("Červení", "&c", Material.RED_WOOL, Material.RED_BED, Material.RED_CONCRETE, Color.RED, 0, -40),
-            new Team("Modří", "&9", Material.BLUE_WOOL, Material.BLUE_BED, Material.BLUE_CONCRETE, Color.BLUE, 40, 0),
-            new Team("Zelení", "&a", Material.LIME_WOOL, Material.LIME_BED, Material.LIME_CONCRETE, Color.LIME, 0, 40),
-            new Team("Žlutí", "&e", Material.YELLOW_WOOL, Material.YELLOW_BED, Material.YELLOW_CONCRETE, Color.YELLOW, -40, 0));
+            new Team("Červení", "&c", Material.RED_WOOL, Material.RED_BED, Material.RED_CONCRETE, Color.RED, 0, -44),
+            new Team("Modří", "&9", Material.BLUE_WOOL, Material.BLUE_BED, Material.BLUE_CONCRETE, Color.BLUE, 44, 0),
+            new Team("Zelení", "&a", Material.LIME_WOOL, Material.LIME_BED, Material.LIME_CONCRETE, Color.LIME, 0, 44),
+            new Team("Žlutí", "&e", Material.YELLOW_WOOL, Material.YELLOW_BED, Material.YELLOW_CONCRETE, Color.YELLOW, -44, 0));
     private final Map<Player, Team> teamOf = new HashMap<>();
     private final Set<Long> breakable = new HashSet<>();
     private final Set<Player> respawning = new HashSet<>();
@@ -53,30 +53,80 @@ public final class BedWars extends Game implements Listener {
         if (t.dx < 0) return BlockFace.EAST; return BlockFace.WEST;
     }
 
+    @Override public List<String> maps() { return List.of("Rudá planeta", "Orbitální stanice"); }
+
+    private Material top(boolean edge) {
+        if (map == 1) return edge ? Material.GRAY_CONCRETE : (rnd.nextInt(6) == 0 ? Material.POLISHED_ANDESITE : Material.LIGHT_GRAY_CONCRETE);
+        Material[] m = {Material.RED_SAND, Material.RED_TERRACOTTA, Material.ORANGE_TERRACOTTA, Material.RED_SAND, Material.TERRACOTTA};
+        return edge ? Material.RED_SANDSTONE : m[rnd.nextInt(m.length)];
+    }
+    private Material under() {
+        if (map == 1) return rnd.nextBoolean() ? Material.IRON_BLOCK : Material.GRAY_CONCRETE;
+        return rnd.nextInt(5) == 0 ? Material.BLACKSTONE : (rnd.nextBoolean() ? Material.RED_SANDSTONE : Material.TERRACOTTA);
+    }
+
+    /** létající ostrov: plochý vršek, pod ním kužel */
+    private void island(U.BlockQueue.Builder b, int cx, int cz, int r) {
+        for (int x = -r; x <= r; x++) for (int z = -r; z <= r; z++) {
+            double d = Math.sqrt(x * x + z * z);
+            if (d > r + 0.3) continue;
+            b.set(cx + x, oy, cz + z, top(d > r - 1));
+            int depth = (int) Math.round((r - d) * 0.8) + 1 + rnd.nextInt(2);
+            for (int y = 1; y <= depth; y++) b.set(cx + x, oy - y, cz + z, under());
+        }
+    }
+
     @Override protected void buildMap(U.BlockQueue.Builder b) {
-        b.fill(ox - 6, oy, oz - 6, ox + 6, oy, oz + 6, Material.END_STONE);
-        b.fill(ox - 5, oy - 1, oz - 5, ox + 5, oy - 1, oz + 5, Material.BLACKSTONE);
-        b.set(ox, oy, oz, Material.EMERALD_BLOCK);
+        // střed: 3 patra se smaragdem
+        island(b, ox, oz, 11);
+        for (int x = -6; x <= 6; x++) for (int z = -6; z <= 6; z++) if (x * x + z * z <= 36) b.set(ox + x, oy + 1, oz + z, map == 1 ? Material.SMOOTH_STONE : Material.RED_NETHER_BRICKS);
+        for (int x = -3; x <= 3; x++) for (int z = -3; z <= 3; z++) if (x * x + z * z <= 9) b.set(ox + x, oy + 2, oz + z, map == 1 ? Material.QUARTZ_BLOCK : Material.SMOOTH_RED_SANDSTONE);
+        b.set(ox, oy + 2, oz, Material.EMERALD_BLOCK);
+        for (int[] c : new int[][]{{6, 6}, {-6, 6}, {6, -6}, {-6, -6}}) { b.fill(ox + c[0], oy + 1, oz + c[1], ox + c[0], oy + 4, oz + c[1], map == 1 ? Material.IRON_BARS : Material.RED_NETHER_BRICK_WALL); b.set(ox + c[0], oy + 5, oz + c[1], map == 1 ? Material.SEA_LANTERN : Material.SHROOMLIGHT); }
+        // diamantové ostrovy
+        for (int[] c : new int[][]{{26, 26}, {-26, 26}, {26, -26}, {-26, -26}}) {
+            island(b, ox + c[0], oz + c[1], 4);
+            b.set(ox + c[0], oy, oz + c[1], Material.DIAMOND_BLOCK);
+        }
+        // malé kameny na odraz (nízká gravitace!)
+        for (int i = 0; i < 14; i++) {
+            double a = rnd.nextDouble() * Math.PI * 2, d = 15 + rnd.nextInt(25);
+            int cx = ox + (int) (Math.cos(a) * d), cz = oz + (int) (Math.sin(a) * d), cy = oy - 2 + rnd.nextInt(6);
+            b.sphere(cx, cy, cz, 1, p -> b.set(p[0], p[1], p[2], map == 1 ? Material.GRAY_CONCRETE : Material.BLACKSTONE));
+        }
         for (Team t : teams) {
             int cx = ox + t.dx, cz = oz + t.dz;
-            b.fill(cx - 6, oy, cz - 6, cx + 6, oy, cz + 6, t.concrete);
-            b.fill(cx - 5, oy - 1, cz - 5, cx + 5, oy - 1, cz + 5, Material.RED_TERRACOTTA);
+            island(b, cx, cz, 9);
             BlockFace f = toward(t);
-            int fx = cx + f.getModX() * 3, fz = cz + f.getModZ() * 3;
+            int fx0 = f.getModX(), fz0 = f.getModZ(), px = -fz0, pz = fx0; // kolmý směr
+            // týmová plošina + kopule
+            for (int x = -3; x <= 3; x++) for (int z = -3; z <= 3; z++) if (x * x + z * z <= 10) b.set(cx + x, oy, cz + z, t.concrete);
+            Material glass = Material.valueOf(t.wool.name().replace("_WOOL", "_STAINED_GLASS"));
+            for (int x = -5; x <= 5; x++) for (int y = 0; y <= 5; y++) for (int z = -5; z <= 5; z++) {
+                double d = Math.sqrt(x * x + y * y + z * z);
+                if (d > 5.3 || d < 4.4) continue;
+                boolean door = y <= 3 && (Math.abs(x) <= 1 || Math.abs(z) <= 1);
+                if (!door) b.set(cx + x, oy + 1 + y, cz + z, y == 5 ? Material.SEA_LANTERN : glass);
+            }
+            // postel směrem ke středu
+            int fx = cx + fx0 * 7, fz = cz + fz0 * 7;
             Bed foot = (Bed) t.bed.createBlockData(); foot.setPart(Bed.Part.FOOT); foot.setFacing(f);
             Bed head = (Bed) t.bed.createBlockData(); head.setPart(Bed.Part.HEAD); head.setFacing(f);
             b.set(fx, oy + 1, fz, foot);
-            b.set(fx + f.getModX(), oy + 2 - 1, fz + f.getModZ(), head);
+            b.set(fx + fx0, oy + 1, fz + fz0, head);
             t.foot = new int[]{fx, oy + 1, fz};
-            t.head = new int[]{fx + f.getModX(), oy + 1, fz + f.getModZ()};
-            // ochrana postele z vlny (dá se rozbít)
+            t.head = new int[]{fx + fx0, oy + 1, fz + fz0};
             for (int[] c : new int[][]{t.foot, t.head}) for (int[] d : new int[][]{{1, 0, 0}, {-1, 0, 0}, {0, 0, 1}, {0, 0, -1}, {0, 1, 0}}) {
                 int x = c[0] + d[0], y = c[1] + d[1], z = c[2] + d[2];
                 if ((x == t.foot[0] && z == t.foot[2] && y == t.foot[1]) || (x == t.head[0] && z == t.head[2] && y == t.head[1])) continue;
                 b.set(x, y, z, t.wool);
                 breakable.add(U.pack(x, y, z));
             }
-            b.set(cx - f.getModX() * 5, oy, cz - f.getModZ() * 5, Material.IRON_BLOCK);
+            // generátor za základnou
+            int gx = cx - fx0 * 7, gz = cz - fz0 * 7;
+            b.set(gx, oy, gz, Material.IRON_BLOCK);
+            for (int[] d : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) b.set(gx + d[0], oy, gz + d[1], Material.GOLD_BLOCK);
+            b.set(cx + px * 7, oy, cz + pz * 7, Material.EMERALD_BLOCK);
         }
     }
 
@@ -87,7 +137,7 @@ public final class BedWars extends Game implements Listener {
         l.setDirection(new Vector(-t.dx, 0, -t.dz));
         return l;
     }
-    private Location genOf(Team t) { BlockFace f = toward(t); return U.center(w, ox + t.dx - f.getModX() * 5, oy + 1, oz + t.dz - f.getModZ() * 5); }
+    private Location genOf(Team t) { BlockFace f = toward(t); return U.center(w, ox + t.dx - f.getModX() * 7, oy + 1, oz + t.dz - f.getModZ() * 7); }
 
     @Override protected GameMode mode() { return GameMode.SURVIVAL; }
     @Override protected Dmg damage() { return Dmg.NORMAL; }
@@ -104,14 +154,16 @@ public final class BedWars extends Game implements Listener {
             t.used = i < n;
             if (!t.used) { t.bedAlive = false; air(t.foot); air(t.head); continue; }
             Location s = spawnOf(t);
-            spawn(s.clone().add(t.dx == 0 ? 4 : 0, 0, t.dz == 0 ? 4 : 0), Villager.class, v -> {
-                v.setAI(false); v.setInvulnerable(true); v.setSilent(true);
-                v.customName(U.c("&6&lOBCHOD")); v.setCustomNameVisible(true);
-                v.addScoreboardTag("ss_shop");
+            BlockFace f = toward(t);
+            Location shop = U.center(w, ox + t.dx - f.getModZ() * 7, oy + 1, oz + t.dz + f.getModX() * 7);
+            shop.setDirection(new Vector(-t.dx, 0, -t.dz));
+            spawn(shop, Mannequin.class, m -> {
+                cz.adrrex.squarestar.LobbyFx.npc(m, "&6&lOBCHOD", "&7Pravý klik", "npc_shop");
+                m.addScoreboardTag("ss_shop");
             });
         }
         for (Player p : players) { Team t = teamOf.get(p); kit(p, t); p.teleport(spawnOf(t)); U.title(p, t.color + "&lTým " + t.name, "&7Braň svou postel!"); }
-        broadcast("&eSuroviny padají z &fželezného bloku&e. Smaragdy jsou &auprostřed&e. Obchod = &6vesničan&e.");
+        broadcast("&eSuroviny: &fželezo&e/&6zlato &eza základnou, &bdiamanty &ena rohových ostrovech, &asmaragdy &euprostřed. Obchod = &6astronaut&e.");
     }
 
     private void air(int[] c) { w.getBlockAt(c[0], c[1], c[2]).setType(Material.AIR, false); }
@@ -135,7 +187,8 @@ public final class BedWars extends Game implements Listener {
             drop(g, Material.IRON_INGOT);
             if (time % 6 == 0) drop(g, Material.GOLD_INGOT);
         }
-        if (time % 30 == 0) drop(U.center(w, ox, oy + 1, oz), Material.EMERALD);
+        if (time % 30 == 0) drop(U.center(w, ox, oy + 3, oz), Material.EMERALD);
+        if (time % 25 == 0) for (int[] c : new int[][]{{26, 26}, {-26, 26}, {26, -26}, {-26, -26}}) drop(U.center(w, ox + c[0], oy + 1, oz + c[1]), Material.DIAMOND);
         if (time == 600) broadcast("&c&lZa 5 minut končí hra! Rychle zničte postele!");
     }
     private void drop(Location l, Material m) { w.dropItem(l, new ItemStack(m)).setVelocity(new Vector()); }
@@ -145,7 +198,7 @@ public final class BedWars extends Game implements Listener {
     }
 
     @Override public boolean canPlace(Player p, Block b) {
-        if (b.getY() > oy + 30 || Math.abs(b.getX() - ox) > 70 || Math.abs(b.getZ() - oz) > 70) return false;
+        if (b.getY() > oy + 30 || Math.abs(b.getX() - ox) > 75 || Math.abs(b.getZ() - oz) > 75) return false;
         breakable.add(U.pack(b.getX(), b.getY(), b.getZ()));
         return true;
     }
@@ -171,7 +224,7 @@ public final class BedWars extends Game implements Listener {
     @Override public void onDeath(Player p, Player killer) {
         Team t = teamOf.get(p);
         if (killer != null && killer != p) {
-            for (Material m : new Material[]{Material.IRON_INGOT, Material.GOLD_INGOT, Material.EMERALD}) {
+            for (Material m : new Material[]{Material.IRON_INGOT, Material.GOLD_INGOT, Material.EMERALD, Material.DIAMOND}) {
                 int n = 0; for (ItemStack it : p.getInventory().getContents()) if (it != null && it.getType() == m) n += it.getAmount();
                 if (n > 0) killer.getInventory().addItem(new ItemStack(m, n));
             }
@@ -231,7 +284,10 @@ public final class BedWars extends Game implements Listener {
                 new Offer(it.get("jetpack", 1), Material.EMERALD, 2),
                 new Offer(it.get("laser_pistol", 1), Material.EMERALD, 5),
                 new Offer(it.get("plasma_sword", 1), Material.EMERALD, 4),
-                new Offer(sharp(), Material.EMERALD, 6));
+                new Offer(sharp(), Material.DIAMOND, 4),
+                new Offer(unbreak(new ItemStack(Material.DIAMOND_CHESTPLATE)), Material.DIAMOND, 6),
+                new Offer(unbreak(new ItemStack(Material.DIAMOND_PICKAXE)), Material.DIAMOND, 3),
+                new Offer(it.get("gravity_boots", 1), Material.DIAMOND, 2));
     }
     private static ItemStack sharp() { ItemStack s = unbreak(new ItemStack(Material.DIAMOND_SWORD)); s.addUnsafeEnchantment(Enchantment.SHARPNESS, 1); return s; }
 
@@ -254,7 +310,7 @@ public final class BedWars extends Game implements Listener {
         e.getPlayer().openInventory(h.inv);
     }
     private static String price(Offer o) {
-        return switch (o.currency()) { case IRON_INGOT -> "&f" + o.price() + " železa"; case GOLD_INGOT -> "&6" + o.price() + " zlata"; default -> "&a" + o.price() + " smaragdů"; };
+        return switch (o.currency()) { case IRON_INGOT -> "&f" + o.price() + " železa"; case GOLD_INGOT -> "&6" + o.price() + " zlata"; case DIAMOND -> "&b" + o.price() + " diamantů"; default -> "&a" + o.price() + " smaragdů"; };
     }
 
     @EventHandler public void shopClick(InventoryClickEvent e) {

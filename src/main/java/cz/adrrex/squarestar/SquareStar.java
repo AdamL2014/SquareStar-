@@ -21,6 +21,8 @@ public final class SquareStar extends JavaPlugin {
     public SpaceItems items;
     public Crates crates;
     public Lobby lobby;
+    public Ranks ranks;
+    public LobbyFx fx;
 
     @Override public void onEnable() {
         I = this;
@@ -33,15 +35,21 @@ public final class SquareStar extends JavaPlugin {
         crates = new Crates(this);
         games = new GameManager(this);
         lobby = new Lobby(this);
+        ranks = new Ranks(this);
+        fx = new LobbyFx(this);
         var pm = getServer().getPluginManager();
         pm.registerEvents(items, this);
         pm.registerEvents(crates, this);
         pm.registerEvents(games, this);
         pm.registerEvents(lobby, this);
+        pm.registerEvents(ranks, this);
+        pm.registerEvents(fx, this);
         Commands cmd = new Commands(this);
         var pc = getCommand("ss");
         if (pc != null) { pc.setExecutor(cmd); pc.setTabCompleter(cmd); }
         lobby.ensureBuilt();
+        fx.start();
+        for (Player p : Bukkit.getOnlinePlayers()) ranks.apply(p);
         // gravitace + efekty vesmírného oblečení každých 10 ticků
         Bukkit.getScheduler().runTaskTimer(this, () -> { for (Player p : Bukkit.getOnlinePlayers()) applyGravity(p); }, 20, 10);
         getLogger().info("SquareStar zapnut! Mars ceka. Gravitace: " + getConfig().getDouble("gravity.value"));

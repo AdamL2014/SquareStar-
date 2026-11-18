@@ -1,0 +1,140 @@
+package cz.adrrex.squarestar.game.games;
+
+import cz.adrrex.squarestar.U;
+import cz.adrrex.squarestar.game.Game;
+import cz.adrrex.squarestar.game.GameManager;
+import cz.adrrex.squarestar.game.GameType;
+import org.bukkit.*;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.Vector;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/** PvP Aréna (3 životy, vybavení) a Sumo (jen odhazování z talíře). */
+public final class PvpArena extends Game {
+    private final boolean sumo;
+    private final Map<Player, Integer> lives = new HashMap<>();
+    private static final int R = 24, SR = 7, LIVES = 3;
+
+    public PvpArena(GameManager gm, int slot, boolean sumo) {
+        super(gm, sumo ? GameType.SUMO : GameType.PVP, slot);
+        this.sumo = sumo;
+    }
+
+    @Override public List<String> maps() { return sumo ? List.of("Měsíční talíř", "Rudý talíř") : List.of("Koloseum", "Kráter"); }
+
+    @Override protected void buildMap(U.BlockQueue.Builder b) {
+        if (sumo) { buildSumo(b); return; }
+        boolean crater = map == 1;
+        for (int x = -R - 1; x <= R + 1; x++) for (int z = -R - 1; z <= R + 1; z++) {
+            double d = Math.sqrt(x * x + z * z);
+            if (d > R + 1.5) continue;
+            int h = crater ? (int) Math.round(Math.pow(d / R, 2) * 6) : 0;
+            Material top = crater ? (rnd.nextInt(4) == 0 ? Material.RED_TERRACOTTA : Material.RED_SAND)
+                    : ((int) d % 6 == 0 ? Material.RED_SANDSTONE : (x + z) % 2 == 0 ? Material.SMOOTH_SANDSTONE : Material.SMOOTH_RED_SANDSTONE);
+            for (int y = -3; y < h; y++) b.set(ox + x, oy + y, oz + z, crater ? Material.TERRACOTTA : Material.SANDSTONE);
+            b.set(ox + x, oy + h, oz + z, top);
+            if (d > R - 0.5) {
+                int wall = crater ? 3 : 8;
+                for (int y = 1; y <= wall; y++) b.set(ox + x, oy + h + y, oz + z, crater ? Material.BLACKSTONE : (y == wall ? Material.SEA_LANTERN : Material.RED_NETHER_BRICKS));
+            }
+        }
+        if (crater) {
+            for (int i = 0; i < 12; i++) {
+                double a = rnd.nextDouble() * Math.PI * 2, d = 5 + rnd.nextInt(14);
+                int cx = ox + (int) (Math.cos(a) * d), cz = oz + (int) (Math.sin(a) * d);
+                b.sphere(cx, oy + 1, cz, 1 + rnd.nextInt(2), p -> b.set(p[0], p[1], p[2], rnd.nextBoolean() ? Material.BASALT : Material.BLACKSTONE));
+            }
+        } else {
+            for (int i = 0; i < 8; i++) {
+                double a = i * Math.PI / 4;
+                int cx = ox + (int) Math.round(Math.cos(a) * 13), cz = oz + (int) Math.round(Math.sin(a) * 13);
+                b.fill(cx, oy + 1, cz, cx + 1, oy + 6, cz + 1, Material.QUARTZ_PILLAR);
+                b.fill(cx, oy + 7, cz, cx + 1, oy + 7, cz + 1, Material.CHISELED_QUARTZ_BLOCK);
+            }
+            for (int x = -4; x <= 4; x++) for (int z = -4; z <= 4; z++) if (x * x + z * z <= 16) b.fill(ox + x, oy + 1, oz + z, ox + x, oy + 2, oz + z, Material.RED_SANDSTONE);
+            b.set(ox, oy + 2, oz, Material.GOLD_BLOCK);
+        }
+    }
+
+    private void buildSumo(U.BlockQueue.Builder b) {
+        boolean red = map == 1;
+        for (int x = -SR; x <= SR; x++) for (int z = -SR; z <= SR; z++) {
+            double d = Math.sqrt(x * x + z * z);
+            if (d > SR + 0.3) continue;
+            Material m = d > SR - 1 ? (red ? Material.RED_NETHER_BRICKS : Material.LIGHT_BLUE_CONCRETE)
+                    : (d < 1.5 ? (red ? Material.SHROOMLIGHT : Material.SEA_LANTERN) : (red ? Material.RED_TERRACOTTA : Material.WHITE_CONCRETE));
+            b.set(ox + x, oy, oz + z, m);
+            b.set(ox + x, oy - 1, oz + z, red ? Material.BLACKSTONE : Material.CALCITE);
+        }
+    }
+
+    @Override protected GameMode mode() { return GameMode.ADVENTURE; }
+    @Override protected Dmg damage() { return sumo ? Dmg.KNOCKBACK : Dmg.NORMAL; }
+    @Override protected int voidY() { return sumo ? oy - 8 : oy - 15; }
+    @Override protected int timeLimit() { return sumo ? 180 : 420; }
+
+    private Location spot(int i, int n) {
+        double a = i * Math.PI * 2 / Math.max(1, n) + rnd.nextDouble() * 0.2;
+        double r = sumo ? 4 : 17;
+        int x = (int) Math.round(Math.cos(a) * r), z = (int) Math.round(Math.sin(a) * r);
+        int h = (!sumo && map == 1) ? (int) Math.round(Math.pow(Math.sqrt(x * x + z * z) / R, 2) * 6) : 0;
+        Location l = U.center(w, ox + x, oy + h + 1, oz + z);
+        l.setDirection(new Vector(-x, 0, -z));
+        return l;
+    }
+
+    @Override protected void start() {
+        int i = 0;
+        for (Player p : players) {
+            lives.put(p, sumo ? 1 : LIVES);
+            p.teleport(spot(i++, players.size()));
+            if (!sumo) kit(p);
+        }
+        broadcast(sumo ? "&eVystrč ostatní z talíře! Poslední nahoře vyhrává." : "&eKaždý má &c3 životy&e. Jetpack a granáty jsou v inventáři!");
+    }
+
+    private void kit(Player p) {
+        PlayerInventory inv = p.getInventory();
+        inv.setHelmet(unb(Material.IRON_HELMET)); inv.setChestplate(unb(Material.IRON_CHESTPLATE));
+        inv.setLeggings(unb(Material.IRON_LEGGINGS)); inv.setBoots(unb(Material.IRON_BOOTS));
+        inv.setItem(0, unb(Material.IRON_SWORD));
+        inv.setItem(1, unb(Material.BOW));
+        inv.setItem(2, new ItemStack(Material.GOLDEN_APPLE, 3));
+        inv.setItem(3, pl.items.get("jetpack", 1));
+        inv.setItem(4, pl.items.get("meteor_grenade", 2));
+        inv.setItem(5, new ItemStack(Material.COOKED_BEEF, 8));
+        inv.setItem(9, new ItemStack(Material.ARROW, 16));
+    }
+
+    private static ItemStack unb(Material m) { ItemStack it = new ItemStack(m); ItemMeta im = it.getItemMeta(); im.setUnbreakable(true); it.setItemMeta(im); return it; }
+
+    @Override public void onDeath(Player p, Player killer) {
+        int left = lives.getOrDefault(p, 1) - 1;
+        lives.put(p, left);
+        if (left <= 0) { eliminate(p, killer); return; }
+        broadcast("&c⚔ " + p.getName() + " &7padl" + (killer != null && killer != p ? " &8(" + killer.getName() + ")" : "") + " &7- zbývá &c" + left + " ❤");
+        U.reset(p, GameMode.ADVENTURE);
+        p.teleport(spot(rnd.nextInt(8), 8));
+        kit(p);
+        pl.applyGravity(p);
+        U.title(p, "&c" + left + " ❤", "&7Zbývající životy");
+        if (killer != null && killer != p) killer.getInventory().addItem(new ItemStack(Material.GOLDEN_APPLE));
+    }
+
+    @Override protected String status(Player p) {
+        String t = "&7Naživu: &a" + alive.size() + " &8| &7Čas: &e" + fmt(timeLimit() - time);
+        return sumo ? t : "&c" + "❤".repeat(Math.max(0, lives.getOrDefault(p, 0))) + " &8| " + t;
+    }
+
+    @Override protected void timeUp() {
+        if (sumo) { end(List.copyOf(alive)); return; }
+        int best = alive.stream().mapToInt(p -> lives.getOrDefault(p, 0)).max().orElse(0);
+        end(alive.stream().filter(p -> lives.getOrDefault(p, 0) == best).toList());
+    }
+}

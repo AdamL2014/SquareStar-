@@ -17,7 +17,7 @@ import java.util.*;
 
 /** Základ každé minihry: čekání, odpočet, průběh, konec a úklid mapy. */
 public abstract class Game {
-    public enum State { BUILDING, WAITING, COUNTDOWN, RUNNING, ENDING }
+    public enum State { BUILDING, WAITING, COUNTDOWN, STARTING, RUNNING, ENDING }
     public enum Dmg { NONE, KNOCKBACK, NORMAL }
 
     protected final SquareStar pl;
@@ -35,6 +35,8 @@ public abstract class Game {
     protected final List<Entity> spawned = new ArrayList<>();
     protected final Map<Player, Player> lastHit = new HashMap<>();
     protected int countdown, time;
+    public int map;
+    final Map<Player, Integer> votes = new HashMap<>();
     private BukkitTask ticker;
     private boolean destroyed;
 
@@ -44,6 +46,8 @@ public abstract class Game {
 
     // ---------- co implementuje každá hra ----------
     protected abstract void buildMap(U.BlockQueue.Builder b);
+    /** názvy variant mapy (hlasování) */
+    public List<String> maps() { return List.of("Standard"); }
     protected abstract void start();
     protected void afterBuild() {}
     protected void second() {}
@@ -57,6 +61,7 @@ public abstract class Game {
     protected boolean hideNames() { return false; }
     public boolean canBreak(Player p, Block b) { return false; }
     public boolean canPlace(Player p, Block b) { return false; }
+    public boolean allowFlow(Block to) { return true; }
     public void onDeath(Player p, Player killer) { eliminate(p, killer); }
     public void onVoid(Player p) { onDeath(p, lastHit.get(p)); }
     /** vrátí false = útok zrušit */
@@ -66,6 +71,7 @@ public abstract class Game {
     public void onInteractEntity(PlayerInteractEntityEvent e) {}
     public void onBlockDamage(BlockDamageEvent e) {}
     public void onProjectileHit(ProjectileHitEvent e) {}
+    protected String status(Player p) { return status(); }
     protected String status() { return "&7Naživu: &a" + alive.size() + " &8| &7Čas: &e" + fmt(time); }
 
     // ---------- společná logika ----------
@@ -87,23 +93,49 @@ public abstract class Game {
         b.fill(ox + 5, y + 1, oz - 5, ox + 5, y + 4, oz + 5, Material.BARRIER);
         b.fill(ox - 5, y + 5, oz - 5, ox + 5, y + 5, oz + 5, Material.BARRIER);
         b.set(ox, y, oz, Material.SEA_LANTERN);
-        buildMap(b);
-        for (Object[] e : b.entries()) { int bx = (int) e[0], by = (int) e[1], bz = (int) e[2]; if (placed.add(U.pack(bx, by, bz))) placedList.add(new int[]{bx, by, bz}); }
+        record(b);
         b.submit(() -> {
             if (destroyed) return;
             state = State.WAITING;
-            afterBuild();
             for (Player p : players) p.teleport(waitSpot());
             if (players.isEmpty()) destroy(); else checkStart();
         });
         ticker = Bukkit.getScheduler().runTaskTimer(pl, this::tick, 20, 20);
     }
 
+    private void record(U.BlockQueue.Builder b) {
+        for (Object[] e : b.entries()) { int bx = (int) e[0], by = (int) e[1], bz = (int) e[2]; if (placed.add(U.pack(bx, by, bz))) placedList.add(new int[]{bx, by, bz}); }
+    }
+
+    public void openVote(Player p) {
+        GameManager.VoteHolder h = new GameManager.VoteHolder(this);
+        h.inv = Bukkit.createInventory(h, 9, U.c("&6&lHlasování o mapě"));
+        List<String> m = maps();
+        Material[] icons = {Material.RED_TERRACOTTA, Material.LIGHT_BLUE_CONCRETE, Material.PURPLE_CONCRETE, Material.LIME_CONCRETE};
+        for (int i = 0; i < m.size(); i++) {
+            final int idx = i;
+            long n = votes.values().stream().filter(v -> v == idx).count();
+            h.inv.setItem(2 + i * 2, U.item(icons[i % icons.length], (int) Math.max(1, n), "&e&l" + m.get(i), "&7Hlasů: &a" + n, votes.get(p) != null && votes.get(p) == i ? "&a✔ Tvůj hlas" : "&eKlikni pro hlas"));
+        }
+        p.openInventory(h.inv);
+    }
+
+    void vote(Player p, int slot) {
+        int i = (slot - 2) / 2;
+        if (slot < 2 || (slot - 2) % 2 != 0 || i >= maps().size()) return;
+        if (state != State.WAITING && state != State.COUNTDOWN) { U.msg(p, "&cHlasování už skončilo."); return; }
+        votes.put(p, i);
+        U.msg(p, "&aHlasuješ pro mapu &e" + maps().get(i));
+        U.sound(p, Sound.UI_BUTTON_CLICK, 1.5f);
+        openVote(p);
+    }
+
     void addPlayer(Player p) {
         players.add(p);
         U.reset(p, GameMode.ADVENTURE);
         p.getInventory().setItem(8, U.tag(U.item(Material.RED_BED, 1, "&c&lOpustit hru &7(pravý klik)"), "ss_game", "leave"));
-        if (state == State.BUILDING) U.msg(p, "&eStavím mapu... chvilku strpení &7(" + type.display + ")");
+        if (maps().size() > 1) p.getInventory().setItem(4, U.tag(U.item(Material.MAP, 1, "&e&lHlasování o mapě &7(pravý klik)", "&7Mapy: &f" + String.join("&7, &f", maps())), "ss_game", "vote"));
+        if (state == State.BUILDING) U.msg(p, "&ePřipravuji čekárnu... &7(" + type.display + ")");
         else p.teleport(waitSpot());
         if (hideNames()) gm.hideName(p, true);
         pl.applyGravity(p);
@@ -113,6 +145,7 @@ public abstract class Game {
 
     void removePlayer(Player p, boolean toLobby) {
         players.remove(p);
+        votes.remove(p);
         boolean wasAlive = alive.remove(p);
         gm.map.remove(p);
         gm.hideName(p, false);
@@ -141,19 +174,39 @@ public abstract class Game {
                 }
                 if (--countdown < 0) begin();
             }
+            case STARTING -> { for (Player p : players) U.bar(p, "&eStavím mapu &6" + maps().get(map) + "&e..."); }
             case RUNNING -> {
                 time++;
                 second();
                 if (state != State.RUNNING) return;
                 if (time >= timeLimit()) { broadcast("&eČas vypršel!"); timeUp(); return; }
-                String s = status();
-                for (Player p : players) U.bar(p, s);
+                for (Player p : players) U.bar(p, status(p));
             }
             default -> {}
         }
     }
 
     private void begin() {
+        List<String> m = maps();
+        int[] count = new int[m.size()];
+        for (int v : votes.values()) if (v < count.length) count[v]++;
+        int best = 0;
+        for (int i = 1; i < count.length; i++) if (count[i] > count[best] || (count[i] == count[best] && rnd.nextBoolean())) best = i;
+        map = best;
+        state = State.STARTING;
+        if (m.size() > 1) broadcast("&eVyhrála mapa: &6&l" + m.get(map) + " &7(" + count[map] + " hlasů)");
+        U.BlockQueue.Builder b = pl.queue.builder(w);
+        buildMap(b);
+        record(b);
+        b.submit(() -> {
+            if (destroyed || state != State.STARTING) return;
+            if (players.size() < Math.min(type.min, 1)) { destroy(); return; }
+            afterBuild();
+            launch();
+        });
+    }
+
+    private void launch() {
         state = State.RUNNING; time = 0;
         alive.addAll(players);
         for (Player p : players) {
