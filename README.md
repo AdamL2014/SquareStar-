@@ -14,7 +14,7 @@ Laserová pistole, jetpack, meteoritový granát, gravitační boty, kyslíková
 Obyčejná, vzácná a legendární. Zatím bez placení, klíče se získávají za výhry nebo příkazem `/ss key`.
 
 ## 📥 Instalace
-1. Stáhni `SquareStar.jar` z [Releases](../../releases).
+1. Stáhni `SquareStar.jar` ze složky [download/](download/).
 2. Nahraj ho do složky `plugins/` na serveru (Paper 1.21.11).
 3. Zapni server.
 
@@ -30,4 +30,11 @@ Obyčejná, vzácná a legendární. Zatím bez placení, klíče se získávaj�
 ## 🔧 Sestavení
 ```
 mvn package
+```
+
+## 🖼️ Resource pack
+Do `server.properties` dej:
+```
+resource-pack=https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip
+resource-pack-sha1=ec999e882a01cf89d6d33ddd01383c7a4efd8a11
 ```
