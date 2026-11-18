@@ -45,7 +45,7 @@ public final class GameManager implements Listener {
 
     public void openMenu(Player p) {
         MenuHolder h = new MenuHolder();
-        h.inv = Bukkit.createInventory(h, 27, U.c("&c&l✦ &6Minihry na Marsu"));
+        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.title(27, "&f&l✦ Minihry na Marsu"));
         int[] pos = {10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24};
         GameType[] t = GameType.values();
         for (int i = 0; i < t.length; i++) {

@@ -47,7 +47,7 @@ mvn package
 Do `server.properties` dej:
 ```
 resource-pack=https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip
-resource-pack-sha1=b090e81632850cf153dd57f686b1a467ef8dcfa5
+resource-pack-sha1=a689ffe28de6c50373898d5a1f952d6ec5435f11
 ```
 
 ## ✨ Novinky 2.2

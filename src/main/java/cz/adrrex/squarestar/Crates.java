@@ -113,7 +113,7 @@ public final class Crates implements Listener {
     private void preview(Player p, Type t) {
         Holder h = new Holder();
         int size = Math.min(54, ((t.rewards().size() + 8) / 9) * 9);
-        h.inv = Bukkit.createInventory(h, Math.max(9, size), U.c(t.name() + " &8- náhled"));
+        h.inv = Bukkit.createInventory(h, Math.max(9, size), cz.adrrex.squarestar.Gui.title(Math.max(9, size), t.name() + " &f- náhled"));
         for (Reward r : t.rewards()) {
             ItemStack it = rewardItem(r).clone();
             ItemMeta m = it.getItemMeta();
@@ -133,7 +133,7 @@ public final class Crates implements Listener {
 
     private void open(Player p, Type t) {
         Holder h = new Holder();
-        h.inv = Bukkit.createInventory(h, 27, U.c(t.name() + " &8- otevírání..."));
+        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.title(27, t.name() + " &f- otevírání..."));
         ItemStack pane = U.item(Material.PURPLE_STAINED_GLASS_PANE, 1, " ");
         for (int i = 0; i < 27; i++) h.inv.setItem(i, pane);
         h.inv.setItem(4, U.item(Material.HOPPER, 1, "&e▼ Výhra ▼"));

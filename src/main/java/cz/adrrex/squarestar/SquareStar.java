@@ -28,6 +28,7 @@ public final class SquareStar extends JavaPlugin {
     @Override public void onEnable() {
         I = this;
         saveDefaultConfig();
+        Gui.enabled = getConfig().getBoolean("gui.custom", true);
         queue = new U.BlockQueue(getConfig().getInt("blocks-per-tick", 6000));
         queue.runTaskTimer(this, 1, 1);
         mars = makeWorld("ss_mars", 18000);

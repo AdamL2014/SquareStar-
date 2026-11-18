@@ -71,7 +71,7 @@ public final class Cosmetics implements Listener {
 
     public void open(Player p) {
         Holder h = new Holder();
-        h.inv = Bukkit.createInventory(h, 36, U.c("&d&l✦ Kosmetika"));
+        h.inv = Bukkit.createInventory(h, 36, cz.adrrex.squarestar.Gui.title(36, "&f&l✦ Kosmetika"));
         Trail ct = get(p, "cos_trail", Trail.class);
         Hat chat = get(p, "cos_hat", Hat.class);
         h.inv.setItem(4, U.item(Material.BLAZE_POWDER, 1, "&6&lStopy za tebou", "&7Částice, když chodíš po lobby"));

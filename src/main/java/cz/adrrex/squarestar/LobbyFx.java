@@ -70,7 +70,9 @@ public final class LobbyFx implements Listener {
     }
 
     // ---------------- obří 3D nápis ----------------
+    private ItemDisplay logo; private float logoScale;
     private void spawnTitle() {
+        if (!"blocks".equalsIgnoreCase(pl.getConfig().getString("lobby.fx.title-style", "model"))) { spawnLogo(); return; }
         String text = pl.getConfig().getString("lobby.title", "SQUARESTAR").toUpperCase(Locale.ROOT);
         float s = (float) pl.getConfig().getDouble("lobby.fx.title-scale", 1.4);
         int cols = text.length() * 6 - 1;
@@ -89,6 +91,31 @@ public final class LobbyFx implements Listener {
         }
     }
 
+    /** hezké 3D logo z resource packu (gradient, obrys, hloubka) */
+    private void spawnLogo() {
+        logoScale = (float) pl.getConfig().getDouble("lobby.fx.logo-size", 30);
+        titleCenter = new Location(pl.mars, 0.5, Lobby.Y + 30, 44.5);
+        ItemStack it = new ItemStack(Material.PAPER);
+        var meta = it.getItemMeta(); meta.setItemModel(new NamespacedKey("squarestar", "logo3d")); it.setItemMeta(meta);
+        logo = pl.mars.spawn(titleCenter, ItemDisplay.class, e -> {
+            e.setItemStack(it);
+            e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setViewRange(8f);
+            e.setDisplayWidth(logoScale * 3); e.setDisplayHeight(logoScale);
+            e.addScoreboardTag(TAG); e.setPersistent(false);
+        });
+        logoPose(0);
+    }
+    private void logoPose(double t) {
+        if (logo == null || !logo.isValid()) return;
+        float s = logoScale;
+        logo.setInterpolationDelay(0); logo.setInterpolationDuration(40);
+        logo.setTransformation(new Transformation(new Vector3f(0, (float) Math.sin(t) * 1.2f, 0),
+                new Quaternionf().rotateY((float) Math.sin(t * 0.5) * 0.18f).rotateX((float) Math.sin(t * 0.7) * 0.05f),
+                new Vector3f(s, s, s), new Quaternionf()));
+    }
+
     private void add(int letter, Vector3f base, Vector3f scale, BlockData data) {
         BlockDisplay d = pl.mars.spawn(titleCenter, BlockDisplay.class, e -> {
             e.setBlock(data);
@@ -103,8 +130,8 @@ public final class LobbyFx implements Listener {
 
     // ---------------- 3D Země (model z resource packu, točí se) ----------------
     private void spawnEarth() {
-        float s = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 46);
-        Location at = new Location(pl.mars, 0.5, Lobby.Y + 62, 70.5);
+        float s = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 90);
+        Location at = new Location(pl.mars, 0.5, Lobby.Y + 80, 120.5);
         earth = earthPart(at, "earth", s);
         clouds = earthPart(at, "earth_clouds", s * 1.06f);
     }
@@ -145,9 +172,11 @@ public final class LobbyFx implements Listener {
         part(c, Material.RED_CONCRETE, 0.45f, -0.05f, -1.5f, 0.6f, 0.1f, 0.8f);
         part(c, Material.RED_CONCRETE, -1.05f, -0.05f, -1.5f, 0.6f, 0.1f, 0.8f);
         part(c, Material.SHROOMLIGHT, -0.3f, -0.3f, -2.1f, 0.6f, 0.6f, 0.6f);
-        part(c, Material.FIRE, -0.45f, -0.45f, -3.1f, 0.9f, 0.9f, 1.1f);
-        part(c, Material.SOUL_FIRE, 0.48f, -0.2f, -2.6f, 0.36f, 0.4f, 0.6f);
-        part(c, Material.SOUL_FIRE, -0.84f, -0.2f, -2.6f, 0.36f, 0.4f, 0.6f);
+        // plameny otočené dozadu (oheň jinak míří nahoru)
+        flame(c, Material.FIRE, -0.45f, -0.45f, -2.1f, 0.9f, 0.9f, 1.4f);
+        flame(c, Material.FIRE, -0.3f, -0.3f, -2.4f, 0.6f, 0.6f, 1.9f);
+        flame(c, Material.SOUL_FIRE, 0.48f, -0.2f, -2.0f, 0.36f, 0.4f, 0.9f);
+        flame(c, Material.SOUL_FIRE, -0.84f, -0.2f, -2.0f, 0.36f, 0.4f, 0.9f);
         part(c, Material.RED_CONCRETE, -0.47f, -0.47f, 0.9f, 0.94f, 0.94f, 0.15f);
         part(c, Material.RED_CONCRETE, -0.47f, -0.47f, -0.6f, 0.94f, 0.94f, 0.12f);
         part(c, Material.LIGHT_BLUE_STAINED_GLASS, -0.2f, 0.42f, -0.3f, 0.4f, 0.08f, 0.4f);
@@ -158,6 +187,18 @@ public final class LobbyFx implements Listener {
         part(c, Material.RED_CONCRETE, -0.82f, -0.22f, -0.2f, 0.32f, 0.44f, 0.3f);
         part(c, Material.ORANGE_CONCRETE, 0.55f, -0.17f, -2.0f, 0.22f, 0.34f, 0.3f);
         part(c, Material.ORANGE_CONCRETE, -0.77f, -0.17f, -2.0f, 0.22f, 0.34f, 0.3f);
+    }
+
+    /** blok ohně položený naležato: plameny míří do -Z (za raketu) */
+    private void flame(Location c, Material m, float x, float y, float z, float w, float h, float len) {
+        BlockDisplay d = pl.mars.spawn(c, BlockDisplay.class, e -> {
+            e.setBlock(m.createBlockData());
+            e.setTransformation(new Transformation(new Vector3f(x * 2, y * 2, z * 2), new Quaternionf().rotateX((float) Math.toRadians(-90)), new Vector3f(w * 2, len * 2, h * 2), new Quaternionf()));
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setTeleportDuration(3); e.setViewRange(4f);
+            e.addScoreboardTag(TAG); e.setPersistent(false);
+        });
+        rocket.add(d);
     }
 
     private void part(Location c, Material m, float x, float y, float z, float sx, float sy, float sz) {
@@ -308,7 +349,8 @@ public final class LobbyFx implements Listener {
                 for (ItemDisplay d : spinners) if (d.isValid()) pl.mars.spawnParticle(Particle.ENCHANT, d.getLocation(), 3, 0.3, 0.3, 0.3, 0.4);
             }
             if (tick % 20 == 0) {
-                float es = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 46);
+                float es = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 90);
+                logoPose(tick / 20.0 * 0.6);
                 earthSpin += (float) Math.toRadians(8); cloudSpin += (float) Math.toRadians(11);
                 rotate(earth, earthSpin, es); rotate(clouds, cloudSpin, es * 1.06f);
                 spin += (float) Math.toRadians(120);
