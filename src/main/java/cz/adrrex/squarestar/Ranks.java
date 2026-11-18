@@ -75,7 +75,8 @@ public final class Ranks implements Listener {
     }
     private Component glyphBadge(Rank r) {
         Component g = Component.text(String.valueOf(r.glyph())).font(FONT).color(NamedTextColor.WHITE);
-        return (r == Rank.VIDRIFTER ? link(g) : g).append(Component.text(" "));
+        // obal bez fontu: vše, co se připojí za odznak, musí mít normální písmo (jinak čtverečky)
+        return Component.text().append(r == Rank.VIDRIFTER ? link(g) : g).append(Component.text(" ")).build();
     }
     /** VidRifter odznak je klikací odkaz na VidRift */
     private Component link(Component c) {
