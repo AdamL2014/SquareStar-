@@ -25,7 +25,7 @@ import java.util.*;
 public final class Ranks implements Listener {
     public enum Rank {
         OWNER("&4&l", true), ADMIN("&c&l", true), MODERATOR("&e&l", false), HELPER("&a&l", false), BUILDER("&6&l", false),
-        YOUTUBER("&c&l", false), STREAMER("&5&l", false), LEGENDA("&d&l", false), MVP("&b&l", false), VIP("&a&l", false), HRAC("&7", false);
+        YOUTUBER("&c&l", false), STREAMER("&5&l", false), VIDRIFTER("&b&l", false), LEGENDA("&d&l", false), MVP("&b&l", false), VIP("&a&l", false), HRAC("&7", false);
         public final String color; public final boolean admin;
         Rank(String c, boolean a) { color = c; admin = a; }
         public char glyph() { return (char) (0xE000 + ordinal()); }
@@ -57,8 +57,22 @@ public final class Ranks implements Listener {
         apply(p);
     }
 
-    private Component textBadge(Rank r) { return r == Rank.HRAC ? Component.empty() : U.c("&8[" + r.color + r.name() + "&8] "); }
-    private Component glyphBadge(Rank r) { return r == Rank.HRAC ? Component.empty() : Component.text(String.valueOf(r.glyph())).font(FONT).color(NamedTextColor.WHITE).append(Component.text(" ")); }
+    private Component textBadge(Rank r) {
+        if (r == Rank.HRAC) return Component.empty();
+        if (r == Rank.VIDRIFTER) return link(U.c("&8[&b&lVID&d&lRIFTER&8]")).append(Component.text(" "));
+        return U.c("&8[" + r.color + r.name() + "&8] ");
+    }
+    private Component glyphBadge(Rank r) {
+        if (r == Rank.HRAC) return Component.empty();
+        Component g = Component.text(String.valueOf(r.glyph())).font(FONT).color(NamedTextColor.WHITE);
+        return (r == Rank.VIDRIFTER ? link(g) : g).append(Component.text(" "));
+    }
+    /** VidRifter odznak je klikací odkaz na VidRift */
+    private Component link(Component c) {
+        String url = pl.getConfig().getString("ranks.vidrift-url", "https://vidriftvideo.netlify.app");
+        return c.clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl(url))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c("&b&lVid&d&lRift\n&7Česká video platforma\n&eKlikni: &f" + url)));
+    }
     private static String nameColor(Rank r) { return r == Rank.HRAC ? "&7" : r.color.replace("&l", ""); }
 
     public void apply(Player p) {

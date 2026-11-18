@@ -80,7 +80,30 @@ public final class Lobby implements Listener {
             if (y < 3 || (x == 0 && z == 0)) b.set(rx + x, Y + 17 + y, rz + z, Material.RED_CONCRETE);
         for (int[] f : new int[][]{{3, 0}, {-3, 0}, {0, 3}, {0, -3}}) b.fill(rx + f[0], Y + 1, rz + f[1], rx + f[0], Y + 4, rz + f[1], Material.GRAY_CONCRETE);
         b.set(rx, Y + 9, rz - 2, Material.LIGHT_BLUE_STAINED_GLASS);
+        earth(b);
         b.submit(done);
+    }
+
+    /** Planeta Země na obloze: oceány, kontinenty, ledové čepičky, mraky a atmosféra. */
+    private void earth(U.BlockQueue.Builder b) {
+        int ex = -34, ey = Y + 50, ez = 66, R = 13;
+        for (int x = -R - 3; x <= R + 3; x++) for (int y = -R - 3; y <= R + 3; y++) for (int z = -R - 3; z <= R + 3; z++) {
+            double d = Math.sqrt(x * x + y * y + z * z);
+            double lat = y / (double) R;
+            if (d <= R && d > R - 2) {
+                double n = Math.sin(x * 0.33 + 1.3) + Math.cos(z * 0.29) + Math.sin((x + y) * 0.21) + 0.6 * Math.cos((y - z) * 0.4);
+                Material m;
+                if (Math.abs(lat) > 0.82) m = Material.WHITE_CONCRETE;
+                else if (n > 0.35) m = n > 1.7 ? Material.YELLOW_TERRACOTTA : (n > 1.0 ? Material.GREEN_CONCRETE : Material.LIME_CONCRETE);
+                else m = n > 0.05 ? Material.LIGHT_BLUE_CONCRETE : Material.BLUE_CONCRETE;
+                b.set(ex + x, ey + y, ez + z, m);
+            } else if (d <= R + 1 && d > R) {
+                double c = Math.sin(x * 0.5 + y * 0.3) * Math.cos(z * 0.45 - y * 0.2);
+                if (c > 0.45) b.set(ex + x, ey + y, ez + z, Material.WHITE_STAINED_GLASS);
+            } else if (d <= R + 2.6 && d > R + 2 && ((x + y + z) & 3) == 0) {
+                b.set(ex + x, ey + y, ez + z, Material.LIGHT);
+            }
+        }
     }
 
     public void spawnHolo() {

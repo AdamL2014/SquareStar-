@@ -12,7 +12,7 @@ Mars Parkour · Spleef · TNT Run · SkyWars · Bed Wars · Murder Mystery · Sc
 Obří létající 3D nápis, kolem kterého obíhá raketa, NPC pro každou minihru, točící se ikony nad bednami a **dvojskok**.
 
 ## 👑 Ranky
-OWNER, ADMIN, MODERATOR, HELPER, BUILDER, YOUTUBER, STREAMER, LEGENDA, MVP, VIP. S resource packem mají v chatu pixel-art odznaky.
+OWNER, ADMIN, MODERATOR, HELPER, BUILDER, YOUTUBER, STREAMER, **VIDRIFTER** (klikací odkaz na [VidRift](https://vidriftvideo.netlify.app)), LEGENDA, MVP, VIP. S resource packem mají v chatu pixel-art odznaky.
 
 ## 🛰️ Vesmírné itemy
 Laserová pistole, jetpack, meteoritový granát, gravitační boty, kyslíková helma, plazmový meč, měsíční kámen, vesmírná porce, hvězdný úlomek. Textury jsou ve složce `resourcepack/`.
@@ -47,5 +47,5 @@ mvn package
 Do `server.properties` dej:
 ```
 resource-pack=https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip
-resource-pack-sha1=c203ea4a8a637bb511e62970f8329bb127ef3120
+resource-pack-sha1=2643744f3c1a4dad334a18802a1d84cc94af8aa1
 ```

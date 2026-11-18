@@ -30,6 +30,10 @@ max-arenas: 4
 # kolik bloku za tick se stavi pri tvorbe map (mensi = mene lagu)
 blocks-per-tick: 6000
 
+ranks:
+  # kam vede klikaci odznak VIDRIFTER v chatu
+  vidrift-url: "https://vidriftvideo.netlify.app"
+
 build-battle:
   # kolik sekund se stavi
   build-seconds: 300

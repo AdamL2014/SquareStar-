@@ -110,6 +110,16 @@ public final class LobbyFx implements Listener {
         part(c, Material.RED_CONCRETE, 0.45f, -0.05f, -1.5f, 0.6f, 0.1f, 0.8f);
         part(c, Material.RED_CONCRETE, -1.05f, -0.05f, -1.5f, 0.6f, 0.1f, 0.8f);
         part(c, Material.SHROOMLIGHT, -0.3f, -0.3f, -2.1f, 0.6f, 0.6f, 0.6f);
+        part(c, Material.RED_CONCRETE, -0.47f, -0.47f, 0.9f, 0.94f, 0.94f, 0.15f);
+        part(c, Material.RED_CONCRETE, -0.47f, -0.47f, -0.6f, 0.94f, 0.94f, 0.12f);
+        part(c, Material.LIGHT_BLUE_STAINED_GLASS, -0.2f, 0.42f, -0.3f, 0.4f, 0.08f, 0.4f);
+        part(c, Material.GRAY_CONCRETE, -0.38f, -0.38f, -1.8f, 0.76f, 0.76f, 0.3f);
+        part(c, Material.LIGHT_GRAY_CONCRETE, 0.5f, -0.22f, -1.7f, 0.32f, 0.44f, 1.5f);
+        part(c, Material.LIGHT_GRAY_CONCRETE, -0.82f, -0.22f, -1.7f, 0.32f, 0.44f, 1.5f);
+        part(c, Material.RED_CONCRETE, 0.5f, -0.22f, -0.2f, 0.32f, 0.44f, 0.3f);
+        part(c, Material.RED_CONCRETE, -0.82f, -0.22f, -0.2f, 0.32f, 0.44f, 0.3f);
+        part(c, Material.ORANGE_CONCRETE, 0.55f, -0.17f, -2.0f, 0.22f, 0.34f, 0.3f);
+        part(c, Material.ORANGE_CONCRETE, -0.77f, -0.17f, -2.0f, 0.22f, 0.34f, 0.3f);
     }
 
     private void part(Location c, Material m, float x, float y, float z, float sx, float sy, float sz) {

@@ -65,7 +65,7 @@
   },
   {
    "type": "bitmap",
-   "file": "squarestar:font/rank_legenda.png",
+   "file": "squarestar:font/rank_vidrifter.png",
    "ascent": 8,
    "height": 10,
    "chars": [
@@ -74,7 +74,7 @@
   },
   {
    "type": "bitmap",
-   "file": "squarestar:font/rank_mvp.png",
+   "file": "squarestar:font/rank_legenda.png",
    "ascent": 8,
    "height": 10,
    "chars": [
@@ -83,11 +83,20 @@
   },
   {
    "type": "bitmap",
-   "file": "squarestar:font/rank_vip.png",
+   "file": "squarestar:font/rank_mvp.png",
    "ascent": 8,
    "height": 10,
    "chars": [
     "\ue009"
+   ]
+  },
+  {
+   "type": "bitmap",
+   "file": "squarestar:font/rank_vip.png",
+   "ascent": 8,
+   "height": 10,
+   "chars": [
+    "\ue00a"
    ]
   }
  ]
