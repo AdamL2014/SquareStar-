@@ -297,7 +297,7 @@ public final class BedWars extends Game implements Listener {
         Team t = teamOf.get(e.getPlayer());
         if (t == null) return;
         Shop h = new Shop(); h.team = t;
-        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.title(27, "&f&lObchod &e- " + t.name));
+        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.shop(27, "&f&lObchod &e- " + t.name));
         List<Offer> o = offers(t);
         for (int i = 0; i < o.size(); i++) {
             ItemStack show = o.get(i).item().clone();

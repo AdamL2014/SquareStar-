@@ -109,7 +109,7 @@ public abstract class Game {
 
     public void openVote(Player p) {
         GameManager.VoteHolder h = new GameManager.VoteHolder(this);
-        h.inv = Bukkit.createInventory(h, 9, cz.adrrex.squarestar.Gui.title(9, "&f&lHlasování o mapě"));
+        h.inv = Bukkit.createInventory(h, 9, cz.adrrex.squarestar.Gui.vote(9, "&f&lHlasování o mapě"));
         List<String> m = maps();
         Material[] icons = {Material.RED_TERRACOTTA, Material.LIGHT_BLUE_CONCRETE, Material.PURPLE_CONCRETE, Material.LIME_CONCRETE};
         for (int i = 0; i < m.size(); i++) {

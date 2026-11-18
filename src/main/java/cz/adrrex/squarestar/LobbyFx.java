@@ -70,7 +70,7 @@ public final class LobbyFx implements Listener {
     }
 
     // ---------------- obří 3D nápis ----------------
-    private ItemDisplay logo; private float logoScale;
+    private final List<TextDisplay> logo = new ArrayList<>(); private float logoScale;
     private void spawnTitle() {
         if (!"blocks".equalsIgnoreCase(pl.getConfig().getString("lobby.fx.title-style", "model"))) { spawnLogo(); return; }
         String text = pl.getConfig().getString("lobby.title", "SQUARESTAR").toUpperCase(Locale.ROOT);
@@ -91,29 +91,48 @@ public final class LobbyFx implements Listener {
         }
     }
 
-    /** hezké 3D logo z resource packu (gradient, obrys, hloubka) */
+    /** 3D nápis Minecraft fontem: každé písmeno zvlášť (vlní se), za ním tmavší vrstvy = hloubka */
+    private static final int DEPTH = 5;
+    private static final String[] GRAD = {"#FFF25A", "#FFD83A", "#FFBE2A", "#FFA020", "#FF8418", "#FF6814", "#FF4C12", "#F23410", "#E0200E", "#CC100C"};
     private void spawnLogo() {
-        logoScale = (float) pl.getConfig().getDouble("lobby.fx.logo-size", 30);
-        titleCenter = new Location(pl.mars, 0.5, Lobby.Y + 30, 44.5);
-        ItemStack it = new ItemStack(Material.PAPER);
-        var meta = it.getItemMeta(); meta.setItemModel(new NamespacedKey("squarestar", "logo3d")); it.setItemMeta(meta);
-        logo = pl.mars.spawn(titleCenter, ItemDisplay.class, e -> {
-            e.setItemStack(it);
-            e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
-            e.setBrightness(new Display.Brightness(15, 15));
-            e.setViewRange(8f);
-            e.setDisplayWidth(logoScale * 3); e.setDisplayHeight(logoScale);
-            e.addScoreboardTag(TAG); e.setPersistent(false);
-        });
-        logoPose(0);
+        logo.clear();
+        logoScale = (float) pl.getConfig().getDouble("lobby.fx.logo-size", 28);
+        String text = pl.getConfig().getString("lobby.title", "SQUARESTAR").toUpperCase(Locale.ROOT);
+        titleCenter = new Location(pl.mars, 0.5, Lobby.Y + 24, 44.5, 180, 0);
+        for (int i = 0; i < text.length(); i++) {
+            String ch = String.valueOf(text.charAt(i));
+            for (int k = DEPTH; k >= 0; k--) {
+                final int layer = k;
+                String col = k == 0 ? GRAD[i * GRAD.length / text.length()] : (k == DEPTH ? "#3A0A06" : "#8A2A10");
+                logo.add(pl.mars.spawn(titleCenter, TextDisplay.class, e -> {
+                    e.text(net.kyori.adventure.text.Component.text(ch).decorate(net.kyori.adventure.text.format.TextDecoration.BOLD)
+                            .color(net.kyori.adventure.text.format.TextColor.fromHexString(col)));
+                    e.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+                    e.setShadowed(layer == 0);
+                    e.setBrightness(new Display.Brightness(15, 15));
+                    e.setViewRange(8f);
+                    e.setTeleportDuration(0);
+                    e.addScoreboardTag(TAG); e.setPersistent(false);
+                }));
+            }
+        }
+        logoWave(0);
     }
-    private void logoPose(double t) {
-        if (logo == null || !logo.isValid()) return;
-        float s = logoScale;
-        logo.setInterpolationDelay(0); logo.setInterpolationDuration(40);
-        logo.setTransformation(new Transformation(new Vector3f(0, (float) Math.sin(t) * 1.2f, 0),
-                new Quaternionf().rotateY((float) Math.sin(t * 0.5) * 0.18f).rotateX((float) Math.sin(t * 0.7) * 0.05f),
-                new Vector3f(s, s, s), new Quaternionf()));
+    /** písmena se vlní nahoru-dolů a lehce naklápějí, jako vlna */
+    private void logoWave(double t) {
+        if (logo.isEmpty()) return;
+        float s = logoScale, w = 7 * s / 40f; // šířka tučného písmena v Minecraft fontu
+        int per = DEPTH + 1, n = logo.size() / per;
+        for (int idx = 0; idx < logo.size(); idx++) {
+            TextDisplay d = logo.get(idx);
+            if (!d.isValid()) continue;
+            int i = idx / per, layer = DEPTH - idx % per;
+            double ph = t + i * 0.55;
+            float x = (i - (n - 1) / 2f) * w, y = (float) Math.sin(ph) * s * 0.06f;
+            d.setInterpolationDelay(0); d.setInterpolationDuration(5);
+            d.setTransformation(new Transformation(new Vector3f(x, y - layer * s * 0.004f, -layer * s * 0.012f),
+                    new Quaternionf().rotateZ((float) Math.sin(ph + 1.2) * 0.12f), new Vector3f(s, s, s), new Quaternionf()));
+        }
     }
 
     private void add(int letter, Vector3f base, Vector3f scale, BlockData data) {
@@ -131,7 +150,7 @@ public final class LobbyFx implements Listener {
     // ---------------- 3D Země (model z resource packu, točí se) ----------------
     private void spawnEarth() {
         float s = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 90);
-        Location at = new Location(pl.mars, 0.5, Lobby.Y + 80, 120.5);
+        Location at = new Location(pl.mars, 0.5, Lobby.Y + 85, 30.5);
         earth = earthPart(at, "earth", s);
         clouds = earthPart(at, "earth_clouds", s * 1.06f);
     }
@@ -147,7 +166,7 @@ public final class LobbyFx implements Listener {
             e.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateZ((float) Math.toRadians(23)), new Vector3f(s, s, s), new Quaternionf()));
             e.setBrightness(new Display.Brightness(15, 15));
             e.setViewRange(8f);
-            e.setDisplayWidth(s); e.setDisplayHeight(s);
+            e.setDisplayWidth(0); e.setDisplayHeight(0); // 0 = bez ořezu, obří model nezmizí
             e.addScoreboardTag(TAG);
             e.setPersistent(false);
         });
@@ -258,7 +277,7 @@ public final class LobbyFx implements Listener {
         m.setCollidable(false);
         m.setPersistent(false);
         Color col = switch (look) { case "npc_shop" -> Color.ORANGE; default -> Color.WHITE; };
-        if (!skin(m)) suit(m, col, null);
+        suit(m, col, null);
     }
 
     /** Vlastní skin NPC z resource packu (assets/squarestar/textures/entity/npc_skin.png). */
@@ -270,7 +289,7 @@ public final class LobbyFx implements Listener {
     }
 
     private static void suit(Mannequin m, Color col, Material hand) {
-        if (skin(m)) { if (hand != null) m.getEquipment().setItemInMainHand(new ItemStack(hand)); return; }
+        skin(m); // skin astronauta + brnění navrch
         var eq = m.getEquipment();
         eq.setHelmet(dye(Material.LEATHER_HELMET, Color.WHITE));
         eq.setChestplate(dye(Material.LEATHER_CHESTPLATE, col));
@@ -355,6 +374,7 @@ public final class LobbyFx implements Listener {
                 if (near != null) m.lookAt(near.getEyeLocation().getX(), near.getEyeLocation().getY(), near.getEyeLocation().getZ(), io.papermc.paper.entity.LookAnchor.EYES);
                 else m.setRotation((float) Math.toDegrees(Math.atan2(m.getLocation().getX(), -m.getLocation().getZ())), 0);
             }
+            if (tick % 2 == 0) logoWave(tick * 0.12);
             if (tick % 10 == 0 && !title.isEmpty()) {
                 phase += 0.55;
                 for (Pixel px : title) {
@@ -379,7 +399,6 @@ public final class LobbyFx implements Listener {
             }
             if (tick % 20 == 0) {
                 float es = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 90);
-                logoPose(tick / 20.0 * 0.6);
                 pl.crates.idle();
                 earthSpin += (float) Math.toRadians(8); cloudSpin += (float) Math.toRadians(11);
                 rotate(earth, earthSpin, es); rotate(clouds, cloudSpin, es * 1.06f);

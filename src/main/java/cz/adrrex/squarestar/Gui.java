@@ -14,6 +14,12 @@ public final class Gui {
     public static Component title(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }
     /** zlato-modrý panel pro bedny */
     public static Component crate(int size, String legacy) { return make((char) (0xE210 + rows(size)), legacy); }
+    /** růžový panel pro kosmetiku */
+    public static Component cosmetics(int size, String legacy) { return make((char) (0xE230 + rows(size)), legacy); }
+    /** zelený panel pro hlasování */
+    public static Component vote(int size, String legacy) { return make((char) (0xE240 + rows(size)), legacy); }
+    /** dřevěný panel pro obchod */
+    public static Component shop(int size, String legacy) { return make((char) (0xE250 + rows(size)), legacy); }
     /** otevírání bedny se zvýrazněným výherním políčkem */
     public static Component crateOpen(String legacy) { return make('', legacy); }
 
@@ -23,6 +29,7 @@ public final class Gui {
         Component text = U.c(legacy);
         if (!enabled) return text;
         Component bg = Component.text("" + glyph + "").font(FONT).color(NamedTextColor.WHITE);
-        return bg.append(text.colorIfAbsent(NamedTextColor.WHITE));
+        // text NESMÍ být dítě pozadí, jinak zdědí font s obrázky (čtverečky)
+        return Component.text().append(bg).append(text.colorIfAbsent(NamedTextColor.WHITE)).build();
     }
 }

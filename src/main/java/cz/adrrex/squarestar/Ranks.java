@@ -41,12 +41,19 @@ public final class Ranks implements Listener {
     public Ranks(SquareStar pl) {
         this.pl = pl;
         Bukkit.getScheduler().runTaskTimer(pl, () -> { for (Player p : Bukkit.getOnlinePlayers()) tab(p); }, 40, 40);
-        file = new File(pl.getDataFolder(), "ranks.yml");
+        // ranky leží MIMO složku pluginu (hlavní složka serveru), aby přežily update/smazání plugins/SquareStar
+        file = new File(Bukkit.getWorldContainer(), "squarestar-ranks.yml");
+        File old = new File(pl.getDataFolder(), "ranks.yml");
+        if (!file.exists() && old.exists()) old.renameTo(file);
         data = YamlConfiguration.loadConfiguration(file);
     }
 
+    private static final org.bukkit.NamespacedKey PDC = new org.bukkit.NamespacedKey("squarestar", "rank");
+
     public Rank of(Player p) {
         String r = data.getString("players." + p.getUniqueId());
+        // záloha přímo v datech hráče (přežije i smazání souboru s ranky)
+        if (r == null) r = p.getPersistentDataContainer().get(PDC, org.bukkit.persistence.PersistentDataType.STRING);
         if (r == null) return Rank.HRAC;
         try { return Rank.valueOf(r); } catch (IllegalArgumentException e) { return Rank.HRAC; }
     }
@@ -54,6 +61,8 @@ public final class Ranks implements Listener {
     public void set(Player p, Rank r) {
         data.set("players." + p.getUniqueId(), r == Rank.HRAC ? null : r.name());
         data.set("names." + p.getUniqueId(), p.getName());
+        if (r == Rank.HRAC) p.getPersistentDataContainer().remove(PDC);
+        else p.getPersistentDataContainer().set(PDC, org.bukkit.persistence.PersistentDataType.STRING, r.name());
         try { data.save(file); } catch (IOException e) { pl.getLogger().warning("Nelze ulozit ranks.yml: " + e.getMessage()); }
         apply(p);
     }

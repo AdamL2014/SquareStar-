@@ -22,7 +22,7 @@ lobby:
     title: true
     title-scale: 1.4
     title-style: model   # model = hezké 3D logo, blocks = kostičky
-    logo-size: 30
+    logo-size: 28
     rocket: true
     # rychlost rakety (vic = rychleji)
     rocket-speed: 0.03
