@@ -65,6 +65,7 @@ public final class LobbyFx implements Listener {
         if (pl.getConfig().getBoolean("lobby.fx.title", true)) spawnTitle();
         if (pl.getConfig().getBoolean("lobby.fx.rocket", true)) spawnRocket();
         spawnNpcs();
+        if (pl.getConfig().getBoolean("lobby.vidrift-npc", true)) spawnVidrift();
         spawnSpinners();
         if (pl.getConfig().getBoolean("lobby.fx.earth", true)) spawnEarth();
     }
@@ -362,6 +363,11 @@ public final class LobbyFx implements Listener {
                 trail(tail);
                 if (tick % 4 == 0) pl.mars.spawnParticle(Particle.LAVA, tail, 1, 0.2, 0.2, 0.2, 0, null, true);
             }
+            if (tick % 3 == 0 && vidrift != null && vidrift.isValid()) {
+                Player near = null; double best = 144;
+                for (Player p : pl.mars.getPlayers()) { double d = p.getLocation().distanceSquared(vidrift.getLocation()); if (d < best) { best = d; near = p; } }
+                if (near != null) vidrift.lookAt(near.getEyeLocation().getX(), near.getEyeLocation().getY(), near.getEyeLocation().getZ(), io.papermc.paper.entity.LookAnchor.EYES);
+            }
             if (tick % 3 == 0) for (Mannequin m : npcs.values()) {
                 if (!m.isValid()) continue;
                 Player near = null; double best = 100;
@@ -413,6 +419,57 @@ public final class LobbyFx implements Listener {
         }, 40, 2);
     }
 
+    // ---------------- VidRift postava: „podívej se na film" ----------------
+    private Mannequin vidrift;
+    private void spawnVidrift() {
+        Location l = new Location(pl.mars, 16.5, Lobby.Y + 1, 12.5);
+        l.setDirection(new Vector(-16, 0, -12));
+        vidrift = pl.mars.spawn(l, Mannequin.class, e -> {
+            e.customName(U.c("&b&lVid&d&lRift"));
+            e.setCustomNameVisible(true);
+            e.setDescription(U.c("&fPodívej se na film! &8| &eKlikni"));
+            e.setImmovable(true);
+            e.setAI(false);
+            e.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
+                    .skinPatch(sp -> sp.body(net.kyori.adventure.key.Key.key("squarestar", "entity/vidrift_skin"))).build());
+            e.getEquipment().setItemInMainHand(new ItemStack(Material.SPYGLASS));
+            e.addScoreboardTag(TAG);
+            e.addScoreboardTag("ss_npc_vidrift");
+        });
+        // neonová cedule nad postavou
+        pl.mars.spawn(l.clone().add(0, 3.3, 0), TextDisplay.class, d -> {
+            d.text(U.c("&b&l▶ &f&lPODÍVEJ SE NA FILM &d&l◀\n&7filmy &8• &7kanály &8• &7hry\n&b&nvidriftvideo.netlify.app"));
+            d.setBillboard(Display.Billboard.CENTER);
+            d.setBackgroundColor(Color.fromARGB(200, 7, 6, 13));
+            d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(1.3f, 1.3f, 1.3f), new AxisAngle4f()));
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.addScoreboardTag(TAG); d.setPersistent(false);
+        });
+        // „kino plátno" za postavou
+        Location sc = l.clone().add(2.2, 2.6, 1.6);
+        sc.setYaw(l.getYaw()); sc.setPitch(0);
+        pl.mars.spawn(sc, TextDisplay.class, d -> {
+            d.text(U.c("&b&l▶\n&d&lVidRift"));
+            d.setBackgroundColor(Color.fromARGB(235, 7, 6, 13));
+            d.setLineWidth(60);
+            d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(3.2f, 3.2f, 3.2f), new AxisAngle4f()));
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.addScoreboardTag(TAG); d.setPersistent(false);
+        });
+        pl.mars.getBlockAt(l.getBlockX(), Lobby.Y, l.getBlockZ()).setType(Material.PURPLE_GLAZED_TERRACOTTA, false);
+    }
+    private void openVidrift(Player p) {
+        String url = pl.getConfig().getString("ranks.vidrift-url", "https://vidriftvideo.netlify.app");
+        boolean en = Lang.en(p);
+        p.sendMessage(U.c("&8» &b&lVid&d&lRift &7" + (en ? "Czech video platform: movies, channels and games." : "česká video platforma: filmy, kanály a hry.")));
+        p.sendMessage(U.c(en ? "&e&l▶ CLICK HERE &7to open VidRift" : "&e&l▶ KLIKNI SEM &7a otevři VidRift")
+                .clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl(url))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c("&b" + url))));
+        U.title(p, "&b&lVid&d&lRift", en ? "&7Watch a movie! Link is in chat" : "&7Podívej se na film! Odkaz je v chatu");
+        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 1f, 1.4f);
+        if (vidrift != null && vidrift.isValid()) { vidrift.swingMainHand(); pl.mars.spawnParticle(Particle.NOTE, vidrift.getLocation().add(0, 2.3, 0), 5, 0.4, 0.2, 0.4, 1); }
+    }
+
     // ---------------- interakce ----------------
     private GameType npcGame(Entity e) {
         for (String t : e.getScoreboardTags()) if (t.startsWith("ss_npc_game:")) return GameType.valueOf(t.substring(12));
@@ -421,6 +478,7 @@ public final class LobbyFx implements Listener {
 
     @EventHandler public void clickNpc(PlayerInteractEntityEvent e) {
         if (e.getHand() != EquipmentSlot.HAND) return;
+        if (e.getRightClicked().getScoreboardTags().contains("ss_npc_vidrift")) { e.setCancelled(true); openVidrift(e.getPlayer()); return; }
         GameType g = npcGame(e.getRightClicked());
         if (g == null) return;
         e.setCancelled(true);
@@ -428,6 +486,7 @@ public final class LobbyFx implements Listener {
     }
 
     @EventHandler public void hitNpc(EntityDamageByEntityEvent e) {
+        if (e.getEntity().getScoreboardTags().contains("ss_npc_vidrift")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) openVidrift(p); return; }
         GameType g = npcGame(e.getEntity());
         if (g == null) return;
         e.setCancelled(true);

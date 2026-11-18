@@ -20,6 +20,8 @@ lobby:
   double-jump: true
   # úvodní animace (kamera přeletí Mars) při každém připojení, přeskočit = Shift
   intro: true
+  # VidRift postava v lobby („podívej se na film")
+  vidrift-npc: true
   fx:
     title: true
     title-scale: 1.4
