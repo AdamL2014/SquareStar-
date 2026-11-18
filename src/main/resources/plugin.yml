@@ -1,0 +1,14 @@
+name: SquareStar
+version: '1.0.0'
+main: cz.adrrex.squarestar.SquareStar
+api-version: '1.21.11'
+author: AdrrexStudio
+description: Minihry na Marsu s nizkou gravitaci
+commands:
+  ss:
+    description: SquareStar minihry
+    aliases: [squarestar, hry]
+permissions:
+  squarestar.admin:
+    description: Admin prikazy (give, key, rebuildlobby)
+    default: op

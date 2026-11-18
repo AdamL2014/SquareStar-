@@ -1,0 +1,61 @@
+# ============================================
+#   SquareStar - minihry na Marsu (AdrrexStudio)
+# ============================================
+
+gravity:
+  enabled: true
+  # normalni Minecraft = 0.08 | Mars ~ 0.03 | Mesic ~ 0.013
+  value: 0.03
+  # z jake vysky se nebere poskozeni padem
+  safe-fall-distance: 12
+  # dalsi svety, kde ma byt nizka gravitace (napr. "world")
+  extra-worlds: []
+
+lobby:
+  # po pripojeni posle hrace na Mars lobby
+  force-on-join: true
+
+# odpocet pred startem hry (sekundy)
+countdown: 15
+# kolik her muze bezet najednou (na slabem free serveru dej 2-3)
+max-arenas: 4
+# kolik bloku za tick se stavi pri tvorbe map (mensi = mene lagu)
+blocks-per-tick: 6000
+
+# odmena za vyhru
+win-reward:
+  key: common
+  amount: 1
+
+# BEDNY - zatim bez placeni. Klice: vyhry v minihrach nebo /ss key <hrac> <typ> [pocet]
+# odmena = "druh:id:pocet:vaha"   druh: item (Minecraft item) | space (vesmirny item) | key (klic od bedny)
+crates:
+  common:
+    name: "&a&lObyčejná bedna"
+    location: [-4, 100, 9]
+    rewards:
+      - "space:space_ration:8:30"
+      - "space:moon_rock:4:25"
+      - "space:meteor_grenade:3:20"
+      - "item:EXPERIENCE_BOTTLE:16:15"
+      - "space:star_shard:1:8"
+      - "key:rare:1:2"
+  rare:
+    name: "&9&lVzácná bedna"
+    location: [0, 100, 9]
+    rewards:
+      - "space:jetpack:1:25"
+      - "space:gravity_boots:1:20"
+      - "space:oxygen_helmet:1:20"
+      - "space:star_shard:3:20"
+      - "item:DIAMOND:3:10"
+      - "key:legendary:1:5"
+  legendary:
+    name: "&6&l✦ Legendární bedna"
+    location: [4, 100, 9]
+    rewards:
+      - "space:laser_pistol:1:30"
+      - "space:plasma_sword:1:30"
+      - "space:star_shard:10:25"
+      - "item:NETHERITE_INGOT:1:10"
+      - "item:ELYTRA:1:5"
