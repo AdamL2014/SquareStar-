@@ -61,7 +61,7 @@ public final class LobbyFx implements Listener {
 
     public void spawnAll() {
         for (Entity e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(TAG)) e.remove();
-        title.clear(); rocket.clear(); spinners.clear(); npcs.clear();
+        title.clear(); rocket.clear(); trail.clear(); spinners.clear(); npcs.clear();
         if (pl.getConfig().getBoolean("lobby.fx.title", true)) spawnTitle();
         if (pl.getConfig().getBoolean("lobby.fx.rocket", true)) spawnRocket();
         spawnNpcs();
@@ -214,6 +214,33 @@ public final class LobbyFx implements Listener {
         rocket.add(d);
     }
 
+    // ---- svítící ohnivá stopa za raketou (vidět z dálky, plynule mizí) ----
+    private final List<BlockDisplay> trail = new ArrayList<>();
+    private int trailIdx = 0;
+    private static final Material[] TRAIL = {Material.SHROOMLIGHT, Material.ORANGE_CONCRETE, Material.ORANGE_STAINED_GLASS, Material.RED_STAINED_GLASS};
+    private void trail(Location at) {
+        if (trail.isEmpty()) for (int i = 0; i < 24; i++) {
+            final int k = i;
+            trail.add(pl.mars.spawn(at, BlockDisplay.class, e -> {
+                e.setBlock(TRAIL[k % TRAIL.length].createBlockData());
+                e.setBrightness(new Display.Brightness(15, 15));
+                e.setViewRange(8f);
+                e.addScoreboardTag(TAG); e.setPersistent(false);
+            }));
+        }
+        BlockDisplay d = trail.get(trailIdx++ % trail.size());
+        if (!d.isValid()) return;
+        float s = 1.8f;
+        d.teleport(at);
+        d.setInterpolationDelay(0); d.setInterpolationDuration(0);
+        d.setTransformation(new Transformation(new Vector3f(-s / 2, -s / 2, -s / 2), new AxisAngle4f(), new Vector3f(s, s, s), new AxisAngle4f()));
+        Bukkit.getScheduler().runTaskLater(pl, () -> {
+            if (!d.isValid()) return;
+            d.setInterpolationDelay(0); d.setInterpolationDuration(40);
+            d.setTransformation(new Transformation(new Vector3f(0, 0, 0), new AxisAngle4f((float) Math.random() * 6, 1, 1, 0), new Vector3f(0.05f, 0.05f, 0.05f), new AxisAngle4f()));
+        }, 2);
+    }
+
     private Location orbitPos(double t) {
         double rx = 52, rz = 18;
         return new Location(pl.mars, 0.5 + Math.cos(t) * rx, Lobby.Y + 30 + Math.sin(t * 2) * 5, 44.5 + Math.sin(t) * rz);
@@ -290,7 +317,7 @@ public final class LobbyFx implements Listener {
         for (Crates.Type t : pl.crates.types.values()) {
             if (t.loc() == null) continue;
             Material icon = icons[Math.min(i++, icons.length - 1)];
-            ItemDisplay d = pl.mars.spawn(t.loc().clone().add(0.5, 1.7, 0.5), ItemDisplay.class, e -> {
+            ItemDisplay d = pl.mars.spawn(t.loc().clone().add(0.5, 2.5, 0.5), ItemDisplay.class, e -> {
                 e.setItemStack(new ItemStack(icon));
                 e.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(0.9f, 0.9f, 0.9f), new AxisAngle4f()));
                 e.setBrightness(new Display.Brightness(15, 15));
@@ -312,12 +339,14 @@ public final class LobbyFx implements Listener {
                 p.setDirection(next.toVector().subtract(p.toVector()));
                 for (Display d : rocket) if (d.isValid()) d.teleport(p);
                 Vector dir = p.getDirection();
-                Location tail = p.clone().add(dir.clone().multiply(-6.5));
+                Location tail = p.clone().add(dir.clone().multiply(-8));
                 Vector push = dir.clone().multiply(-0.35);
-                for (int i = 0; i < 6; i++) pl.mars.spawnParticle(Particle.FLAME, tail, 0, push.getX() + (Math.random() - 0.5) * 0.15, push.getY() + (Math.random() - 0.5) * 0.15, push.getZ() + (Math.random() - 0.5) * 0.15, 1);
-                pl.mars.spawnParticle(Particle.SOUL_FIRE_FLAME, tail, 3, 0.25, 0.25, 0.25, 0.03);
-                pl.mars.spawnParticle(Particle.LARGE_SMOKE, tail.clone().add(dir.clone().multiply(-2)), 2, 0.3, 0.3, 0.3, 0.01);
-                if (tick % 4 == 0) pl.mars.spawnParticle(Particle.LAVA, tail, 1, 0.2, 0.2, 0.2, 0);
+                // force = true -> částice vidět i z dálky (až ~512 bloků)
+                for (int i = 0; i < 6; i++) pl.mars.spawnParticle(Particle.FLAME, tail, 0, push.getX() + (Math.random() - 0.5) * 0.15, push.getY() + (Math.random() - 0.5) * 0.15, push.getZ() + (Math.random() - 0.5) * 0.15, 1, null, true);
+                pl.mars.spawnParticle(Particle.SOUL_FIRE_FLAME, tail, 3, 0.25, 0.25, 0.25, 0.03, null, true);
+                pl.mars.spawnParticle(Particle.LARGE_SMOKE, tail.clone().add(dir.clone().multiply(-2)), 2, 0.3, 0.3, 0.3, 0.01, null, true);
+                trail(tail);
+                if (tick % 4 == 0) pl.mars.spawnParticle(Particle.LAVA, tail, 1, 0.2, 0.2, 0.2, 0, null, true);
             }
             if (tick % 3 == 0) for (Mannequin m : npcs.values()) {
                 if (!m.isValid()) continue;
@@ -351,6 +380,7 @@ public final class LobbyFx implements Listener {
             if (tick % 20 == 0) {
                 float es = (float) pl.getConfig().getDouble("lobby.fx.earth-size", 90);
                 logoPose(tick / 20.0 * 0.6);
+                pl.crates.idle();
                 earthSpin += (float) Math.toRadians(8); cloudSpin += (float) Math.toRadians(11);
                 rotate(earth, earthSpin, es); rotate(clouds, cloudSpin, es * 1.06f);
                 spin += (float) Math.toRadians(120);
