@@ -176,7 +176,7 @@ public final class Station extends Game {
             Player p = list.get(i);
             if (i < n) {
                 seekers.add(p);
-                p.teleport(loc(0.5, 1, 0.5));
+                p.teleport(randomSpot());
                 p.setWalkSpeed(0f);
                 p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, HIDE_TIME * 20, 0, false, false));
                 U.title(p, "&c&lHLEDÁŠ", "&7Za " + HIDE_TIME + " s tě pustíme. Najdi všechny bloky!");
