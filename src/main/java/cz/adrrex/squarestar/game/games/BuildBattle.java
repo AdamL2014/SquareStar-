@@ -35,7 +35,10 @@ public final class BuildBattle extends Game {
         owners.clear(); owners.addAll(players);
         int n = owners.size();
         for (int i = 0; i < n; i++) {
-            int cx = ox + (int) Math.round((i - (n - 1) / 2.0) * SPACING), cz = oz;
+            // pozemky v mřížce (max 4 v řadě), ne v jedné dlouhé čáře
+            int cols = Math.min(n, 4), rowsN = (n + 3) / 4, col = i % 4, row = i / 4;
+            int inRow = row == rowsN - 1 ? n - row * 4 : cols;
+            int cx = ox + (int) Math.round((col - (inRow - 1) / 2.0) * SPACING), cz = oz + (int) Math.round((row - (rowsN - 1) / 2.0) * SPACING);
             plots.put(owners.get(i), new int[]{cx, cz});
             for (int x = -HALF; x <= HALF; x++) for (int z = -HALF; z <= HALF; z++) {
                 b.set(cx + x, oy, cz + z, (x + z) % 2 == 0 ? Material.SMOOTH_QUARTZ : Material.WHITE_CONCRETE);

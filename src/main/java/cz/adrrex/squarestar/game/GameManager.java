@@ -249,4 +249,22 @@ public final class GameManager implements Listener {
         if (g == null || !g.allowFlow(e.getToBlock())) { e.setCancelled(true); return; }
         g.markPlaced(e.getToBlock());
     }
+
+    // ---- růst stromů/hub/trávy, tvorba bloků: zaznamenat, aby se po hře uklidily ----
+    @EventHandler(ignoreCancelled = true) public void grow(org.bukkit.event.world.StructureGrowEvent e) {
+        Game g = gameAt(e.getLocation());
+        if (g == null) return;
+        e.getBlocks().removeIf(st -> gameAt(st.getLocation()) != g);
+        for (org.bukkit.block.BlockState st : e.getBlocks()) g.markPlaced(st.getBlock());
+    }
+    @EventHandler(ignoreCancelled = true) public void spread(org.bukkit.event.block.BlockSpreadEvent e) { track(e.getBlock()); }
+    @EventHandler(ignoreCancelled = true) public void form(org.bukkit.event.block.BlockFormEvent e) { track(e.getBlock()); }
+    @EventHandler(ignoreCancelled = true) public void growB(org.bukkit.event.block.BlockGrowEvent e) { track(e.getBlock()); }
+    @EventHandler(ignoreCancelled = true) public void fert(org.bukkit.event.block.BlockFertilizeEvent e) {
+        for (org.bukkit.block.BlockState st : e.getBlocks()) track(st.getBlock());
+    }
+    private void track(org.bukkit.block.Block b) {
+        Game g = gameAt(b.getLocation());
+        if (g != null) g.markPlaced(b);
+    }
 }
