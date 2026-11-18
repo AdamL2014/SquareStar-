@@ -12,9 +12,14 @@ public enum GameType {
     MURDER("Murder Mystery", Material.IRON_SWORD, 3, 12, "Mezi vámi je vrah. Detektiv ho musí najít."),
     HIDESEEK("Schovávaná", Material.BARREL, 2, 16, "Proměň se v blok a schovej se před hledačem."),
     LUCKYTOWER("Lucky Tower", Material.GOLD_BLOCK, 2, 12, "Stojíš na věži a dostáváš náhodné itemy. Shoď ostatní!"),
-    PVP("PvP Aréna", Material.DIAMOND_SWORD, 2, 16, "Boj všichni proti všem. Máš 3 životy a vybavení."),
+    PVP("PvP: Všichni proti všem", Material.DIAMOND_SWORD, 2, 16, "Boj všichni proti všem. Máš 3 životy a vybavení."),
+    PVP1V1("PvP: 1v1", Material.IRON_SWORD, 2, 2, "Souboj jeden na jednoho. 3 životy."),
+    PVP5V5("PvP: 5v5", Material.SHIELD, 2, 10, "Dva týmy po 5. Spoluhráče nezraníš."),
+    PVP10V10("PvP: 10v10", Material.NETHERITE_SWORD, 2, 20, "Velká bitva dvou týmů po 10."),
     SUMO("Sumo", Material.SLIME_BALL, 2, 10, "Vystrč soupeře z talíře. Jen odhazování, žádné poškození."),
-    BUILDBATTLE("Build Battle", Material.BRICKS, 2, 12, "Postav téma za 5 minut. Pak všichni hlasují.");
+    BUILDBATTLE("Build Battle", Material.BRICKS, 2, 12, "Postav téma za 5 minut. Pak všichni hlasují."),
+    ZOMBIES("Vesmírní zombíci", Material.ZOMBIE_HEAD, 1, 8, "Tým brání reaktor před vlnami mimozemských zombíků."),
+    SPEEDRUN("Speedrun: Free Edition", Material.WHITE_WOOL, 1, 8, "Levný vlněný svět, moby jsou jen hlavy. Posbírej díly a odleť raketou!");
 
     public final String display; public final Material icon; public final int min, max; public final String desc;
     GameType(String d, Material i, int min, int max, String desc) { display = d; icon = i; this.min = min; this.max = max; this.desc = desc; }
@@ -30,8 +35,13 @@ public enum GameType {
             case HIDESEEK -> new Station(gm, slot, true);
             case LUCKYTOWER -> new LuckyTower(gm, slot);
             case PVP -> new PvpArena(gm, slot, false);
+            case PVP1V1 -> new PvpArena(gm, slot, this, 1);
+            case PVP5V5 -> new PvpArena(gm, slot, this, 5);
+            case PVP10V10 -> new PvpArena(gm, slot, this, 10);
             case SUMO -> new PvpArena(gm, slot, true);
             case BUILDBATTLE -> new BuildBattle(gm, slot);
+            case ZOMBIES -> new Zombies(gm, slot);
+            case SPEEDRUN -> new SpeedrunFE(gm, slot);
         };
     }
 }

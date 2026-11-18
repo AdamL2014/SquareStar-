@@ -45,7 +45,7 @@ public final class Motd implements Listener {
         } else {
             List<String> tips = pl.getConfig().getStringList("motd.tips");
             if (tips.isEmpty()) tips = List.of(
-                    "  <aqua>✦ 11 miniher</aqua> <dark_gray>•</dark_gray> <gold>nízká gravitace</gold> <dark_gray>•</dark_gray> <light_purple>bedny</light_purple>",
+                    "  <aqua>✦ 16 miniher</aqua> <dark_gray>•</dark_gray> <gold>nízká gravitace</gold> <dark_gray>•</dark_gray> <light_purple>bedny</light_purple>",
                     "  <yellow>NOVÉ:</yellow> <white>3D lobby, Země a raketa</white> <dark_gray>•</dark_gray> <green>připoj se!</green>",
                     "  <gold>Bed Wars</gold> <dark_gray>•</dark_gray> <aqua>SkyWars</aqua> <dark_gray>•</dark_gray> <red>Murder</red> <dark_gray>•</dark_gray> <green>Build Battle</green>");
             bottom = tips.get(tip++ % tips.size());

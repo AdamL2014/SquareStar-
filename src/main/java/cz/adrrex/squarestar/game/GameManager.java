@@ -45,8 +45,8 @@ public final class GameManager implements Listener {
 
     public void openMenu(Player p) {
         MenuHolder h = new MenuHolder();
-        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.title(27, cz.adrrex.squarestar.Lang.t(p, "&f&l✦ Minihry na Marsu")));
-        int[] pos = {10, 11, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24};
+        h.inv = Bukkit.createInventory(h, 45, cz.adrrex.squarestar.Gui.title(45, cz.adrrex.squarestar.Lang.t(p, "&f&l✦ Minihry na Marsu")));
+        int[] pos = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
         GameType[] t = GameType.values();
         for (int i = 0; i < t.length; i++) {
             GameType g = t[i];
@@ -56,6 +56,10 @@ public final class GameManager implements Listener {
                     "&7Hráči: &f" + g.min + "–" + g.max, "&7Čeká: &a" + waiting + " &8| &7Celkem hraje: &e" + playing, "", "&e▶ Klikni pro připojení");
             h.inv.setItem(pos[i], U.tag(it, "ss_menu", g.name()));
         }
+        // Redstone týden (trvalý režim, ne kolo minihry)
+        boolean vote = cz.adrrex.squarestar.RedstoneWeek.voting();
+        h.inv.setItem(40, U.tag(U.item(Material.REDSTONE_BLOCK, 1, "&c&l⚡ Redstone týden", "&7Každý týden nové redstone téma.", "&7Postav nápad na svém pozemku,", "&7v neděli se hlasuje o nejlepší!", "",
+                "&7Téma: &e" + pl.redstone.theme(), vote ? "&d&lDnes se hlasuje!" : "&7Hlasování: &fneděle", "", "&e▶ Klikni pro vstup"), "ss_menu", "REDSTONE"));
         p.openInventory(h.inv);
     }
 
@@ -124,7 +128,11 @@ public final class GameManager implements Listener {
         if (!(e.getInventory().getHolder() instanceof MenuHolder)) return;
         e.setCancelled(true);
         String t = U.tagOf(e.getCurrentItem(), "ss_menu");
-        if (t != null && e.getWhoClicked() instanceof Player p) { p.closeInventory(); join(p, GameType.valueOf(t)); }
+        if (t != null && e.getWhoClicked() instanceof Player p) {
+            p.closeInventory();
+            if (t.equals("REDSTONE")) { if (cz.adrrex.squarestar.RedstoneWeek.voting()) pl.redstone.visit(p, 0); else pl.redstone.join(p); }
+            else join(p, GameType.valueOf(t));
+        }
     }
 
     @EventHandler public void quit(PlayerQuitEvent e) { Game g = map.get(e.getPlayer()); if (g != null) g.removePlayer(e.getPlayer(), false); }
@@ -267,4 +275,6 @@ public final class GameManager implements Listener {
         Game g = gameAt(b.getLocation());
         if (g != null) g.markPlaced(b);
     }
+    /** levné moby (slizy pod hlavami) se po smrti nedělí */
+    @EventHandler public void slimeSplit(org.bukkit.event.entity.SlimeSplitEvent e) { if (pl.isArena(e.getEntity().getWorld())) e.setCancelled(true); }
 }

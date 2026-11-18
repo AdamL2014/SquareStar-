@@ -32,6 +32,11 @@ public final class Commands implements CommandExecutor, TabCompleter {
                 pl.motd.setMaintenance(on);
                 s.sendMessage(U.c(on ? "&c&lÚdržba ZAPNUTA &7- připojí se jen tým." : "&a&lÚdržba VYPNUTA &7- server je otevřený."));
             }
+            case "redstone", "rs" -> {
+                if (p == null) return true;
+                if (a.length > 1 && (a[1].equalsIgnoreCase("hlasovat") || a[1].equalsIgnoreCase("vote"))) pl.redstone.visit(p, 0);
+                else pl.redstone.join(p);
+            }
             case "intro" -> { if (p != null && pl.games.of(p) == null) pl.intro.play(p); }
             case "give" -> {
                 if (!admin(s)) return true;

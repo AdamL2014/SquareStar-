@@ -126,6 +126,7 @@ public final class Lobby implements Listener {
         place(p, 4, pl.cosmetics.menuItem());
         place(p, 8, U.tag(U.item(Material.ENDER_EYE, 1, "&b&lZpět na spawn", "&7Teleport na náměstí"), "ss_lobby", "spawn"));
         pl.cosmetics.apply(p);
+        pl.levels.showBar(p);
     }
 
     /** dá lobby item do slotu; co tam bylo (klíče, odměny), se jen přesune jinam */

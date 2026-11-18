@@ -182,30 +182,23 @@ public final class LobbyFx implements Listener {
     // ---------------- raketa ----------------
     private void spawnRocket() {
         Location c = new Location(pl.mars, 0.5, Lobby.Y + 30, 44.5);
-        part(c, Material.WHITE_CONCRETE, -0.45f, -0.45f, -1.5f, 0.9f, 0.9f, 3f);
-        part(c, Material.RED_CONCRETE, -0.35f, -0.35f, 1.5f, 0.7f, 0.7f, 0.6f);
-        part(c, Material.RED_CONCRETE, -0.2f, -0.2f, 2.1f, 0.4f, 0.4f, 0.5f);
-        part(c, Material.LIGHT_BLUE_STAINED_GLASS, -0.25f, 0.42f, 0.4f, 0.5f, 0.08f, 0.5f);
-        part(c, Material.RED_CONCRETE, -0.05f, 0.45f, -1.5f, 0.1f, 0.6f, 0.8f);
-        part(c, Material.RED_CONCRETE, -0.05f, -1.05f, -1.5f, 0.1f, 0.6f, 0.8f);
-        part(c, Material.RED_CONCRETE, 0.45f, -0.05f, -1.5f, 0.6f, 0.1f, 0.8f);
-        part(c, Material.RED_CONCRETE, -1.05f, -0.05f, -1.5f, 0.6f, 0.1f, 0.8f);
-        part(c, Material.SHROOMLIGHT, -0.3f, -0.3f, -2.1f, 0.6f, 0.6f, 0.6f);
+        // detailní 3D model rakety z resource packu (osmiboký trup, okénka, ploutve, motor)
+        ItemStack it = new ItemStack(Material.PAPER);
+        var meta = it.getItemMeta(); meta.setItemModel(new NamespacedKey("squarestar", "rocket_big")); it.setItemMeta(meta);
+        rocket.add(pl.mars.spawn(c, ItemDisplay.class, e -> {
+            e.setItemStack(it);
+            e.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.NONE);
+            // model stojí svisle (+Y) -> otočit, aby špička mířila dopředu (+Z)
+            e.setTransformation(new Transformation(new Vector3f(0, 0, -1.0f), new Quaternionf().rotateX((float) Math.toRadians(90)), new Vector3f(4f, 4f, 4f), new Quaternionf()));
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setTeleportDuration(3); e.setViewRange(8f);
+            e.addScoreboardTag(TAG); e.setPersistent(false);
+        }));
         // plameny otočené dozadu (oheň jinak míří nahoru)
         flame(c, Material.FIRE, -0.45f, -0.45f, -2.1f, 0.9f, 0.9f, 1.4f);
         flame(c, Material.FIRE, -0.3f, -0.3f, -2.4f, 0.6f, 0.6f, 1.9f);
         flame(c, Material.SOUL_FIRE, 0.48f, -0.2f, -2.0f, 0.36f, 0.4f, 0.9f);
         flame(c, Material.SOUL_FIRE, -0.84f, -0.2f, -2.0f, 0.36f, 0.4f, 0.9f);
-        part(c, Material.RED_CONCRETE, -0.47f, -0.47f, 0.9f, 0.94f, 0.94f, 0.15f);
-        part(c, Material.RED_CONCRETE, -0.47f, -0.47f, -0.6f, 0.94f, 0.94f, 0.12f);
-        part(c, Material.LIGHT_BLUE_STAINED_GLASS, -0.2f, 0.42f, -0.3f, 0.4f, 0.08f, 0.4f);
-        part(c, Material.GRAY_CONCRETE, -0.38f, -0.38f, -1.8f, 0.76f, 0.76f, 0.3f);
-        part(c, Material.LIGHT_GRAY_CONCRETE, 0.5f, -0.22f, -1.7f, 0.32f, 0.44f, 1.5f);
-        part(c, Material.LIGHT_GRAY_CONCRETE, -0.82f, -0.22f, -1.7f, 0.32f, 0.44f, 1.5f);
-        part(c, Material.RED_CONCRETE, 0.5f, -0.22f, -0.2f, 0.32f, 0.44f, 0.3f);
-        part(c, Material.RED_CONCRETE, -0.82f, -0.22f, -0.2f, 0.32f, 0.44f, 0.3f);
-        part(c, Material.ORANGE_CONCRETE, 0.55f, -0.17f, -2.0f, 0.22f, 0.34f, 0.3f);
-        part(c, Material.ORANGE_CONCRETE, -0.77f, -0.17f, -2.0f, 0.22f, 0.34f, 0.3f);
     }
 
     /** blok ohně položený naležato: plameny míří do -Z (za raketu) */
@@ -313,8 +306,10 @@ public final class LobbyFx implements Listener {
         GameType[] t = GameType.values();
         int n = t.length;
         for (int i = 0; i < n; i++) {
-            double a = Math.toRadians(200 + 140.0 * i / Math.max(1, n - 1));
-            double x = Math.cos(a) * 13, z = Math.sin(a) * 13;
+            // půlkruh za spawnem; víc her = větší poloměr, ať stojí NPC od sebe
+            double a = Math.toRadians(185 + 170.0 * i / Math.max(1, n - 1));
+            double r = Math.max(13, n * 0.95);
+            double x = Math.cos(a) * r, z = Math.sin(a) * r;
             Location l = new Location(pl.mars, x + 0.5, Lobby.Y + 1, z + 0.5);
             l.setDirection(new Vector(-x, 0, -z));
             GameType g = t[i];

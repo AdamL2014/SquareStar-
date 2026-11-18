@@ -18,13 +18,21 @@ import java.util.Map;
 /** PvP Aréna (3 životy, vybavení) a Sumo (jen odhazování z talíře). */
 public final class PvpArena extends Game {
     private final boolean sumo;
+    /** 0 = všichni proti všem, 1 = 1v1, 5 = 5v5, 10 = 10v10 (dva týmy) */
+    private final int teamSize;
+    private final Map<Player, Integer> team = new HashMap<>();
+    private static final String[] TN = {"&c&lČervení", "&9&lModří"};
+    private static final Color[] TC = {Color.RED, Color.BLUE};
     private final Map<Player, Integer> lives = new HashMap<>();
     private static final int R = 24, SR = 7, LIVES = 3;
 
-    public PvpArena(GameManager gm, int slot, boolean sumo) {
-        super(gm, sumo ? GameType.SUMO : GameType.PVP, slot);
-        this.sumo = sumo;
+    public PvpArena(GameManager gm, int slot, boolean sumo) { this(gm, slot, sumo ? GameType.SUMO : GameType.PVP, 0); }
+    public PvpArena(GameManager gm, int slot, GameType type, int teamSize) {
+        super(gm, type, slot);
+        this.sumo = type == GameType.SUMO;
+        this.teamSize = teamSize;
     }
+    private boolean teams() { return teamSize >= 5; }
 
     @Override public List<String> maps() { return sumo ? List.of("Měsíční talíř", "Rudý talíř") : List.of("Koloseum", "Kráter"); }
 
@@ -91,9 +99,20 @@ public final class PvpArena extends Game {
 
     @Override protected void start() {
         int i = 0;
-        for (Player p : players) {
+        List<Player> order = new java.util.ArrayList<>(players);
+        java.util.Collections.shuffle(order, rnd);
+        for (Player p : order) {
             lives.put(p, sumo ? 1 : LIVES);
-            p.teleport(spot(i++, players.size()));
+            if (teams()) {
+                int t = i % 2; team.put(p, t);
+                // tým 0 na jedné straně, tým 1 na druhé
+                double a = (t == 0 ? 0 : Math.PI) + (i / 2 - order.size() / 4.0) * 0.18;
+                Location l = U.center(w, ox + (int) Math.round(Math.cos(a) * 17), oy + (map == 1 ? 3 : 0) + 1, oz + (int) Math.round(Math.sin(a) * 17));
+                l.setDirection(new Vector(-(l.getX() - ox), 0, -(l.getZ() - oz)));
+                p.teleport(l);
+                U.title(p, TN[t], "&7Tvůj tým");
+                i++;
+            } else p.teleport(spot(i++, order.size()));
             if (!sumo) kit(p);
         }
         broadcast(sumo ? "&eVystrč ostatní z talíře! Poslední nahoře vyhrává." : "&eKaždý má &c3 životy&e. Jetpack a granáty jsou v inventáři!");
@@ -101,7 +120,12 @@ public final class PvpArena extends Game {
 
     private void kit(Player p) {
         PlayerInventory inv = p.getInventory();
-        inv.setHelmet(unb(Material.IRON_HELMET)); inv.setChestplate(unb(Material.IRON_CHESTPLATE));
+        if (teams()) {
+            ItemStack h = new ItemStack(Material.LEATHER_HELMET);
+            var lm = (org.bukkit.inventory.meta.LeatherArmorMeta) h.getItemMeta(); lm.setColor(TC[team.getOrDefault(p, 0)]); lm.setUnbreakable(true); h.setItemMeta(lm);
+            inv.setHelmet(h);
+        } else inv.setHelmet(unb(Material.IRON_HELMET));
+        inv.setChestplate(unb(Material.IRON_CHESTPLATE));
         inv.setLeggings(unb(Material.IRON_LEGGINGS)); inv.setBoots(unb(Material.IRON_BOOTS));
         inv.setItem(0, unb(Material.IRON_SWORD));
         inv.setItem(1, unb(Material.BOW));
@@ -127,13 +151,39 @@ public final class PvpArena extends Game {
         if (killer != null && killer != p) killer.getInventory().addItem(new ItemStack(Material.GOLDEN_APPLE));
     }
 
+    /** v týmech se spoluhráči nezraňují */
+    @Override public boolean onPvp(Player victim, Player attacker, org.bukkit.event.entity.EntityDamageByEntityEvent e) {
+        if (teams() && team.get(victim) != null && team.get(victim).equals(team.get(attacker))) return false;
+        return true;
+    }
+
+    @Override protected void checkWin() {
+        if (!teams()) { super.checkWin(); return; }
+        if (state != State.RUNNING) return;
+        long t0 = alive.stream().filter(p -> team.getOrDefault(p, 0) == 0).count(), t1 = alive.size() - t0;
+        if (t0 == 0 || t1 == 0) {
+            int win = t0 > 0 ? 0 : 1;
+            broadcast("&6&l" + TN[win] + " &6&lvyhráli!");
+            end(players.stream().filter(p -> team.getOrDefault(p, -1) == win).toList());
+        }
+    }
+
     @Override protected String status(Player p) {
+        if (teams()) {
+            long t0 = alive.stream().filter(x -> team.getOrDefault(x, 0) == 0).count();
+            return TN[team.getOrDefault(p, 0)] + " &8| &cČervení: &f" + t0 + " &9Modří: &f" + (alive.size() - t0) + " &8| &c" + "❤".repeat(Math.max(0, lives.getOrDefault(p, 0)));
+        }
         String t = "&7Naživu: &a" + alive.size() + " &8| &7Čas: &e" + fmt(timeLimit() - time);
         return sumo ? t : "&c" + "❤".repeat(Math.max(0, lives.getOrDefault(p, 0))) + " &8| " + t;
     }
 
     @Override protected void timeUp() {
         if (sumo) { end(List.copyOf(alive)); return; }
+        if (teams()) {
+            int[] sc = new int[2]; for (Player p : alive) sc[team.getOrDefault(p, 0)] += lives.getOrDefault(p, 0);
+            int win = sc[0] >= sc[1] ? 0 : 1;
+            end(players.stream().filter(p -> team.getOrDefault(p, -1) == win).toList()); return;
+        }
         int best = alive.stream().mapToInt(p -> lives.getOrDefault(p, 0)).max().orElse(0);
         end(alive.stream().filter(p -> lives.getOrDefault(p, 0) == best).toList());
     }

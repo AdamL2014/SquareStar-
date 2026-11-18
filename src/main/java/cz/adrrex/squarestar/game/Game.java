@@ -244,6 +244,7 @@ public abstract class Game {
             U.title(p, win ? "&6&l✦ VÍTĚZSTVÍ ✦" : "&c&lKONEC HRY", "&7Vyhrál: &a" + names);
             U.sound(p, win ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_WITHER_DEATH, 1f);
         }
+        for (Player p : players) pl.levels.add(p, winners.contains(p) ? 100 : 25, winners.contains(p) ? "výhra" : "odehraná hra");
         String keyType = pl.getConfig().getString("win-reward.key", "common");
         int amount = pl.getConfig().getInt("win-reward.amount", 1);
         for (Player p : winners) {

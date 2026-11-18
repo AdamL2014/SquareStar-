@@ -21,6 +21,8 @@ public final class SquareStar extends JavaPlugin {
     public SpaceItems items;
     public Crates crates;
     public Intro intro;
+    public Levels levels;
+    public RedstoneWeek redstone;
     public Motd motd;
     public Lobby lobby;
     public Ranks ranks;
@@ -52,6 +54,9 @@ public final class SquareStar extends JavaPlugin {
         pm.registerEvents(ranks, this);
         pm.registerEvents(fx, this);
         pm.registerEvents(cosmetics, this);
+        levels = new Levels(this);
+        redstone = new RedstoneWeek(this);
+        pm.registerEvents(redstone, this);
         intro = new Intro(this);
         pm.registerEvents(intro, this);
         pm.registerEvents(new Gui(), this);

@@ -136,6 +136,30 @@ public final class Lang {
         a("Dvojskok:", "Double jump:"); a("skoč 2x", "jump twice"); a("Hra:", "Game:"); a("Lobby", "Lobby"); a("Online:", "Online:");
         a("Na tohle nemáš práva.", "You don't have permission."); a("Hráč není online.", "Player is not online.");
         a("Česká video platforma", "Czech video platform");
+        // --- nové hry a systémy (v3) ---
+        a("PvP: Všichni proti všem", "PvP: Free for all"); a("Souboj jeden na jednoho. 3 životy.", "One on one duel. 3 lives.");
+        a("Dva týmy po 5. Spoluhráče nezraníš.", "Two teams of 5. No friendly fire."); a("Velká bitva dvou týmů po 10.", "Big battle of two teams of 10.");
+        a("Vesmírní zombíci", "Space Zombies"); a("Tým brání reaktor před vlnami mimozemských zombíků.", "Your team defends the reactor from waves of alien zombies.");
+        a("Braňte reaktor!", "Defend the reactor!"); a("Mimozemští zombíci přijdou branami.", "Alien zombies come through the gates."); a("Přežijte", "Survive"); a(" vln", " waves");
+        a("Další vlna za", "Next wave in"); a("Reaktor", "Reactor"); a("Vlna", "Wave"); a("VLNA", "WAVE"); a("zvládnuta!", "cleared!"); a("Odměny jsou v inventáři", "Rewards are in your inventory");
+        a("Přichází mimozemský obr!", "An alien giant is coming!"); a("zombíků", "zombies"); a("Zombíci", "Zombies"); a("padl!", "fell!"); a("(oživí se po vlně)", "(respawns after the wave)");
+        a("PADL JSI", "YOU FELL"); a("Oživíš se po konci vlny", "You respawn when the wave ends"); a("Oživen!", "Revived!"); a("Zpátky do boje.", "Back to the fight.");
+        a("REAKTOR ZNIČEN!", "REACTOR DESTROYED!"); a("Mimozemšťané vyhráli.", "The aliens won."); a("ZÁKLADNA ZACHRÁNĚNA!", "BASE SAVED!"); a("Přežili jste všech", "You survived all");
+        a("Všichni padli!", "Everyone fell!"); a("Základna je ztracena.", "The base is lost."); a("Mimozemský obr", "Alien giant");
+        a("Speedrun: Free Edition", "Speedrun: Free Edition"); a("Levný vlněný svět, moby jsou jen hlavy. Posbírej díly a odleť raketou!", "A cheap wool world where mobs are just heads. Collect parts and fly away by rocket!");
+        a("Svět je z vlny, moby jsou jen hlavy.", "The world is made of wool, mobs are just heads."); a("Posbírej díly a odleť raketou", "Collect parts and fly away by rocket");
+        a("Měsíční kámen", "Moon rock"); a("Vesmírné zlato", "Space gold"); a("Krystal", "Crystal"); a("Palivo", "Fuel");
+        a("Máš vše! Běž na zlatou rampu k raketě!", "You have everything! Go to the golden pad by the rocket!"); a("odletěl domů!", "flew home!"); a("Čas speedrunu:", "Speedrun time:");
+        a("UMŘEL JSI", "YOU DIED"); a("Ztratil jsi půlku věcí. Běž dál!", "You lost half your stuff. Keep going!"); a("Levné nůžky", "Cheap shears"); a("Dřevěný meč", "Wooden sword"); a("(zdarma)", "(free)");
+        a("Redstone týden", "Redstone Week"); a("Každý týden nové redstone téma.", "A new redstone theme every week."); a("Postav nápad na svém pozemku,", "Build your idea on your plot,");
+        a("v neděli se hlasuje o nejlepší!", "on Sunday everyone votes for the best!"); a("Dnes se hlasuje!", "Voting today!"); a("Hlasování:", "Voting:"); a("neděle", "Sunday"); a("Klikni pro vstup", "Click to enter");
+        a("Téma týdne:", "Theme of the week:"); a("Stav na svém pozemku, v neděli se hlasuje.", "Build on your plot, voting is on Sunday."); a("Minulý vítěz:", "Last winner:");
+        a("Zpět do lobby", "Back to lobby"); a("Další pozemek", "Next plot"); a("pravý klik = hlas", "right click = vote"); a("Stůj na něčím pozemku.", "Stand on someone's plot.");
+        a("Dnes se HLASUJE!", "VOTING today!"); a("Navštiv pozemky:", "Visit plots:"); a("Nejdřív opusť hru:", "Leave your game first:");
+        a("odehraná hra", "game played"); a("výhra", "win"); a("Nový level! Jen tak dál!", "New level! Keep it up!"); a("dosáhl", "reached"); a("levelu", "level");
+        a("Bonus za level", "Level bonus"); a("klíč k bedně", "crate key"); a("(na spawnu)", "(at spawn)"); a("Počkej chvilku…", "Wait a moment…"); a("Emoty:", "Emotes:");
+        a("vyhráli!", "won!"); a("Tvůj tým", "Your team"); a("Přeskočit:", "Skip:"); a("Nízká gravitace", "Low gravity"); a("všude na Marsu", "everywhere on Mars");
+        a("16 miniher", "16 minigames"); a("Bed Wars, SkyWars, Build Battle a další", "Bed Wars, SkyWars, Build Battle and more"); a("Vítej na Marsu!", "Welcome to Mars!");
         D.sort((x, y) -> y[0].length() - x[0].length()); // nejdelší fráze první
     }
 }

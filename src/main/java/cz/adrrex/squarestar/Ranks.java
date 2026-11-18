@@ -101,7 +101,7 @@ public final class Ranks implements Listener {
     public void apply(Player p) {
         Rank r = of(p);
         boolean g = glyphsEverywhere();
-        p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName())));
+        p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName() + " " + pl.levels.tag(p).trim())));
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         String tn = String.format("ss_r%02d", r.ordinal());
         Team t = sb.getTeam(tn);
@@ -131,11 +131,12 @@ public final class Ranks implements Listener {
     @EventHandler(priority = EventPriority.HIGH) public void chat(AsyncChatEvent e) {
         Rank r = of(e.getPlayer());
         String name = e.getPlayer().getName();
+        String lvl = pl.levels.tag(e.getPlayer());
         e.renderer((source, displayName, message, viewer) -> {
             // pack je povinný (require-resource-pack) -> obrázek ranku ukazuj vždy; jen kdo pack odmítl, vidí text
             boolean glyph = !(viewer instanceof Player v) || !declined.contains(v.getUniqueId());
             Component head = Component.object(net.kyori.adventure.text.object.ObjectContents.playerHead().id(source.getUniqueId()).name(name).hat(true).build());
-            return (glyph ? glyphBadge(r) : textBadge(r)).append(head).append(Component.text(" ")).append(U.c(nameColor(r) + name + "&8: &f")).append(message);
+            return (glyph ? glyphBadge(r) : textBadge(r)).append(head).append(Component.text(" ")).append(U.c(lvl + nameColor(r) + name + "&8: &f")).append(message);
         });
     }
 }
