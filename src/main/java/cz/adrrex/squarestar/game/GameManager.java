@@ -277,4 +277,9 @@ public final class GameManager implements Listener {
     }
     /** levné moby (slizy pod hlavami) se po smrti nedělí */
     @EventHandler public void slimeSplit(org.bukkit.event.entity.SlimeSplitEvent e) { if (pl.isArena(e.getEntity().getWorld())) e.setCancelled(true); }
+    @EventHandler public void exitVehicle(org.bukkit.event.vehicle.VehicleExitEvent e) {
+        if (e.getExited() instanceof Player p) { Game g = of(p); if (g != null && !g.canExitVehicle(p)) e.setCancelled(true); }
+    }
+    @EventHandler public void vehicleDamage(org.bukkit.event.vehicle.VehicleDamageEvent e) { if (pl.isArena(e.getVehicle().getWorld())) e.setCancelled(true); }
+    @EventHandler public void vehicleDestroy(org.bukkit.event.vehicle.VehicleDestroyEvent e) { if (pl.isArena(e.getVehicle().getWorld())) e.setCancelled(true); }
 }

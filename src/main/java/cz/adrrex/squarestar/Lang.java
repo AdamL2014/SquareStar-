@@ -161,7 +161,13 @@ public final class Lang {
         a("odehraná hra", "game played"); a("výhra", "win"); a("Nový level! Jen tak dál!", "New level! Keep it up!"); a("dosáhl", "reached"); a("levelu", "level");
         a("Bonus za level", "Level bonus"); a("klíč k bedně", "crate key"); a("(na spawnu)", "(at spawn)"); a("Počkej chvilku…", "Wait a moment…"); a("Emoty:", "Emotes:");
         a("vyhráli!", "won!"); a("Tvůj tým", "Your team"); a("Přeskočit:", "Skip:"); a("Nízká gravitace", "Low gravity"); a("všude na Marsu", "everywhere on Mars");
-        a("16 miniher", "16 minigames"); a("Bed Wars, SkyWars, Build Battle a další", "Bed Wars, SkyWars, Build Battle and more"); a("Vítej na Marsu!", "Welcome to Mars!");
+        a("18 miniher", "18 minigames"); a("Bed Wars, SkyWars, Build Battle a další", "Bed Wars, SkyWars, Build Battle and more"); a("Vítej na Marsu!", "Welcome to Mars!");
+        a("Závod roverů", "Rover Race"); a("Závod Mars roverů po ledové trati. 3 kola, kdo první v cíli!", "Mars rover race on an ice track. 3 laps, first to finish wins!");
+        a("POSLEDNÍ KOLO!", "FINAL LAP!"); a("Kolo", "Lap"); a("JEĎ!", "GO!"); a("dojel do cíle jako", "finished as"); a("1. MÍSTO!", "1st PLACE!"); a("místo", "place"); a("Pozice", "Position");
+        a("Dropper", "Dropper"); a("Padej šachtou, nenaraz do ničeho a dopadni do vody. 5 levelů!", "Fall down the shaft, hit nothing and land in the water. 5 levels!");
+        a("Skoč do šachty, nenaraz do ničeho a dopadni do", "Jump into the shaft, hit nothing and land in the"); a("vody", "water"); a("levelů!", "levels!");
+        a("prošel level", "passed level"); a("prošel všechny levely!", "passed all levels!"); a("chyb:", "fails:"); a("čas", "time"); a("Náraz!", "Crash!"); a("Znovu od začátku levelu.", "Back to the start of the level.");
+        a("Nárazy", "Crashes"); a("Trámy", "Beams"); a("Díry v podlaze", "Holes in the floor"); a("Les sloupů", "Pillar forest"); a("Spirála", "Spiral"); a("Asteroidy", "Asteroids");
         D.sort((x, y) -> y[0].length() - x[0].length()); // nejdelší fráze první
         for (String[] e : D) P.add(java.util.regex.Pattern.compile("(?<!(?<!&)\\p{L})" + java.util.regex.Pattern.quote(e[0]) + "(?![\\p{L}])"));
     }

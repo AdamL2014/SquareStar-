@@ -19,7 +19,9 @@ public enum GameType {
     SUMO("Sumo", Material.SLIME_BALL, 2, 10, "Vystrč soupeře z talíře. Jen odhazování, žádné poškození."),
     BUILDBATTLE("Build Battle", Material.BRICKS, 2, 12, "Postav téma za 5 minut. Pak všichni hlasují."),
     ZOMBIES("Vesmírní zombíci", Material.ZOMBIE_HEAD, 1, 8, "Tým brání reaktor před vlnami mimozemských zombíků."),
-    SPEEDRUN("Speedrun: Free Edition", Material.WHITE_WOOL, 1, 8, "Levný vlněný svět, moby jsou jen hlavy. Posbírej díly a odleť raketou!");
+    SPEEDRUN("Speedrun: Free Edition", Material.WHITE_WOOL, 1, 8, "Levný vlněný svět, moby jsou jen hlavy. Posbírej díly a odleť raketou!"),
+    ROVER("Závod roverů", Material.MINECART, 1, 9, "Závod Mars roverů po ledové trati. 3 kola, kdo první v cíli!"),
+    DROPPER("Dropper", Material.FEATHER, 1, 12, "Padej šachtou, nenaraz do ničeho a dopadni do vody. 5 levelů!");
 
     public final String display; public final Material icon; public final int min, max; public final String desc;
     GameType(String d, Material i, int min, int max, String desc) { display = d; icon = i; this.min = min; this.max = max; this.desc = desc; }
@@ -42,6 +44,8 @@ public enum GameType {
             case BUILDBATTLE -> new BuildBattle(gm, slot);
             case ZOMBIES -> new Zombies(gm, slot);
             case SPEEDRUN -> new SpeedrunFE(gm, slot);
+            case ROVER -> new RoverRace(gm, slot);
+            case DROPPER -> new Dropper(gm, slot);
         };
     }
 }

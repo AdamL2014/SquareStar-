@@ -60,6 +60,10 @@ public abstract class Game {
     protected boolean hunger() { return false; }
     protected boolean canDrop() { return false; }
     protected boolean hideNames() { return false; }
+    /** vlastní gravitace hry (null = nízká marsovská) */
+    public Double gravity() { return null; }
+    /** smí hráč vystoupit z vozidla? */
+    public boolean canExitVehicle(Player p) { return true; }
     public boolean canBreak(Player p, Block b) { return false; }
     public boolean canPlace(Player p, Block b) { return false; }
     public boolean allowFlow(Block to) { return true; }

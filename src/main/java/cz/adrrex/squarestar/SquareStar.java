@@ -111,6 +111,7 @@ public final class SquareStar extends JavaPlugin {
     public void applyGravity(Player p) {
         boolean space = isSpaceWorld(p.getWorld()) && getConfig().getBoolean("gravity.enabled", true);
         double g = space ? getConfig().getDouble("gravity.value", 0.03) : 0.08;
+        if (space && games != null) { var gm = games.of(p); if (gm != null && gm.gravity() != null) g = gm.gravity(); }
         double fall = space ? getConfig().getDouble("gravity.safe-fall-distance", 12) : 3;
         ItemStack boots = p.getInventory().getBoots();
         double jump = 0.41999998688697815;
