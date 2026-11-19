@@ -55,6 +55,7 @@ public final class U {
         p.getInventory().setArmorContents(null);
         p.setGameMode(gm);
         for (PotionEffect e : p.getActivePotionEffects()) p.removePotionEffect(e.getType());
+        var kbr = p.getAttribute(org.bukkit.attribute.Attribute.KNOCKBACK_RESISTANCE); if (kbr != null) kbr.setBaseValue(0);
         p.setHealth(Objects.requireNonNull(p.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH)).getValue());
         p.setFoodLevel(20); p.setSaturation(10); p.setFireTicks(0); p.setFallDistance(0);
         p.setLevel(0); p.setExp(0); p.setWalkSpeed(0.2f);

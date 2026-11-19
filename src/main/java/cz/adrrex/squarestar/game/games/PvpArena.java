@@ -118,22 +118,54 @@ public final class PvpArena extends Game {
         broadcast(sumo ? "&eVystrč ostatní z talíře! Poslední nahoře vyhrává." : "&eKaždý má &c3 životy&e. Jetpack a granáty jsou v inventáři!");
     }
 
+    @Override public List<Object[]> kits() {
+        if (sumo) return List.of();
+        return List.of(
+                new Object[]{"warrior", "Válečník", Material.DIAMOND_SWORD, "Diamantový meč a štít", "Železné brnění", "2x zlaté jablko"},
+                new Object[]{"archer", "Lučištník", Material.BOW, "Luk Síla II + Odhoz", "32 šípů, kamenný meč", "Kroužkové brnění, rychlost I"},
+                new Object[]{"tank", "Tank", Material.SHIELD, "Diamantová vesta a kalhoty", "Sekera + štít", "Skoro žádný odhoz, 4x jablko"},
+                new Object[]{"astro", "Astronaut", Material.FIREWORK_ROCKET, "Plazmový meč + laserová pistole", "Jetpack a kyslíková helma", "Železné brnění"},
+                new Object[]{"ninja", "Ninja", Material.ENDER_PEARL, "Železný meč, 4x perla", "Rychlost II + vyšší skok", "Lehké černé brnění"},
+                new Object[]{"bomber", "Bombardér", Material.FIRE_CHARGE, "6x meteoritový granát", "Kamenný meč", "Železné brnění"});
+    }
+
     private void kit(Player p) {
         PlayerInventory inv = p.getInventory();
+        inv.clear();
+        String k = kitId(p);
+        var kbr = p.getAttribute(org.bukkit.attribute.Attribute.KNOCKBACK_RESISTANCE); if (kbr != null) kbr.setBaseValue(0);
+        Material helm = Material.IRON_HELMET, chest = Material.IRON_CHESTPLATE, legs = Material.IRON_LEGGINGS, boots = Material.IRON_BOOTS;
+        switch (k) {
+            case "archer" -> { helm = Material.CHAINMAIL_HELMET; chest = Material.CHAINMAIL_CHESTPLATE; legs = Material.CHAINMAIL_LEGGINGS; boots = Material.CHAINMAIL_BOOTS;
+                ItemStack bow = unb(Material.BOW); bow.addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.POWER, 2); bow.addUnsafeEnchantment(org.bukkit.enchantments.Enchantment.PUNCH, 1);
+                inv.setItem(0, unb(Material.STONE_SWORD)); inv.setItem(1, bow); inv.setItem(9, new ItemStack(Material.ARROW, 32)); inv.setItem(2, new ItemStack(Material.GOLDEN_APPLE, 2));
+                p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, PotionEffectInf(), 0, false, false)); }
+            case "tank" -> { chest = Material.DIAMOND_CHESTPLATE; legs = Material.DIAMOND_LEGGINGS;
+                inv.setItem(0, unb(Material.IRON_AXE)); inv.setItemInOffHand(unb(Material.SHIELD)); inv.setItem(2, new ItemStack(Material.GOLDEN_APPLE, 4));
+                var kb = p.getAttribute(org.bukkit.attribute.Attribute.KNOCKBACK_RESISTANCE); if (kb != null) kb.setBaseValue(0.7); }
+            case "astro" -> { inv.setItem(0, pl.items.get("plasma_sword", 1)); inv.setItem(1, pl.items.get("laser_pistol", 1)); inv.setItem(2, pl.items.get("jetpack", 1)); inv.setItem(3, new ItemStack(Material.GOLDEN_APPLE, 2)); }
+            case "ninja" -> { helm = Material.LEATHER_HELMET; chest = Material.LEATHER_CHESTPLATE; legs = Material.LEATHER_LEGGINGS; boots = Material.LEATHER_BOOTS;
+                inv.setItem(0, unb(Material.IRON_SWORD)); inv.setItem(1, new ItemStack(Material.ENDER_PEARL, 4)); inv.setItem(2, new ItemStack(Material.GOLDEN_APPLE, 2));
+                p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.SPEED, PotionEffectInf(), 1, false, false)); }
+            case "bomber" -> { inv.setItem(0, unb(Material.STONE_SWORD)); inv.setItem(1, pl.items.get("meteor_grenade", 6)); inv.setItem(2, new ItemStack(Material.GOLDEN_APPLE, 2)); }
+            default -> { inv.setItem(0, unb(Material.DIAMOND_SWORD)); inv.setItemInOffHand(unb(Material.SHIELD)); inv.setItem(1, unb(Material.BOW)); inv.setItem(9, new ItemStack(Material.ARROW, 12)); inv.setItem(2, new ItemStack(Material.GOLDEN_APPLE, 2)); }
+        }
         if (teams()) {
             ItemStack h = new ItemStack(Material.LEATHER_HELMET);
             var lm = (org.bukkit.inventory.meta.LeatherArmorMeta) h.getItemMeta(); lm.setColor(TC[team.getOrDefault(p, 0)]); lm.setUnbreakable(true); h.setItemMeta(lm);
             inv.setHelmet(h);
-        } else inv.setHelmet(unb(Material.IRON_HELMET));
-        inv.setChestplate(unb(Material.IRON_CHESTPLATE));
-        inv.setLeggings(unb(Material.IRON_LEGGINGS)); inv.setBoots(unb(Material.IRON_BOOTS));
-        inv.setItem(0, unb(Material.IRON_SWORD));
-        inv.setItem(1, unb(Material.BOW));
-        inv.setItem(2, new ItemStack(Material.GOLDEN_APPLE, 3));
-        inv.setItem(3, pl.items.get("jetpack", 1));
-        inv.setItem(4, pl.items.get("meteor_grenade", 2));
-        inv.setItem(5, new ItemStack(Material.COOKED_BEEF, 8));
-        inv.setItem(9, new ItemStack(Material.ARROW, 16));
+        } else if (k.equals("astro")) inv.setHelmet(pl.items.get("oxygen_helmet", 1));
+        else inv.setHelmet(dye(unb(helm), k));
+        inv.setChestplate(dye(unb(chest), k)); inv.setLeggings(dye(unb(legs), k)); inv.setBoots(dye(unb(boots), k));
+        inv.setItem(8, new ItemStack(Material.COOKED_BEEF, 8));
+        // ochrana po spawnu
+        p.addPotionEffect(new org.bukkit.potion.PotionEffect(org.bukkit.potion.PotionEffectType.RESISTANCE, 50, 4, false, false));
+        p.setGlowing(false);
+    }
+    private static int PotionEffectInf() { return org.bukkit.potion.PotionEffect.INFINITE_DURATION; }
+    private static ItemStack dye(ItemStack it, String kit) {
+        if (it.getItemMeta() instanceof org.bukkit.inventory.meta.LeatherArmorMeta lm && kit.equals("ninja")) { lm.setColor(Color.fromRGB(0x1a1a1a)); it.setItemMeta(lm); }
+        return it;
     }
 
     private static ItemStack unb(Material m) { ItemStack it = new ItemStack(m); ItemMeta im = it.getItemMeta(); im.setUnbreakable(true); it.setItemMeta(im); return it; }
@@ -141,14 +173,27 @@ public final class PvpArena extends Game {
     @Override public void onDeath(Player p, Player killer) {
         int left = lives.getOrDefault(p, 1) - 1;
         lives.put(p, left);
-        if (left <= 0) { eliminate(p, killer); return; }
+        if (left <= 0) { reward(killer, p); eliminate(p, killer); return; }
         broadcast("&c⚔ " + p.getName() + " &7padl" + (killer != null && killer != p ? " &8(" + killer.getName() + ")" : "") + " &7- zbývá &c" + left + " ❤");
         U.reset(p, GameMode.ADVENTURE);
         p.teleport(spot(rnd.nextInt(8), 8));
         kit(p);
         pl.applyGravity(p);
         U.title(p, "&c" + left + " ❤", "&7Zbývající životy");
-        if (killer != null && killer != p) killer.getInventory().addItem(new ItemStack(Material.GOLDEN_APPLE));
+        reward(killer, p);
+    }
+
+    private final Map<Player, Integer> streak = new HashMap<>();
+    private void reward(Player killer, Player victim) {
+        streak.put(victim, 0);
+        if (killer == null || killer == victim || !alive.contains(killer)) return;
+        int s = streak.merge(killer, 1, Integer::sum);
+        killer.getInventory().addItem(new ItemStack(Material.GOLDEN_APPLE));
+        killer.setHealth(Math.min(killer.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue(), killer.getHealth() + 6));
+        U.sound(killer, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.2f);
+        U.bar(killer, "&a+1 zabití &8| &6Série: &f" + s);
+        if (s == 3) broadcast("&6🔥 " + killer.getName() + " &emá sérii &63 zabití&e!");
+        if (s == 5) broadcast("&c&l⚡ " + killer.getName() + " &cje NEZASTAVITELNÝ! &7(5 zabití)");
     }
 
     /** v týmech se spoluhráči nezraňují */

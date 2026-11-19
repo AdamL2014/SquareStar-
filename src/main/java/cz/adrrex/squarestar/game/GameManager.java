@@ -32,6 +32,9 @@ public final class GameManager implements Listener {
         Inventory inv; @Override public @NotNull Inventory getInventory() { return inv; }
     }
 
+    public static final class KitHolder implements InventoryHolder {
+        final Game game; Inventory inv; KitHolder(Game g) { game = g; } @Override public @NotNull Inventory getInventory() { return inv; }
+    }
     public static final class VoteHolder implements InventoryHolder {
         final Game game; Inventory inv; VoteHolder(Game g) { game = g; } @Override public @NotNull Inventory getInventory() { return inv; }
     }
@@ -124,6 +127,13 @@ public final class GameManager implements Listener {
         if (e.getWhoClicked() instanceof Player p && e.getClickedInventory() == e.getInventory() && map.get(p) == h.game) h.game.vote(p, e.getSlot());
     }
 
+    @EventHandler public void kitClick(InventoryClickEvent e) {
+        if (!(e.getInventory().getHolder() instanceof KitHolder h)) return;
+        e.setCancelled(true);
+        String id = U.tagOf(e.getCurrentItem(), "ss_kit");
+        if (id != null && e.getWhoClicked() instanceof Player p && map.get(p) == h.game) h.game.chooseKit(p, id);
+    }
+
     @EventHandler public void menu(InventoryClickEvent e) {
         if (!(e.getInventory().getHolder() instanceof MenuHolder)) return;
         e.setCancelled(true);
@@ -199,6 +209,7 @@ public final class GameManager implements Listener {
         String tag = U.tagOf(e.getItem(), "ss_game");
         if ("leave".equals(tag)) { e.setCancelled(true); leave(e.getPlayer()); return; }
         if ("vote".equals(tag)) { e.setCancelled(true); g.openVote(e.getPlayer()); return; }
+        if ("kit".equals(tag)) { e.setCancelled(true); g.openKits(e.getPlayer()); return; }
         if (g.state == Game.State.RUNNING) g.onInteract(e);
     }
 

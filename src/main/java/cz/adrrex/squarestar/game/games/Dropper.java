@@ -16,21 +16,21 @@ import java.util.*;
  * 5 levelů, každý jiný. Kdo první projde všechny, vyhrává.
  */
 public final class Dropper extends Game {
-    private static final int LEVELS = 5, H = 70, IN = 4; // vnitřek šachty = -IN..IN (9x9)
+    private static final int LEVELS = 8, H = 110, IN = 4; // vnitřek šachty = -IN..IN (9x9)
     private final Map<Player, Integer> level = new HashMap<>(), fails = new HashMap<>();
     private final Map<Player, Long> lastFail = new HashMap<>();
     private BukkitTask tick;
-    private static final String[] NAMES = {"Trámy", "Díry v podlaze", "Les sloupů", "Spirála", "Asteroidy"};
+    private static final String[] NAMES = {"Trámy", "Díry v podlaze", "Les sloupů", "Spirála", "Kříže", "Rámy", "Asteroidy", "Finále"};
 
     public Dropper(GameManager gm, int slot) { super(gm, GameType.DROPPER, slot); }
 
     @Override public List<String> maps() { return List.of("Marsovské šachty", "Neonové šachty"); }
-    @Override protected int timeLimit() { return 480; }
+    @Override protected int timeLimit() { return 900; }
     @Override protected int voidY() { return oy - 30; }
     /** trochu silnější gravitace než v lobby, ať padání netrvá věčnost */
-    @Override public Double gravity() { return 0.055; }
+    @Override public Double gravity() { return 0.045; }
 
-    private int sx(int lvl) { return ox + (lvl - LEVELS / 2) * 24; }
+    private int sx(int lvl) { return ox + (lvl - LEVELS / 2) * 22; }
 
     // ---------------- stavba ----------------
     @Override protected void buildMap(U.BlockQueue.Builder b) {
@@ -54,21 +54,31 @@ public final class Dropper extends Game {
             // horní plošina se startem
             b.fill(cx - IN - 3, oy + H + 1, cz - IN - 3, cx + IN + 3, oy + H + 1, cz + IN + 3, neon ? Material.POLISHED_BLACKSTONE : Material.SMOOTH_RED_SANDSTONE);
             b.fill(cx - IN, oy + H + 1, cz - IN, cx + IN, oy + H + 1, cz + IN, Material.AIR);
-            // překážky podle levelu
-            for (int y = 12; y < H - 6; y++) {
+            // překážky podle levelu – vždy projít jde (díra další vrstvy je blízko předchozí)
+            int hx = 0, hz = 0, q = 0;
+            for (int y = H - 14; y > 8; y--) {
                 switch (l) {
-                    case 0 -> { if (y % 9 == 0) { boolean xAxis = (y / 9) % 2 == 0; int off = r.nextInt(7) - 3;
+                    case 0 -> { if (y % 9 == 0) { boolean xAxis = (y / 9) % 2 == 0; int off = r.nextInt(5) - 2;
                         for (int i = -IN; i <= IN; i++) { if (xAxis) b.set(cx + i, oy + y, cz + off, obst); else b.set(cx + off, oy + y, cz + i, obst); } } }
-                    case 1 -> { if (y % 11 == 0) { int hx = r.nextInt(2 * IN - 1) - IN + 1, hz = r.nextInt(2 * IN - 1) - IN + 1;
-                        for (int i = -IN; i <= IN; i++) for (int k = -IN; k <= IN; k++) if (Math.abs(i - hx) > 1 || Math.abs(k - hz) > 1) b.set(cx + i, oy + y, cz + k, (i + k) % 2 == 0 ? obst : obst2); } }
-                    case 2 -> { if (y == 12) for (int c = 0; c < 9; c++) { int px = r.nextInt(2 * IN + 1) - IN, pz = r.nextInt(2 * IN + 1) - IN, top = 14 + r.nextInt(H - 30), len = 6 + r.nextInt(12);
-                        for (int k = 0; k < len; k++) b.set(cx + px, oy + top + k, cz + pz, k % 4 == 0 ? stripe : obst); } }
-                    case 3 -> { if (y % 7 == 0) { int q = (y / 7) % 4;
+                    case 1, 7 -> { int gap = l == 7 ? 10 : 13; if (y % gap == 0) {
+                        hx = Math.max(-IN + 1, Math.min(IN - 1, hx + r.nextInt(5) - 2)); hz = Math.max(-IN + 1, Math.min(IN - 1, hz + r.nextInt(5) - 2));
+                        for (int i = -IN; i <= IN; i++) for (int k = -IN; k <= IN; k++) if (Math.abs(i - hx) > 1 || Math.abs(k - hz) > 1)
+                            b.set(cx + i, oy + y, cz + k, l == 7 && (i + k) % 5 == 0 ? Material.MAGMA_BLOCK : ((i + k) % 2 == 0 ? obst : obst2)); } }
+                    case 2 -> { if (y % 16 == 0) for (int c = 0; c < 4; c++) { int px = r.nextInt(2 * IN + 1) - IN, pz = r.nextInt(2 * IN + 1) - IN, len = 5 + r.nextInt(7);
+                        for (int k = 0; k < len; k++) b.set(cx + px, oy + y - k, cz + pz, k % 4 == 0 ? stripe : obst); } }
+                    case 3 -> { if (y % 12 == 0) { q = (q + 1) % 4;
                         for (int i = -IN; i <= IN; i++) for (int k = -IN; k <= IN; k++) {
-                            boolean blocked = switch (q) { case 0 -> i < 1 || k < 1; case 1 -> i > -1 || k < 1; case 2 -> i > -1 || k > -1; default -> i < 1 || k > -1; };
-                            if (blocked) b.set(cx + i, oy + y, cz + k, obst2);
+                            boolean open = switch (q) { case 0 -> i >= 1 && k >= 1; case 1 -> i <= -1 && k >= 1; case 2 -> i <= -1 && k <= -1; default -> i >= 1 && k <= -1; };
+                            if (!open) b.set(cx + i, oy + y, cz + k, obst2);
                         } } }
-                    default -> { if (y % 4 == 0) for (int c = 0; c < 3; c++) { int px = r.nextInt(2 * IN - 1) - IN + 1, pz = r.nextInt(2 * IN - 1) - IN + 1;
+                    case 4 -> { if (y % 10 == 0) { boolean diag = (y / 10) % 2 == 0;
+                        for (int i = -IN; i <= IN; i++) { if (diag) { b.set(cx + i, oy + y, cz + i, obst); b.set(cx + i, oy + y, cz - i, obst); } else { b.set(cx + i, oy + y, cz, obst); b.set(cx, oy + y, cz + i, obst); } } } }
+                    case 5 -> { if (y % 12 == 0) { boolean ring = (y / 12) % 2 == 0;
+                        for (int i = -IN; i <= IN; i++) for (int k = -IN; k <= IN; k++) {
+                            int m = Math.max(Math.abs(i), Math.abs(k));
+                            if (ring ? m >= 3 : m <= 1) b.set(cx + i, oy + y, cz + k, ring ? obst : stripe);
+                        } } }
+                    default -> { if (y % 5 == 0) for (int c = 0; c < 2; c++) { int px = r.nextInt(2 * IN - 1) - IN + 1, pz = r.nextInt(2 * IN - 1) - IN + 1;
                         b.fill(cx + px, oy + y, cz + pz, cx + px + r.nextInt(2), oy + y, cz + pz + r.nextInt(2), c == 0 ? Material.MAGMA_BLOCK : obst); } }
                 }
             }
@@ -118,6 +128,7 @@ public final class Dropper extends Game {
     }
 
     private void fail(Player p) {
+        if (System.getProperty("ssdebug") != null) pl.getLogger().info("DROP fail " + p.getLocation().toVector() + " below=" + p.getLocation().clone().add(0, -0.2, 0).getBlock().getType());
         lastFail.put(p, System.currentTimeMillis());
         fails.merge(p, 1, Integer::sum);
         U.sound(p, Sound.ENTITY_ITEM_BREAK, 0.8f);

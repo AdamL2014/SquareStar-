@@ -112,6 +112,41 @@ public abstract class Game {
         for (Object[] e : b.entries()) { int bx = (int) e[0], by = (int) e[1], bz = (int) e[2]; if (placed.add(U.pack(bx, by, bz))) placedList.add(new int[]{bx, by, bz}); }
     }
 
+    // ---------------- kity ----------------
+    /** {id, název, ikona, popis...} – prázdné = hra nemá kity */
+    public List<Object[]> kits() { return List.of(); }
+    protected final Map<Player, String> kit = new HashMap<>();
+    public String kitOf(Player p) {
+        String id = kit.get(p);
+        for (Object[] k : kits()) if (k[0].equals(id)) return (String) k[1];
+        return kits().isEmpty() ? "-" : (String) kits().get(0)[1];
+    }
+    protected String kitId(Player p) { return kit.getOrDefault(p, kits().isEmpty() ? "" : (String) kits().get(0)[0]); }
+    public void openKits(Player p) {
+        GameManager.KitHolder h = new GameManager.KitHolder(this);
+        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.shop(27, cz.adrrex.squarestar.Lang.t(p, "&f&lVyber kit")));
+        int[] pos = {10, 11, 12, 13, 14, 15, 16};
+        List<Object[]> ks = kits();
+        for (int i = 0; i < ks.size() && i < pos.length; i++) {
+            Object[] k = ks.get(i);
+            List<String> lore = new ArrayList<>();
+            for (int j = 3; j < k.length; j++) lore.add("&7" + k[j]);
+            lore.add("");
+            lore.add(k[0].equals(kitId(p)) ? "&a✔ Vybráno" : "&eKlikni pro výběr");
+            ItemStack it = U.item((Material) k[2], 1, "&6&l" + k[1], lore.toArray(new String[0]));
+            if (k[0].equals(kitId(p))) { var m = it.getItemMeta(); m.setEnchantmentGlintOverride(true); it.setItemMeta(m); }
+            h.inv.setItem(pos[i], U.tag(it, "ss_kit", (String) k[0]));
+        }
+        p.openInventory(h.inv);
+    }
+    public void chooseKit(Player p, String id) {
+        kit.put(p, id);
+        U.msg(p, "&aKit: &6&l" + kitOf(p));
+        U.sound(p, Sound.ITEM_ARMOR_EQUIP_DIAMOND, 1.2f);
+        if (state != State.RUNNING) p.getInventory().setItem(0, U.tag(U.item(Material.CHEST, 1, "&6&lVyber kit &7(pravý klik)", "&7Tvůj kit: &f" + kitOf(p)), "ss_game", "kit"));
+        p.closeInventory();
+    }
+
     public void openVote(Player p) {
         GameManager.VoteHolder h = new GameManager.VoteHolder(this);
         h.inv = Bukkit.createInventory(h, 9, cz.adrrex.squarestar.Gui.vote(9, cz.adrrex.squarestar.Lang.t(p, "&f&lHlasování o mapě")));
@@ -140,6 +175,7 @@ public abstract class Game {
         U.reset(p, GameMode.ADVENTURE);
         p.getInventory().setItem(8, U.tag(U.item(Material.RED_BED, 1, "&c&lOpustit hru &7(pravý klik)"), "ss_game", "leave"));
         if (maps().size() > 1) p.getInventory().setItem(4, U.tag(U.item(Material.MAP, 1, "&e&lHlasování o mapě &7(pravý klik)", "&7Mapy: &f" + String.join("&7, &f", maps())), "ss_game", "vote"));
+        if (!kits().isEmpty()) p.getInventory().setItem(0, U.tag(U.item(Material.CHEST, 1, "&6&lVyber kit &7(pravý klik)", "&7Tvůj kit: &f" + kitOf(p)), "ss_game", "kit"));
         if (state == State.BUILDING) U.msg(p, "&ePřipravuji čekárnu... &7(" + type.display + ")");
         else p.teleport(waitSpot());
         if (hideNames()) gm.hideName(p, true);
