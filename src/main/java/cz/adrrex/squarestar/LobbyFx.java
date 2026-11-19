@@ -307,9 +307,12 @@ public final class LobbyFx implements Listener {
         GameType[] t = GameType.values();
         int n = t.length;
         for (int i = 0; i < n; i++) {
-            // půlkruh za spawnem; víc her = větší poloměr, ať stojí NPC od sebe
-            double a = Math.toRadians(185 + 170.0 * i / Math.max(1, n - 1));
-            double r = Math.max(13, n * 0.95);
+            // dvě řady v půlkruhu za spawnem, uvnitř kopule (kopule má poloměr 18)
+            int inner = (n + 1) / 2;
+            boolean front = i < inner;
+            int k = front ? i : i - inner, cnt = front ? inner : n - inner;
+            double a = Math.toRadians(195 + 150.0 * (k + (front ? 0 : 0.5)) / Math.max(1, cnt - (front ? 1 : 0)));
+            double r = front ? 9.5 : 13.5;
             double x = Math.cos(a) * r, z = Math.sin(a) * r;
             Location l = new Location(pl.mars, x + 0.5, Lobby.Y + 1, z + 0.5);
             l.setDirection(new Vector(-x, 0, -z));
@@ -422,8 +425,8 @@ public final class LobbyFx implements Listener {
     // ---------------- VidRift postava: „podívej se na film" ----------------
     private Mannequin vidrift;
     private void spawnVidrift() {
-        Location l = new Location(pl.mars, 16.5, Lobby.Y + 1, 12.5);
-        l.setDirection(new Vector(-16, 0, -12));
+        Location l = new Location(pl.mars, 10.5, Lobby.Y + 1, 7.5);
+        l.setDirection(new Vector(-10, 0, -7));
         vidrift = pl.mars.spawn(l, Mannequin.class, e -> {
             e.customName(U.c("&b&lVid&d&lRift"));
             e.setCustomNameVisible(true);
@@ -446,7 +449,7 @@ public final class LobbyFx implements Listener {
             d.addScoreboardTag(TAG); d.setPersistent(false);
         });
         // „kino plátno" za postavou
-        Location sc = l.clone().add(2.2, 2.6, 1.6);
+        Location sc = l.clone().add(1.4, 2.4, 1.0);
         sc.setYaw(l.getYaw()); sc.setPitch(0);
         pl.mars.spawn(sc, TextDisplay.class, d -> {
             d.text(U.c("&b&l▶\n&d&lVidRift"));
