@@ -60,6 +60,10 @@ public final class Ranks implements Listener {
     }
 
     public void set(Player p, Rank r) {
+        Rank before = of(p);
+        // OWNER = operátor (všechna práva); kdo o OWNER přijde, přijde i o OP
+        if (r == Rank.OWNER) p.setOp(true);
+        else if (before == Rank.OWNER) p.setOp(false);
         data.set("players." + p.getUniqueId(), r == Rank.HRAC ? null : r.name());
         data.set("names." + p.getUniqueId(), p.getName());
         if (r == Rank.HRAC) p.getPersistentDataContainer().remove(PDC);
@@ -99,7 +103,46 @@ public final class Ranks implements Listener {
         p.sendPlayerListHeaderAndFooter(header, footer);
     }
 
+    // ---------------- práva podle ranku (bez LuckPerms) ----------------
+    /** výchozí práva; jdou upravit v config.yml -> rank-permissions */
+    private static final Map<Rank, List<String>> DEF = new EnumMap<>(Rank.class);
+    static {
+        List<String> helper = List.of("minecraft.command.kick", "minecraft.command.teleport", "minecraft.command.tp", "minecraft.command.list", "squarestar.helper");
+        List<String> mod = new ArrayList<>(helper);
+        mod.addAll(List.of("minecraft.command.ban", "minecraft.command.ban-ip", "minecraft.command.pardon", "minecraft.command.pardon-ip", "minecraft.command.banlist",
+                "minecraft.command.spectate", "minecraft.command.gamemode", "minecraft.command.clear", "grim.alerts", "grim.alerts.enable-on-join", "grim.verbose", "grim.spectate", "squarestar.moderator"));
+        List<String> builder = List.of("minecraft.command.gamemode", "minecraft.command.teleport", "minecraft.command.tp", "minecraft.command.give", "minecraft.command.time",
+                "minecraft.command.weather", "minecraft.command.fill", "minecraft.command.setblock", "minecraft.command.clone", "squarestar.builder");
+        List<String> admin = new ArrayList<>(mod);
+        admin.addAll(builder);
+        admin.addAll(List.of("squarestar.admin", "minecraft.command.whitelist", "minecraft.command.op", "minecraft.command.deop", "minecraft.command.effect",
+                "minecraft.command.kill", "minecraft.command.say", "minecraft.command.difficulty", "minecraft.command.gamerule", "grim.*", "grim.exempt.false"));
+        DEF.put(Rank.OWNER, admin); DEF.put(Rank.ADMIN, admin); DEF.put(Rank.MODERATOR, mod); DEF.put(Rank.HELPER, helper); DEF.put(Rank.BUILDER, builder);
+    }
+    public void applyPerms(Player p) {
+        var old = perms.remove(p.getUniqueId());
+        if (old != null) try { p.removeAttachment(old); } catch (IllegalArgumentException ignored) {}
+        Rank r = of(p);
+        List<String> list = pl.getConfig().isList("rank-permissions." + r.name().toLowerCase()) ? pl.getConfig().getStringList("rank-permissions." + r.name().toLowerCase()) : DEF.getOrDefault(r, List.of());
+        if (list.isEmpty()) { p.updateCommands(); return; }
+        var at = p.addAttachment(pl);
+        for (String perm : list) { if (perm.startsWith("-")) at.setPermission(perm.substring(1), false); else at.setPermission(perm, true); }
+        perms.put(p.getUniqueId(), at);
+        p.updateCommands();
+    }
+
+    /** hráč z Bedrocku (Geyser/Floodgate) – nemá Java resource pack, dostane textové ranky */
+    public static boolean bedrock(Player p) {
+        try {
+            Class<?> c = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
+            Object api = c.getMethod("getInstance").invoke(null);
+            return (boolean) c.getMethod("isFloodgatePlayer", UUID.class).invoke(api, p.getUniqueId());
+        } catch (Throwable t) { return p.getUniqueId().getMostSignificantBits() == 0; }
+    }
+
     public void apply(Player p) {
+        applyPerms(p);
+        if (bedrock(p)) declined.add(p.getUniqueId());
         Rank r = of(p);
         boolean g = glyphsEverywhere();
         p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName() + " " + pl.levels.tag(p).trim())));
@@ -111,9 +154,6 @@ public final class Ranks implements Listener {
         t.prefix(g ? glyphBadge(r) : textBadge(r));
         t.color(r == Rank.HRAC ? NamedTextColor.GRAY : NamedTextColor.WHITE);
         if (!t.hasEntry(p.getName())) t.addEntry(p.getName());
-        PermissionAttachment old = perms.remove(p.getUniqueId());
-        if (old != null) { try { p.removeAttachment(old); } catch (IllegalArgumentException ignored) {} }
-        if (r.admin) { PermissionAttachment a = p.addAttachment(pl); a.setPermission("squarestar.admin", true); perms.put(p.getUniqueId(), a); }
     }
 
     @EventHandler public void join(PlayerJoinEvent e) {

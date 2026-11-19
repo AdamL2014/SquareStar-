@@ -63,6 +63,14 @@ public final class SquareStar extends JavaPlugin {
         motd = new Motd(this);
         pm.registerEvents(motd, this);
         Emotes em = new Emotes(this);
+        var mc = getCommand("udrzba");
+        if (mc != null) mc.setExecutor((s, c, l, a) -> {
+            if (!s.hasPermission("squarestar.admin")) { s.sendMessage(U.c("&cNa tohle nemáš práva.")); return true; }
+            boolean on = a.length > 0 ? a[0].equalsIgnoreCase("on") || a[0].equalsIgnoreCase("zap") : !motd.maintenance();
+            motd.setMaintenance(on);
+            Bukkit.broadcast(U.c(on ? "&c&l⚠ ÚDRŽBA ZAPNUTA &7- na serveru zůstává jen tým." : "&a&l✔ Údržba skončila &7- server je zase otevřený!"));
+            return true;
+        });
         var ec = getCommand("emote"); if (ec != null) { ec.setExecutor(em); ec.setTabCompleter(em); }
         Commands cmd = new Commands(this);
         var pc = getCommand("ss");

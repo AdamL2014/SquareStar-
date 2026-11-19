@@ -98,3 +98,11 @@ gui:
 # údržba: připojí se jen tým (builder, helper, moderator, admin, owner). Příkaz: /ss udrzba on|off
 maintenance:
   enabled: false
+
+# Práva podle ranku (dávají se automaticky, LuckPerms není potřeba).
+# Když tu sekce chybí, platí výchozí práva: OWNER = OP, ADMIN = skoro vše, MODERATOR = kick/ban/tp/spectate,
+# HELPER = kick/tp, BUILDER = gamemode/tp/give/fill. Vlastní seznam např.:
+# rank-permissions:
+#   helper:
+#     - minecraft.command.kick
+#     - minecraft.command.tp

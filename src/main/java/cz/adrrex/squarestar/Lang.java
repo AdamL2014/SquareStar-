@@ -25,7 +25,10 @@ public final class Lang {
     public static void set(Player p, String lang) { p.getPersistentDataContainer().set(KEY, PersistentDataType.STRING, lang); }
 
     /** přeloží text (s &-barvami) podle jazyka hráče */
+    /** poslední hráč, pro kterého se překládalo (Gui podle něj pozná hráče z Bedrocku) */
+    public static Player last;
     public static String t(Player p, String s) {
+        last = p;
         if (s == null || !en(p)) return s;
         for (int i = 0; i < D.size(); i++) if (s.contains(D.get(i)[0])) s = P.get(i).matcher(s).replaceAll(java.util.regex.Matcher.quoteReplacement(D.get(i)[1]));
         return s;

@@ -1,5 +1,5 @@
 name: SquareStar
-version: '3.0.0'
+version: '3.2.0'
 main: cz.adrrex.squarestar.SquareStar
 api-version: '1.21.11'
 author: AdrrexStudio
@@ -8,6 +8,9 @@ commands:
   ss:
     description: SquareStar minihry
     aliases: [squarestar, hry]
+  udrzba:
+    description: Udrzba serveru (/udrzba on|off) - pripoji se jen tym
+    aliases: [maintenance]
   emote:
     description: Emoty (/emote hi)
     aliases: [e, emoty]

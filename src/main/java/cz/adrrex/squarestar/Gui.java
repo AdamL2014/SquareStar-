@@ -3,6 +3,7 @@ package cz.adrrex.squarestar;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.entity.Player;
 
 /** Hezké GUI: pozadí z resource packu + titulek.  = posun -8,  = posun -169 */
 public final class Gui implements org.bukkit.event.Listener {
@@ -53,7 +54,8 @@ public final class Gui implements org.bukkit.event.Listener {
 
     private static Component make(char glyph, String legacy) {
         Component text = U.c(legacy);
-        if (!enabled) return text;
+        Player viewer = Lang.last; Lang.last = null;
+        if (!enabled || (viewer != null && Ranks.bedrock(viewer))) return text; // Bedrock nemá Java resource pack
         Component bg = Component.text("" + glyph + "").font(FONT).color(NamedTextColor.WHITE);
         // text NESMÍ být dítě pozadí, jinak zdědí font s obrázky (čtverečky)
         return Component.text().append(bg).append(text.colorIfAbsent(NamedTextColor.WHITE)).build();
