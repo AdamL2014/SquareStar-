@@ -7,6 +7,8 @@ import cz.adrrex.squarestar.game.GameType;
 import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Display;
+import org.bukkit.entity.BlockDisplay;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -29,6 +31,14 @@ public final class RoverRace extends Game {
     private final Map<Player, ArmorStand> boats = new HashMap<>();
     private final Map<Player, double[]> phys = new HashMap<>(); // {rychlost, směr (rad), boost tiků, cooldown tiků, x, z}
     private static final double MAXV = 0.72, ACC = 0.03, BRAKE = 0.06, DRAG = 0.975;
+    // ---- Mario Kart režim: itemy, drift, boost pady ----
+    private final Map<Player, Integer> spin = new HashMap<>(), star = new HashMap<>(), drift = new HashMap<>();
+    private final Map<Player, String> held = new HashMap<>();
+    private final List<double[]> boxes = new ArrayList<>();          // {x, z, respawnTick}
+    private final List<Display[]> boxEnt = new ArrayList<>();
+    private final List<Object[]> hazards = new ArrayList<>();       // {typ, ItemDisplay/BlockDisplay, x, z, vx, vz, ticks, owner, target}
+    private final Set<Long> pads = new HashSet<>();
+    private int ticks = 0;
     private final Map<Player, ItemDisplay> rovers = new HashMap<>();
     private final Map<Player, Integer> cp = new HashMap<>(), lap = new HashMap<>();
     private final List<Player> finished = new ArrayList<>();
@@ -87,6 +97,21 @@ public final class RoverRace extends Game {
             int r = 2 + rnd.nextInt(3);
             b.sphere(ox + x, oy, oz + z, r, p -> b.set(p[0], p[1], p[2], rnd.nextInt(3) == 0 ? Material.GRANITE : Material.RED_SANDSTONE));
         }
+        // boost pady (šipky) a místa pro „?" boxy
+        pads.clear(); boxes.clear();
+        for (int k = 1; k < 6; k++) {
+            int idx = k * path.size() / 6;
+            double[] p = path.get(idx), q = path.get((idx + 3) % path.size());
+            double nx = -(q[1] - p[1]), nz = q[0] - p[0], len = Math.hypot(nx, nz); nx /= len; nz /= len;
+            if (k % 2 == 1) { // řada boxů napříč tratí
+                for (int j = -1; j <= 1; j++) boxes.add(new double[]{p[0] + nx * j * 2.6 + 0.5, p[1] + nz * j * 2.6 + 0.5, 0});
+            } else {          // boost pad
+                for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+                    int bx = (int) Math.round(p[0] + nx * 1.5) + dx, bz = (int) Math.round(p[1] + nz * 1.5) + dz;
+                    b.set(ox + bx, oy, oz + bz, Material.MAGENTA_GLAZED_TERRACOTTA); pads.add(key(ox + bx, oz + bz));
+                }
+            }
+        }
         // startovní / cílová čára (šachovnice)
         double[] s = path.get(0);
         for (int dz = -HALF_W; dz <= HALF_W; dz++) for (int dx = 0; dx <= 1; dx++)
@@ -141,6 +166,9 @@ public final class RoverRace extends Game {
 
     private void tick() {
         if (state != State.RUNNING) return;
+        ticks++;
+        tickBoxes();
+        tickHazards();
         for (Player p : new ArrayList<>(alive)) {
             ArmorStand b = boats.get(p);
             ItemDisplay d = rovers.get(p);
@@ -166,18 +194,46 @@ public final class RoverRace extends Game {
         double moved = Math.hypot(cur.getX() - f[4], cur.getZ() - f[5]);
         if (Math.abs(v) > 0.25 && moved < Math.abs(v) * 0.35) { v *= 0.35; w.playSound(cur, Sound.ENTITY_IRON_GOLEM_HURT, 0.4f, 1.6f); }
         f[4] = cur.getX(); f[5] = cur.getZ();
+        int sp = spin.getOrDefault(p, 0);
+        if (sp > 0) {
+            spin.put(p, sp - 1);
+            f[1] += 0.55; v *= 0.85;
+            if (sp % 4 == 0) w.spawnParticle(Particle.CRIT, cur.clone().add(0, 1, 0), 6, 0.4, 0.3, 0.4, 0.1);
+            f[0] = v;
+            st.setVelocity(new Vector(-Math.sin(f[1]) * v, Math.min(0, st.getVelocity().getY()), Math.cos(f[1]) * v));
+            st.setRotation((float) Math.toDegrees(f[1]), 0);
+            return;
+        }
+        int stT = star.getOrDefault(p, 0);
+        if (stT > 0) { star.put(p, stT - 1); f[2] = Math.max(f[2], 2);
+            w.spawnParticle(Particle.DUST, cur.clone().add(0, 1, 0), 4, 0.6, 0.4, 0.6, 0, new Particle.DustOptions(Color.fromRGB(java.awt.Color.HSBtoRGB((ticks % 30) / 30f, 1, 1) & 0xFFFFFF), 1.6f));
+            for (Player o : alive) if (o != p && star.getOrDefault(o, 0) == 0 && boats.containsKey(o) && boats.get(o).getLocation().distanceSquared(cur) < 3) hit(o, 30, "&e⭐ " + p.getName() + " tě rozbil hvězdou!");
+        }
+        // boost pad pod rovrem
+        if (pads.contains(key(cur.getBlockX(), cur.getBlockZ())) && f[2] < 20) { f[2] = 25; U.sound(p, Sound.ENTITY_FIREWORK_ROCKET_BLAST, 1.6f); }
+        // drift: Shift + zatáčení = ostřejší zatáčka a jiskry, po puštění mini turbo
+        boolean drifting = !frozen && in.isSneak() && (in.isLeft() || in.isRight()) && v > 0.35;
+        int dr = drift.getOrDefault(p, 0);
+        if (drifting) {
+            drift.put(p, dr + 1);
+            Color c = dr > 45 ? Color.ORANGE : dr > 20 ? Color.AQUA : Color.WHITE;
+            w.spawnParticle(Particle.DUST, cur.clone().add(Math.sin(f[1]) * 1.2, 0.2, -Math.cos(f[1]) * 1.2), 3, 0.3, 0.05, 0.3, 0, new Particle.DustOptions(c, 1.3f));
+        } else if (dr > 0) {
+            drift.put(p, 0);
+            if (dr > 20) { f[2] = Math.max(f[2], dr > 45 ? 30 : 16); U.sound(p, Sound.ENTITY_BLAZE_SHOOT, dr > 45 ? 1.8f : 1.4f); U.bar(p, dr > 45 ? "&6&l🔥 SUPER DRIFT TURBO!" : "&b&lDrift turbo!"); }
+        }
         if (!frozen) {
             if (in.isForward()) v += ACC;
             else if (in.isBackward()) v -= v > 0 ? BRAKE : ACC * 0.6;
             else v *= DRAG;
-            if (in.isJump() && f[3] <= 0) { f[2] = 40; f[3] = 160; U.sound(p, Sound.ENTITY_BLAZE_SHOOT, 1.4f); U.bar(p, "&6&l🔥 TURBO!"); }
+            if (in.isJump() && f[3] <= 0) { f[2] = 35; f[3] = 300; U.sound(p, Sound.ENTITY_BLAZE_SHOOT, 1.4f); U.bar(p, "&6&l🔥 TURBO!"); }
         } else v = 0;
-        double max = f[2] > 0 ? MAXV * 1.5 : MAXV;
+        double max = (f[2] > 0 ? MAXV * 1.5 : MAXV) * (star.getOrDefault(p, 0) > 0 ? 1.15 : 1);
         v = Math.max(-0.25, Math.min(max, v));
         if (f[2] > 0) { f[2]--; v = Math.max(v, MAXV * 1.2); w.spawnParticle(Particle.FLAME, cur.clone().add(Math.sin(f[1]) * 1.6, 0.5, -Math.cos(f[1]) * 1.6), 4, 0.15, 0.1, 0.15, 0.02); }
         if (f[3] > 0) f[3]--;
         // zatáčení (citlivější při nízké rychlosti, obrácené při couvání)
-        double steer = Math.toRadians(4.2) * Math.max(0.35, Math.min(1, Math.abs(v) / MAXV));
+        double steer = Math.toRadians(4.2) * Math.max(0.35, Math.min(1, Math.abs(v) / MAXV)) * (drifting ? 1.6 : 1);
         if (!frozen && Math.abs(v) > 0.02) {
             if (in.isLeft()) f[1] -= steer * Math.signum(v);
             if (in.isRight()) f[1] += steer * Math.signum(v);
@@ -188,11 +244,170 @@ public final class RoverRace extends Game {
         st.setRotation((float) Math.toDegrees(f[1]), 0);
     }
 
+    // ================= „?" boxy =================
+    private void tickBoxes() {
+        if (boxEnt.isEmpty()) for (double[] bx : boxes) boxEnt.add(spawnBox(bx));
+        for (int i = 0; i < boxes.size(); i++) {
+            double[] bx = boxes.get(i);
+            Display[] e = boxEnt.get(i);
+            boolean visible = bx[2] <= ticks;
+            if (visible && e[0] != null && e[0].isValid() && ticks % 2 == 0) {
+                e[0].setInterpolationDelay(0); e[0].setInterpolationDuration(2);
+                e[0].setTransformation(new Transformation(new Vector3f(-0.45f, -0.45f, -0.45f), new Quaternionf().rotateY(ticks * 0.08f).rotateX(0.4f), new Vector3f(0.9f, 0.9f, 0.9f), new Quaternionf()));
+            }
+            if (!visible) continue;
+            Location c = loc(bx[0], 1.4, bx[1]);
+            for (Player p : alive) {
+                ArmorStand st = boats.get(p);
+                if (st == null || st.getLocation().distanceSquared(c) > 3.2) continue;
+                bx[2] = ticks + 60;
+                for (Display d : e) if (d != null) d.setViewRange(0f);
+                Bukkit.getScheduler().runTaskLater(pl, () -> { for (Display d : e) if (d != null && d.isValid()) d.setViewRange(1f); }, 60);
+                w.spawnParticle(Particle.FIREWORK, c, 15, 0.3, 0.3, 0.3, 0.1);
+                if (!held.containsKey(p)) giveItem(p);
+                break;
+            }
+        }
+    }
+    private Display[] spawnBox(double[] bx) {
+        Location c = loc(bx[0], 1.4, bx[1]);
+        BlockDisplay cube = spawn(c, BlockDisplay.class, d -> { d.setBlock(Material.LIGHT_BLUE_STAINED_GLASS.createBlockData()); d.setBrightness(new Display.Brightness(15, 15)); });
+        TextDisplay q = spawn(c.clone().add(0, -0.15, 0), TextDisplay.class, d -> {
+            d.text(U.c("&e&l?")); d.setBillboard(Display.Billboard.CENTER); d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0)); d.setSeeThrough(true);
+            d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(2.2f, 2.2f, 2.2f), new Quaternionf()));
+        });
+        return new Display[]{cube, q};
+    }
+
+    // ================= itemy =================
+    private static final Object[][] ITEMS = {
+            {"mushroom", Material.RED_MUSHROOM, "&c&lTurbo houba", "Pravý klik = turbo"},
+            {"banana", Material.YELLOW_DYE, "&e&lBanán", "Pravý klik = polož za sebe"},
+            {"green", Material.SLIME_BALL, "&a&lZelený krunýř", "Pravý klik = vystřel rovně"},
+            {"red", Material.RED_DYE, "&c&lČervený krunýř", "Pravý klik = navede se na hráče před tebou"},
+            {"star", Material.NETHER_STAR, "&6&l⭐ Hvězda", "Pravý klik = 6 s nezranitelnost a rychlost"},
+            {"meteor", Material.MAGMA_CREAM, "&4&l☄ Meteorit", "Pravý klik = zasáhne všechny před tebou"}};
+    private void giveItem(Player p) {
+        // horší pozice = lepší itemy (jako v Mario Kartu)
+        int pos = 1; for (Player o : alive) if (o != p && score(o) > score(p)) pos++;
+        double back = alive.size() <= 1 ? 0.5 : (pos - 1) / (double) (alive.size() - 1);
+        int[] weights = back < 0.34 ? new int[]{3, 5, 5, 1, 0, 0} : back < 0.67 ? new int[]{4, 3, 3, 3, 1, 0} : new int[]{5, 1, 2, 4, 2, 1};
+        int sum = 0; for (int x : weights) sum += x;
+        int r = rnd.nextInt(sum), i = 0; while (r >= weights[i]) r -= weights[i++];
+        Object[] it = ITEMS[i];
+        held.put(p, (String) it[0]);
+        if (System.getProperty("ssdebug") != null) pl.getLogger().info("KART item " + it[0] + " -> " + p.getName());
+        p.getInventory().setItem(0, U.tag(U.item((Material) it[1], 1, (String) it[2], "&7" + it[3]), "ss_kart", (String) it[0]));
+        p.getInventory().setHeldItemSlot(0);
+        U.title(p, "", it[2] + " &7(pravý klik)");
+        U.sound(p, Sound.ENTITY_ITEM_PICKUP, 1.4f);
+    }
+
+    @Override public void onInteract(org.bukkit.event.player.PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        String id = U.tagOf(e.getItem(), "ss_kart");
+        if (id == null || go >= 0 || !held.containsKey(p)) return;
+        e.setCancelled(true);
+        held.remove(p);
+        p.getInventory().setItem(0, null);
+        useItem(p, id);
+    }
+    @Override public void onInteractEntity(org.bukkit.event.player.PlayerInteractEntityEvent e) {
+        Player p = e.getPlayer();
+        String id = U.tagOf(p.getInventory().getItemInMainHand(), "ss_kart");
+        if (id == null || go >= 0 || !held.containsKey(p)) return;
+        e.setCancelled(true); held.remove(p); p.getInventory().setItem(0, null); useItem(p, id);
+    }
+
+    private void useItem(Player p, String id) {
+        if (System.getProperty("ssdebug") != null) pl.getLogger().info("KART use " + id);
+        double[] f = phys.get(p);
+        ArmorStand st = boats.get(p);
+        if (f == null || st == null) return;
+        Location at = st.getLocation();
+        double fx = -Math.sin(f[1]), fz = Math.cos(f[1]);
+        switch (id) {
+            case "mushroom" -> { f[2] = 40; U.sound(p, Sound.ENTITY_GENERIC_EAT, 1.4f); }
+            case "star" -> { star.put(p, 120); U.sound(p, Sound.ENTITY_PLAYER_LEVELUP, 2f); broadcast("&6⭐ " + p.getName() + " &emá hvězdu!"); }
+            case "banana" -> hazards.add(new Object[]{"banana", item(at.clone().add(-fx * 2.4, 0.3, -fz * 2.4), Material.YELLOW_DYE, 1.3f), at.getX() - fx * 2.4, at.getZ() - fz * 2.4, 0.0, 0.0, 1200, p, null});
+            case "green" -> hazards.add(new Object[]{"green", shell(at.clone().add(fx * 2, 0.4, fz * 2), Material.LIME_CONCRETE), at.getX() + fx * 2, at.getZ() + fz * 2, fx * 1.05, fz * 1.05, 100, p, null});
+            case "red" -> {
+                Player target = null; double best = Double.MAX_VALUE, me = score(p);
+                for (Player o : alive) if (o != p && score(o) > me && score(o) - me < best) { best = score(o) - me; target = o; }
+                if (target == null) for (Player o : alive) if (o != p && (target == null || boats.get(o).getLocation().distanceSquared(at) < boats.get(target).getLocation().distanceSquared(at))) target = o;
+                hazards.add(new Object[]{"red", shell(at.clone().add(fx * 2, 0.4, fz * 2), Material.RED_CONCRETE), at.getX() + fx * 2, at.getZ() + fz * 2, fx, fz, 160, p, target});
+            }
+            case "meteor" -> {
+                double me = score(p);
+                for (Player o : alive) if (o != p && score(o) > me) { hit(o, 35, "&4☄ Meteorit od " + p.getName() + "!"); w.strikeLightningEffect(boats.get(o).getLocation()); }
+                broadcast("&4☄ " + p.getName() + " &cposlal meteorit na všechny před sebou!");
+            }
+        }
+        U.sound(p, Sound.ENTITY_SNOWBALL_THROW, 1.2f);
+    }
+    private ItemDisplay item(Location l, Material m, float scale) {
+        return spawn(l, ItemDisplay.class, d -> { d.setItemStack(new ItemStack(m)); d.setBillboard(Display.Billboard.VERTICAL); d.setTeleportDuration(1);
+            d.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(scale, scale, scale), new Quaternionf())); });
+    }
+    private BlockDisplay shell(Location l, Material m) {
+        return spawn(l, BlockDisplay.class, d -> { d.setBlock(m.createBlockData()); d.setTeleportDuration(1); d.setBrightness(new Display.Brightness(15, 15));
+            d.setTransformation(new Transformation(new Vector3f(-0.35f, 0, -0.35f), new Quaternionf(), new Vector3f(0.7f, 0.5f, 0.7f), new Quaternionf())); });
+    }
+
+    private void tickHazards() {
+        for (Iterator<Object[]> it = hazards.iterator(); it.hasNext(); ) {
+            Object[] h = it.next();
+            Display d = (Display) h[1];
+            int life = (int) h[6] - 1; h[6] = life;
+            double x = (double) h[2], z = (double) h[3], vx = (double) h[4], vz = (double) h[5];
+            if (h[0].equals("red") && h[8] instanceof Player t && boats.containsKey(t)) {
+                Location tl = boats.get(t).getLocation();
+                double dx = tl.getX() - x, dz = tl.getZ() - z, len = Math.max(0.01, Math.hypot(dx, dz));
+                vx = vx * 0.7 + dx / len * 1.25 * 0.3; vz = vz * 0.7 + dz / len * 1.25 * 0.3;
+                double l2 = Math.hypot(vx, vz); vx = vx / l2 * 1.15; vz = vz / l2 * 1.15;
+                h[4] = vx; h[5] = vz;
+            }
+            if (vx != 0 || vz != 0) {
+                double nx = x + vx, nz = z + vz;
+                if (w.getBlockAt((int) Math.floor(nx), oy + 1, (int) Math.floor(nz)).getType().isSolid()) {
+                    if (h[0].equals("green")) { // odraz od zdi
+                        if (w.getBlockAt((int) Math.floor(nx), oy + 1, (int) Math.floor(z)).getType().isSolid()) vx = -vx; else vz = -vz;
+                        h[4] = vx; h[5] = vz; nx = x + vx; nz = z + vz;
+                    } else { life = 0; }
+                }
+                x = nx; z = nz; h[2] = x; h[3] = z;
+                if (d.isValid()) d.teleport(new Location(w, x, oy + 1.25, z));
+                if (ticks % 2 == 0) w.spawnParticle(Particle.CLOUD, new Location(w, x, oy + 1.3, z), 1, 0, 0, 0, 0);
+            }
+            boolean done = life <= 0;
+            for (Player o : alive) {
+                ArmorStand st = boats.get(o);
+                if (st == null || (o == h[7] && (int) h[6] > (h[0].equals("banana") ? 1170 : 90))) continue; // chvíli nezasáhne vlastníka
+                Location ol = st.getLocation();
+                if (Math.hypot(ol.getX() - x, ol.getZ() - z) < 1.5) {
+                    if (star.getOrDefault(o, 0) == 0) hit(o, h[0].equals("banana") ? 26 : 38, h[0].equals("banana") ? "&eUklouzl jsi po banánu!" : "&cZásah krunýřem!");
+                    done = true; break;
+                }
+            }
+            if (done) { if (d.isValid()) d.remove(); it.remove(); }
+        }
+    }
+
+    private void hit(Player o, int ticksSpin, String msg) {
+        if (spin.getOrDefault(o, 0) > 0) return;
+        spin.put(o, ticksSpin);
+        U.title(o, "&c&lAU!", msg);
+        U.sound(o, Sound.ENTITY_ITEM_BREAK, 0.7f);
+        ArmorStand st = boats.get(o);
+        if (st != null) w.spawnParticle(Particle.EXPLOSION, st.getLocation().add(0, 1, 0), 1, 0, 0, 0, 0);
+    }
+
     private void progress(Player p, Location at) {
         int next = cp.getOrDefault(p, 0) + 1;
         int idx = (next % CP) * path.size() / CP;
         double[] t = path.get(idx);
         if (at.distanceSquared(loc(t[0], 1, t[1])) > (HALF_W + 3) * (HALF_W + 3)) return;
+        if (System.getProperty("ssdebug") != null) pl.getLogger().info("KART cp " + next + " lap " + lap.get(p));
         if (next % CP == 0) {
             int l = lap.merge(p, 1, Integer::sum);
             cp.put(p, 0);
@@ -229,7 +444,7 @@ public final class RoverRace extends Game {
         int pos = 1;
         double me = score(p);
         for (Player o : alive) if (o != p && score(o) > me) pos++;
-        return (go >= 0 ? "&7W = plyn, A/D = zatáčení, S = brzda, Mezerník = turbo &8| " : "") + "&6Kolo &f" + Math.min(LAPS, lap.getOrDefault(p, 1)) + "/" + LAPS + " &8| &eCheckpoint &f" + cp.getOrDefault(p, 0) + "/" + CP + " &8| &bPozice &f" + pos + "/" + alive.size() + " &8| &7" + fmt(time);
+        return (go >= 0 ? "&7W plyn, A/D zatáčení, Shift+A/D drift, Mezerník turbo, pravý klik = item &8| " : (held.containsKey(p) ? "&dItem: pravý klik &8| " : "")) + "&6Kolo &f" + Math.min(LAPS, lap.getOrDefault(p, 1)) + "/" + LAPS + " &8| &eCheckpoint &f" + cp.getOrDefault(p, 0) + "/" + CP + " &8| &bPozice &f" + pos + "/" + alive.size() + " &8| &7" + fmt(time);
     }
     private double score(Player p) { return lap.getOrDefault(p, 1) * 100 + cp.getOrDefault(p, 0); }
 
@@ -260,6 +475,9 @@ public final class RoverRace extends Game {
     @Override protected void onDestroy() {
         if (tick != null) tick.cancel();
         for (ArmorStand b : boats.values()) b.remove();
+        for (Object[] h : hazards) ((Display) h[1]).remove();
+        for (Display[] e : boxEnt) for (Display d : e) if (d != null) d.remove();
+        hazards.clear(); boxEnt.clear();
         for (ItemDisplay d : rovers.values()) d.remove();
         boats.clear(); rovers.clear();
     }

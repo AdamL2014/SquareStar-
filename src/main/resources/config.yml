@@ -106,3 +106,10 @@ maintenance:
 #   helper:
 #     - minecraft.command.kick
 #     - minecraft.command.tp
+
+# Resource pack posílá plugin (jen Java hráčům; Bedrock ho nedostane, jinak by ho to vyhodilo).
+# V server.properties proto NECH resource-pack prázdné a require-resource-pack=false.
+resource-pack:
+  enabled: true
+  required: true
+  url: "https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip"

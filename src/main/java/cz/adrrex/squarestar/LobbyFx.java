@@ -66,6 +66,7 @@ public final class LobbyFx implements Listener {
         if (pl.getConfig().getBoolean("lobby.fx.rocket", true)) spawnRocket();
         spawnNpcs();
         if (pl.getConfig().getBoolean("lobby.vidrift-npc", true)) spawnVidrift();
+        spawnRedstoneNpc();
         spawnSpinners();
         if (pl.getConfig().getBoolean("lobby.fx.earth", true)) spawnEarth();
     }
@@ -461,6 +462,33 @@ public final class LobbyFx implements Listener {
         });
         pl.mars.getBlockAt(l.getBlockX(), Lobby.Y, l.getBlockZ()).setType(Material.PURPLE_GLAZED_TERRACOTTA, false);
     }
+    // ---------------- Redstone týden NPC (vlevo vpředu, zrcadlově k VidRiftu) ----------------
+    private void spawnRedstoneNpc() {
+        Location l = new Location(pl.mars, -9.5, Lobby.Y + 1, 7.5);
+        l.setDirection(new Vector(10, 0, -7));
+        pl.mars.spawn(l, Mannequin.class, e -> {
+            e.customName(U.c("&c&l⚡ Redstone týden"));
+            e.setCustomNameVisible(true);
+            e.setDescription(U.c("&7Téma: &e" + pl.redstone.theme() + " &8| &eKlikni"));
+            e.setImmovable(true);
+            e.setAI(false);
+            skin(e);
+            e.getEquipment().setItemInMainHand(new ItemStack(Material.REDSTONE_TORCH));
+            e.getEquipment().setHelmet(new ItemStack(Material.REDSTONE_LAMP));
+            e.addScoreboardTag(TAG);
+            e.addScoreboardTag("ss_npc_redstone");
+        });
+        pl.mars.spawn(l.clone().add(0, 3.3, 0), TextDisplay.class, d -> {
+            d.text(U.c("&c&l⚡ REDSTONE TÝDEN ⚡\n&7Každý týden nové téma\n&eV neděli se hlasuje!"));
+            d.setBillboard(Display.Billboard.CENTER);
+            d.setBackgroundColor(Color.fromARGB(200, 30, 4, 4));
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.addScoreboardTag(TAG); d.setPersistent(false);
+        });
+        pl.mars.getBlockAt(l.getBlockX(), Lobby.Y, l.getBlockZ()).setType(Material.REDSTONE_BLOCK, false);
+    }
+    private void openRedstone(Player p) { if (RedstoneWeek.voting()) pl.redstone.visit(p, 0); else pl.redstone.join(p); }
+
     private void openVidrift(Player p) {
         String url = pl.getConfig().getString("ranks.vidrift-url", "https://vidriftvideo.netlify.app");
         boolean en = Lang.en(p);
@@ -482,6 +510,7 @@ public final class LobbyFx implements Listener {
     @EventHandler public void clickNpc(PlayerInteractEntityEvent e) {
         if (e.getHand() != EquipmentSlot.HAND) return;
         if (e.getRightClicked().getScoreboardTags().contains("ss_npc_vidrift")) { e.setCancelled(true); openVidrift(e.getPlayer()); return; }
+        if (e.getRightClicked().getScoreboardTags().contains("ss_npc_redstone")) { e.setCancelled(true); openRedstone(e.getPlayer()); return; }
         GameType g = npcGame(e.getRightClicked());
         if (g == null) return;
         e.setCancelled(true);
@@ -490,6 +519,7 @@ public final class LobbyFx implements Listener {
 
     @EventHandler public void hitNpc(EntityDamageByEntityEvent e) {
         if (e.getEntity().getScoreboardTags().contains("ss_npc_vidrift")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) openVidrift(p); return; }
+        if (e.getEntity().getScoreboardTags().contains("ss_npc_redstone")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) openRedstone(p); return; }
         GameType g = npcGame(e.getEntity());
         if (g == null) return;
         e.setCancelled(true);

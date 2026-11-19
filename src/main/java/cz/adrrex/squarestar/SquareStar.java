@@ -24,6 +24,7 @@ public final class SquareStar extends JavaPlugin {
     public Levels levels;
     public RedstoneWeek redstone;
     public Motd motd;
+    public Pack pack;
     public Lobby lobby;
     public Ranks ranks;
     public LobbyFx fx;
@@ -44,6 +45,7 @@ public final class SquareStar extends JavaPlugin {
         games = new GameManager(this);
         lobby = new Lobby(this);
         ranks = new Ranks(this);
+        redstone = new RedstoneWeek(this);
         fx = new LobbyFx(this);
         cosmetics = new Cosmetics(this);
         var pm = getServer().getPluginManager();
@@ -55,11 +57,12 @@ public final class SquareStar extends JavaPlugin {
         pm.registerEvents(fx, this);
         pm.registerEvents(cosmetics, this);
         levels = new Levels(this);
-        redstone = new RedstoneWeek(this);
         pm.registerEvents(redstone, this);
         intro = new Intro(this);
         pm.registerEvents(intro, this);
         pm.registerEvents(new Gui(), this);
+        pack = new Pack(this);
+        pm.registerEvents(pack, this);
         motd = new Motd(this);
         pm.registerEvents(motd, this);
         Emotes em = new Emotes(this);
