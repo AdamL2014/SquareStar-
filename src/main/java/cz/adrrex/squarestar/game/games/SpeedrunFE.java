@@ -34,7 +34,7 @@ public final class SpeedrunFE extends Game {
 
     public SpeedrunFE(GameManager gm, int slot) { super(gm, GameType.SPEEDRUN, slot); }
 
-    @Override public List<String> maps() { return List.of("Vlněný měsíc", "Levná planeta"); }
+    @Override public List<String> maps() { return List.of("Vlněný měsíc", "Levná planeta", "Duhová planeta"); }
     @Override protected GameMode mode() { return GameMode.SURVIVAL; }
     @Override protected Dmg damage() { return Dmg.NORMAL; }
     @Override protected int voidY() { return oy - 25; }
@@ -42,9 +42,10 @@ public final class SpeedrunFE extends Game {
 
     // ---------------- vlněný svět ----------------
     @Override protected void buildMap(U.BlockQueue.Builder b) {
-        boolean planet = map == 1;
-        Material base = planet ? Material.ORANGE_WOOL : Material.WHITE_WOOL;
+        boolean planet = map == 1, rainbow = map == 2;
+        Material base = planet ? Material.ORANGE_WOOL : rainbow ? Material.PINK_WOOL : Material.WHITE_WOOL;
         Material top = planet ? Material.RED_WOOL : Material.LIGHT_GRAY_WOOL;
+        Material[] rb = {Material.PINK_WOOL, Material.MAGENTA_WOOL, Material.PURPLE_WOOL, Material.BLUE_WOOL, Material.CYAN_WOOL, Material.LIME_WOOL, Material.GREEN_WOOL};
         long seed = rnd.nextLong();
         for (int x = -R; x <= R; x++) for (int z = -R; z <= R; z++) {
             double d = Math.sqrt(x * x + z * z);
@@ -52,7 +53,7 @@ public final class SpeedrunFE extends Game {
             int h = (int) Math.round(3 + 3 * Math.sin((x + seed % 7) * 0.13) * Math.cos((z - seed % 5) * 0.11) + 2 * Math.sin((x + z) * 0.07) - Math.max(0, d - R + 8));
             int bottom = (int) -Math.max(2, (R - d) * 0.35);
             for (int y = bottom; y < h; y++) b.set(ox + x, oy + y, oz + z, y < h - 3 ? ROCK : base);
-            b.set(ox + x, oy + h, oz + z, (planet && (x * 7 + z * 3) % 11 == 0) ? Material.ORANGE_WOOL : top);
+            b.set(ox + x, oy + h, oz + z, rainbow ? rb[Math.floorMod((x + z) / 4, rb.length)] : (planet && (x * 7 + z * 3) % 11 == 0) ? Material.ORANGE_WOOL : top);
         }
         // „rudy" = barevné shluky vlny pod povrchem i na povrchu
         Material[] ores = {GOLD, GOLD, CRYSTAL, FUEL, ROCK, ROCK};

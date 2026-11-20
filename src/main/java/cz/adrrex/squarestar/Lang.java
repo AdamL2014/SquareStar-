@@ -171,6 +171,10 @@ public final class Lang {
         a("Skoč do šachty, nenaraz do ničeho a dopadni do", "Jump into the shaft, hit nothing and land in the"); a("vody", "water"); a("levelů!", "levels!");
         a("prošel level", "passed level"); a("prošel všechny levely!", "passed all levels!"); a("chyb:", "fails:"); a("čas", "time"); a("Náraz!", "Crash!"); a("Znovu od začátku levelu.", "Back to the start of the level.");
         a("Nárazy", "Crashes"); a("Trámy", "Beams"); a("Díry v podlaze", "Holes in the floor"); a("Les sloupů", "Pillar forest"); a("Spirála", "Spiral"); a("Asteroidy", "Asteroids");
+        a("Neonová aréna", "Neon Arena"); a("Ledový talíř", "Ice Plate"); a("Sopečné ostrovy", "Volcanic Islands"); a("Neonová dráha", "Neon Track");
+        a("Krystalová mlhovina", "Crystal Nebula"); a("Laboratoř", "Laboratory"); a("Ledová stanice", "Ice Station"); a("Duhová planeta", "Rainbow Planet");
+        a("Ledové šachty", "Ice Shafts"); a("Fobos sprint", "Phobos Sprint"); a("Kruhová patra", "Round Floors"); a("Hvězdná patra", "Star Floors");
+        a("Sněžný měsíc", "Snowy Moon"); a("Čtvercový krystal", "Square Crystal");
         D.sort((x, y) -> y[0].length() - x[0].length()); // nejdelší fráze první
         for (String[] e : D) P.add(java.util.regex.Pattern.compile("(?<!(?<!&)\\p{L})" + java.util.regex.Pattern.quote(e[0]) + "(?![\\p{L}])"));
     }

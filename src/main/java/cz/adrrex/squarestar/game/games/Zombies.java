@@ -28,7 +28,7 @@ public final class Zombies extends Game {
 
     public Zombies(GameManager gm, int slot) { super(gm, GameType.ZOMBIES, slot); }
 
-    @Override public List<String> maps() { return List.of("Měsíční základna", "Kráter Tycho"); }
+    @Override public List<String> maps() { return List.of("Měsíční základna", "Kráter Tycho", "Ledová stanice"); }
     @Override protected GameMode mode() { return GameMode.ADVENTURE; }
     @Override protected Dmg damage() { return Dmg.NORMAL; }
     @Override protected int voidY() { return oy - 20; }
@@ -37,9 +37,9 @@ public final class Zombies extends Game {
 
     // ---------------- mapa ----------------
     @Override protected void buildMap(U.BlockQueue.Builder b) {
-        boolean tycho = map == 1;
-        Material floor = tycho ? Material.SMOOTH_STONE : Material.LIGHT_GRAY_CONCRETE;
-        Material floor2 = tycho ? Material.ANDESITE : Material.GRAY_CONCRETE;
+        boolean tycho = map == 1, ice = map == 2;
+        Material floor = ice ? Material.PACKED_ICE : tycho ? Material.SMOOTH_STONE : Material.LIGHT_GRAY_CONCRETE;
+        Material floor2 = ice ? Material.SNOW_BLOCK : tycho ? Material.ANDESITE : Material.GRAY_CONCRETE;
         for (int x = -R - 12; x <= R + 12; x++) for (int z = -R - 12; z <= R + 12; z++) {
             double d = Math.sqrt(x * x + z * z);
             boolean gate = Math.abs(x) <= 2 || Math.abs(z) <= 2;
@@ -49,7 +49,7 @@ public final class Zombies extends Game {
             }
             // zeď s průchody (brány), svítidla nahoře
             if (d > R - 0.5 && d <= R + 0.5 && !gate) {
-                for (int y = 1; y <= 4; y++) b.set(ox + x, oy + y, oz + z, y == 4 ? Material.SEA_LANTERN : (tycho ? Material.STONE_BRICKS : Material.WHITE_CONCRETE));
+                for (int y = 1; y <= 4; y++) b.set(ox + x, oy + y, oz + z, y == 4 ? Material.SEA_LANTERN : (ice ? Material.BLUE_ICE : tycho ? Material.STONE_BRICKS : Material.WHITE_CONCRETE));
             }
         }
         // reaktor uprostřed
@@ -62,7 +62,7 @@ public final class Zombies extends Game {
         for (int i = 0; i < 8; i++) {
             double a = i * Math.PI / 4 + Math.PI / 8;
             int cx = ox + (int) Math.round(Math.cos(a) * 12), cz = oz + (int) Math.round(Math.sin(a) * 12);
-            b.fill(cx, oy + 1, cz, cx + 1, oy + 2, cz, tycho ? Material.COBBLED_DEEPSLATE : Material.CYAN_TERRACOTTA);
+            b.fill(cx, oy + 1, cz, cx + 1, oy + 2, cz, ice ? Material.LIGHT_BLUE_STAINED_GLASS : tycho ? Material.COBBLED_DEEPSLATE : Material.CYAN_TERRACOTTA);
         }
     }
     private static int[][] gates() { return new int[][]{{0, R + 10}, {0, -R - 10}, {R + 10, 0}, {-R - 10, 0}}; }

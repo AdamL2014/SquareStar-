@@ -22,12 +22,14 @@ public final class Parkour extends Game {
 
     public Parkour(GameManager gm, int slot) { super(gm, GameType.PARKOUR, slot); }
 
-    @Override public List<String> maps() { return List.of("Rudé kaňony", "Ledová kometa"); }
+    @Override public List<String> maps() { return List.of("Rudé kaňony", "Ledová kometa", "Neonová dráha"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {
-        b.fill(ox - 2, oy, oz - 2, ox + 2, oy, oz + 2, map == 1 ? Material.PACKED_ICE : Material.RED_NETHER_BRICKS);
+        b.fill(ox - 2, oy, oz - 2, ox + 2, oy, oz + 2, map == 1 ? Material.PACKED_ICE : map == 2 ? Material.BLACK_CONCRETE : Material.RED_NETHER_BRICKS);
         checkpoints.add(new int[]{0, 0, 0});
-        Material[] mats = map == 1
+        Material[] mats = map == 2
+                ? new Material[]{Material.CYAN_CONCRETE, Material.MAGENTA_CONCRETE, Material.LIME_CONCRETE, Material.YELLOW_CONCRETE, Material.PURPLE_STAINED_GLASS}
+                : map == 1
                 ? new Material[]{Material.PACKED_ICE, Material.BLUE_ICE, Material.SNOW_BLOCK, Material.LIGHT_BLUE_CONCRETE, Material.CALCITE}
                 : new Material[]{Material.RED_TERRACOTTA, Material.ORANGE_TERRACOTTA, Material.WHITE_CONCRETE, Material.RED_SANDSTONE, Material.BLACKSTONE};
         int x = 0, y = 0, z = 3;

@@ -24,13 +24,14 @@ public final class SkyWars extends Game {
 
     public SkyWars(GameManager gm, int slot) { super(gm, GameType.SKYWARS, slot); }
 
+    private static final Material[] LAVA = {Material.BASALT, Material.BLACKSTONE, Material.POLISHED_BASALT, Material.NETHERRACK, Material.MAGMA_BLOCK, Material.SMOOTH_BASALT};
     private static final Material[] ICE = {Material.SNOW_BLOCK, Material.PACKED_ICE, Material.CALCITE, Material.DIORITE, Material.WHITE_CONCRETE, Material.BLUE_ICE};
 
-    @Override public java.util.List<String> maps() { return java.util.List.of("Asteroidy", "Ledové měsíce"); }
+    @Override public java.util.List<String> maps() { return java.util.List.of("Asteroidy", "Ledové měsíce", "Sopečné ostrovy"); }
 
     private void asteroid(U.BlockQueue.Builder b, int cx, int cy, int cz, int r) {
-        Material[] rock = map == 1 ? ICE : ROCK;
-        Material topM = map == 1 ? Material.SNOW_BLOCK : Material.RED_SAND;
+        Material[] rock = map == 1 ? ICE : map == 2 ? LAVA : ROCK;
+        Material topM = map == 1 ? Material.SNOW_BLOCK : map == 2 ? Material.BLACKSTONE : Material.RED_SAND;
         b.sphere(cx, cy, cz, r, p -> {
             if (p[1] > cy + 1) return; // plochý vršek
             Material m = p[1] == cy + 1 ? topM : rnd.nextInt(14) == 0 ? ORE[rnd.nextInt(ORE.length)] : rock[rnd.nextInt(rock.length)];

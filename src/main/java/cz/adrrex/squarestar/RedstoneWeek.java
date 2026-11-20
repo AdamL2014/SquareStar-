@@ -138,6 +138,9 @@ public final class RedstoneWeek implements Listener {
         if (pl.games.of(p) != null) { U.msg(p, "&cNejdřív opusť hru: &e/ss leave"); return; }
         int n = plotOf(p);
         int[] o = origin(n);
+        // pozemek chybí (svět se neuložil / smazal) -> postavit znovu, ať hráč nepropadne
+        world.getChunkAt(o[0] >> 4, o[1] >> 4).load();
+        if (world.getBlockAt(o[0] + PLOT / 2, Y, o[1] + PLOT / 2).getType().isAir() || world.getBlockAt(o[0] + PLOT / 2, Y, o[1] - 3).getType().isAir()) buildPlot(n);
         if (p.getWorld() == pl.mars) pl.lobby.saveInv(p);
         p.getInventory().clear();
         p.teleport(new Location(world, o[0] + PLOT / 2.0, Y + 1, o[1] - 3, 0, 20));
@@ -216,6 +219,19 @@ public final class RedstoneWeek implements Listener {
     @EventHandler public void boom(EntityExplodeEvent e) { if (e.getLocation().getWorld() == world) e.blockList().clear(); }
     @EventHandler public void piston(BlockPistonExtendEvent e) { if (e.getBlock().getWorld() == world && plotAt(e.getBlock().getRelative(e.getDirection(), e.getBlocks().size() + 1).getLocation()) == null) e.setCancelled(true); }
     @EventHandler public void flow(BlockFromToEvent e) { if (e.getBlock().getWorld() == world && plotAt(e.getToBlock().getLocation()) == null) e.setCancelled(true); }
+    /** pád pod pozemek -> zpátky nahoru (místo smrti v prázdnu) */
+    @EventHandler public void fall(org.bukkit.event.player.PlayerMoveEvent e) {
+        Player p = e.getPlayer();
+        if (p.getWorld() != world || e.getTo().getY() > Y - 12) return;
+        Integer n = data.contains("plots." + p.getUniqueId()) ? data.getInt("plots." + p.getUniqueId()) : null;
+        if (n != null) { int[] o = origin(n); buildPlot(n); p.teleport(new Location(world, o[0] + PLOT / 2.0, Y + 1, o[1] - 3, 0, 20)); }
+        else pl.lobby.send(p);
+        p.setFallDistance(0);
+    }
+    @EventHandler public void voidDamage(org.bukkit.event.entity.EntityDamageEvent e) {
+        if (e.getEntity().getWorld() == world && (e.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.VOID || e.getCause() == org.bukkit.event.entity.EntityDamageEvent.DamageCause.FALL)) e.setCancelled(true);
+    }
+
     @EventHandler public void leaveWorld(PlayerChangedWorldEvent e) {
         if (e.getFrom() == world && e.getPlayer().getGameMode() == GameMode.CREATIVE) e.getPlayer().setGameMode(GameMode.ADVENTURE);
     }

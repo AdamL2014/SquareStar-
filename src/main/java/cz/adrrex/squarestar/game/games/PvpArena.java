@@ -34,10 +34,11 @@ public final class PvpArena extends Game {
     }
     private boolean teams() { return teamSize >= 5; }
 
-    @Override public List<String> maps() { return sumo ? List.of("Měsíční talíř", "Rudý talíř") : List.of("Koloseum", "Kráter"); }
+    @Override public List<String> maps() { return sumo ? List.of("Měsíční talíř", "Rudý talíř", "Ledový talíř") : List.of("Koloseum", "Kráter", "Neonová aréna"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {
         if (sumo) { buildSumo(b); return; }
+        if (map == 2) { buildNeon(b); return; }
         boolean crater = map == 1;
         for (int x = -R - 1; x <= R + 1; x++) for (int z = -R - 1; z <= R + 1; z++) {
             double d = Math.sqrt(x * x + z * z);
@@ -70,7 +71,46 @@ public final class PvpArena extends Game {
         }
     }
 
+    /** Neonová aréna: černá podlaha s neonovou mřížkou, vyvýšené plošiny a kryty */
+    private void buildNeon(U.BlockQueue.Builder b) {
+        for (int x = -R - 1; x <= R + 1; x++) for (int z = -R - 1; z <= R + 1; z++) {
+            double d = Math.sqrt(x * x + z * z);
+            if (d > R + 1.5) continue;
+            Material top = (x % 5 == 0 || z % 5 == 0) ? ((x + z) % 2 == 0 ? Material.CYAN_CONCRETE : Material.MAGENTA_CONCRETE) : Material.BLACK_CONCRETE;
+            if (x % 5 == 0 && z % 5 == 0) top = Material.SEA_LANTERN;
+            b.set(ox + x, oy, oz + z, top);
+            for (int y = -3; y < 0; y++) b.set(ox + x, oy + y, oz + z, Material.POLISHED_BLACKSTONE);
+            if (d > R - 0.5) for (int y = 1; y <= 7; y++) b.set(ox + x, oy + y, oz + z, y == 7 ? Material.SEA_LANTERN : (y % 3 == 0 ? Material.MAGENTA_STAINED_GLASS : Material.BLACK_STAINED_GLASS));
+        }
+        // 4 vyvýšené plošiny se schody (výhoda výšky)
+        for (int i = 0; i < 4; i++) {
+            double a = i * Math.PI / 2 + Math.PI / 4;
+            int cx = ox + (int) Math.round(Math.cos(a) * 11), cz = oz + (int) Math.round(Math.sin(a) * 11);
+            b.fill(cx - 2, oy + 1, cz - 2, cx + 2, oy + 2, cz + 2, Material.POLISHED_BLACKSTONE_BRICKS);
+            b.fill(cx - 2, oy + 3, cz - 2, cx + 2, oy + 3, cz + 2, i % 2 == 0 ? Material.CYAN_STAINED_GLASS : Material.MAGENTA_STAINED_GLASS);
+            int sx = (int) Math.signum(ox - cx), sz = (int) Math.signum(oz - cz);
+            b.set(cx + sx * 3, oy + 1, cz, Material.POLISHED_BLACKSTONE_SLAB); b.set(cx, oy + 1, cz + sz * 3, Material.POLISHED_BLACKSTONE_SLAB);
+        }
+        // kryty
+        for (int i = 0; i < 4; i++) {
+            double a = i * Math.PI / 2;
+            int cx = ox + (int) Math.round(Math.cos(a) * 6), cz = oz + (int) Math.round(Math.sin(a) * 6);
+            b.fill(cx, oy + 1, cz, cx, oy + 2, cz, Material.LIGHT_BLUE_STAINED_GLASS);
+            b.set(cx, oy + 3, cz, Material.END_ROD);
+        }
+        b.set(ox, oy + 1, oz, Material.BEACON);
+    }
+
     private void buildSumo(U.BlockQueue.Builder b) {
+        if (map == 2) { // Ledový talíř – klouže!
+            for (int x = -SR; x <= SR; x++) for (int z = -SR; z <= SR; z++) {
+                double d = Math.sqrt(x * x + z * z);
+                if (d > SR + 0.3) continue;
+                b.set(ox + x, oy, oz + z, d > SR - 1 ? Material.BLUE_ICE : d < 1.5 ? Material.SEA_LANTERN : Material.PACKED_ICE);
+                b.set(ox + x, oy - 1, oz + z, Material.SNOW_BLOCK);
+            }
+            return;
+        }
         boolean red = map == 1;
         for (int x = -SR; x <= SR; x++) for (int z = -SR; z <= SR; z++) {
             double d = Math.sqrt(x * x + z * z);

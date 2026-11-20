@@ -24,7 +24,7 @@ public final class Dropper extends Game {
 
     public Dropper(GameManager gm, int slot) { super(gm, GameType.DROPPER, slot); }
 
-    @Override public List<String> maps() { return List.of("Marsovské šachty", "Neonové šachty"); }
+    @Override public List<String> maps() { return List.of("Marsovské šachty", "Neonové šachty", "Ledové šachty"); }
     @Override protected int timeLimit() { return 900; }
     @Override protected int voidY() { return oy - 30; }
     /** trochu silnější gravitace než v lobby, ať padání netrvá věčnost */
@@ -34,11 +34,11 @@ public final class Dropper extends Game {
 
     // ---------------- stavba ----------------
     @Override protected void buildMap(U.BlockQueue.Builder b) {
-        boolean neon = map == 1;
-        Material wall = neon ? Material.BLACK_STAINED_GLASS : Material.ORANGE_STAINED_GLASS;
-        Material stripe = neon ? Material.SEA_LANTERN : Material.SHROOMLIGHT;
-        Material obst = neon ? Material.MAGENTA_CONCRETE : Material.RED_TERRACOTTA;
-        Material obst2 = neon ? Material.CYAN_CONCRETE : Material.RED_SANDSTONE;
+        boolean neon = map == 1, ice = map == 2;
+        Material wall = ice ? Material.LIGHT_BLUE_STAINED_GLASS : neon ? Material.BLACK_STAINED_GLASS : Material.ORANGE_STAINED_GLASS;
+        Material stripe = ice ? Material.PEARLESCENT_FROGLIGHT : neon ? Material.SEA_LANTERN : Material.SHROOMLIGHT;
+        Material obst = ice ? Material.PACKED_ICE : neon ? Material.MAGENTA_CONCRETE : Material.RED_TERRACOTTA;
+        Material obst2 = ice ? Material.SNOW_BLOCK : neon ? Material.CYAN_CONCRETE : Material.RED_SANDSTONE;
         for (int l = 0; l < LEVELS; l++) {
             int cx = sx(l), cz = oz;
             Random r = new Random(l * 7919L + map);

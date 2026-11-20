@@ -53,14 +53,16 @@ public final class BedWars extends Game implements Listener {
         if (t.dx < 0) return BlockFace.EAST; return BlockFace.WEST;
     }
 
-    @Override public List<String> maps() { return List.of("Rudá planeta", "Orbitální stanice"); }
+    @Override public List<String> maps() { return List.of("Rudá planeta", "Orbitální stanice", "Krystalová mlhovina"); }
 
     private Material top(boolean edge) {
+        if (map == 2) return edge ? Material.PURPLE_CONCRETE : (rnd.nextInt(5) == 0 ? Material.AMETHYST_BLOCK : rnd.nextBoolean() ? Material.PURPUR_BLOCK : Material.MAGENTA_TERRACOTTA);
         if (map == 1) return edge ? Material.GRAY_CONCRETE : (rnd.nextInt(6) == 0 ? Material.POLISHED_ANDESITE : Material.LIGHT_GRAY_CONCRETE);
         Material[] m = {Material.RED_SAND, Material.RED_TERRACOTTA, Material.ORANGE_TERRACOTTA, Material.RED_SAND, Material.TERRACOTTA};
         return edge ? Material.RED_SANDSTONE : m[rnd.nextInt(m.length)];
     }
     private Material under() {
+        if (map == 2) return rnd.nextInt(4) == 0 ? Material.AMETHYST_BLOCK : (rnd.nextBoolean() ? Material.CALCITE : Material.SMOOTH_BASALT);
         if (map == 1) return rnd.nextBoolean() ? Material.IRON_BLOCK : Material.GRAY_CONCRETE;
         return rnd.nextInt(5) == 0 ? Material.BLACKSTONE : (rnd.nextBoolean() ? Material.RED_SANDSTONE : Material.TERRACOTTA);
     }
@@ -79,10 +81,10 @@ public final class BedWars extends Game implements Listener {
     @Override protected void buildMap(U.BlockQueue.Builder b) {
         // střed: 3 patra se smaragdem
         island(b, ox, oz, 11);
-        for (int x = -6; x <= 6; x++) for (int z = -6; z <= 6; z++) if (x * x + z * z <= 36) b.set(ox + x, oy + 1, oz + z, map == 1 ? Material.SMOOTH_STONE : Material.RED_NETHER_BRICKS);
-        for (int x = -3; x <= 3; x++) for (int z = -3; z <= 3; z++) if (x * x + z * z <= 9) b.set(ox + x, oy + 2, oz + z, map == 1 ? Material.QUARTZ_BLOCK : Material.SMOOTH_RED_SANDSTONE);
+        for (int x = -6; x <= 6; x++) for (int z = -6; z <= 6; z++) if (x * x + z * z <= 36) b.set(ox + x, oy + 1, oz + z, map == 1 ? Material.SMOOTH_STONE : map == 2 ? Material.PURPUR_PILLAR : Material.RED_NETHER_BRICKS);
+        for (int x = -3; x <= 3; x++) for (int z = -3; z <= 3; z++) if (x * x + z * z <= 9) b.set(ox + x, oy + 2, oz + z, map == 1 ? Material.QUARTZ_BLOCK : map == 2 ? Material.AMETHYST_BLOCK : Material.SMOOTH_RED_SANDSTONE);
         b.set(ox, oy + 2, oz, Material.EMERALD_BLOCK);
-        for (int[] c : new int[][]{{6, 6}, {-6, 6}, {6, -6}, {-6, -6}}) { b.fill(ox + c[0], oy + 1, oz + c[1], ox + c[0], oy + 4, oz + c[1], map == 1 ? Material.IRON_BARS : Material.RED_NETHER_BRICK_WALL); b.set(ox + c[0], oy + 5, oz + c[1], map == 1 ? Material.SEA_LANTERN : Material.SHROOMLIGHT); }
+        for (int[] c : new int[][]{{6, 6}, {-6, 6}, {6, -6}, {-6, -6}}) { b.fill(ox + c[0], oy + 1, oz + c[1], ox + c[0], oy + 4, oz + c[1], map == 1 ? Material.IRON_BARS : map == 2 ? Material.AMETHYST_CLUSTER : Material.RED_NETHER_BRICK_WALL); b.set(ox + c[0], oy + 5, oz + c[1], map == 1 ? Material.SEA_LANTERN : map == 2 ? Material.PEARLESCENT_FROGLIGHT : Material.SHROOMLIGHT); }
         // diamantové ostrovy
         for (int[] c : new int[][]{{26, 26}, {-26, 26}, {26, -26}, {-26, -26}}) {
             island(b, ox + c[0], oz + c[1], 4);
@@ -92,7 +94,7 @@ public final class BedWars extends Game implements Listener {
         for (int i = 0; i < 14; i++) {
             double a = rnd.nextDouble() * Math.PI * 2, d = 15 + rnd.nextInt(25);
             int cx = ox + (int) (Math.cos(a) * d), cz = oz + (int) (Math.sin(a) * d), cy = oy - 2 + rnd.nextInt(6);
-            b.sphere(cx, cy, cz, 1, p -> b.set(p[0], p[1], p[2], map == 1 ? Material.GRAY_CONCRETE : Material.BLACKSTONE));
+            b.sphere(cx, cy, cz, 1, p -> b.set(p[0], p[1], p[2], map == 1 ? Material.GRAY_CONCRETE : map == 2 ? Material.AMETHYST_BLOCK : Material.BLACKSTONE));
         }
         for (Team t : teams) {
             int cx = ox + t.dx, cz = oz + t.dz;

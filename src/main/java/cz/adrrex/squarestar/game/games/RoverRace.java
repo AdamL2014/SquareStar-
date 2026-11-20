@@ -48,7 +48,7 @@ public final class RoverRace extends Game {
 
     public RoverRace(GameManager gm, int slot) { super(gm, GameType.ROVER, slot); }
 
-    @Override public List<String> maps() { return List.of("Kaňon Valles", "Olympus okruh"); }
+    @Override public List<String> maps() { return List.of("Kaňon Valles", "Olympus okruh", "Fobos sprint"); }
     @Override protected int timeLimit() { return 420; }
     @Override protected int voidY() { return oy - 15; }
     @Override public boolean canExitVehicle(Player p) { return !alive.contains(p) || finished.contains(p); }
@@ -60,8 +60,8 @@ public final class RoverRace extends Game {
         int n = 720;
         for (int i = 0; i < n; i++) {
             double t = i * Math.PI * 2 / n;
-            double r = olympus ? 46 + 12 * Math.sin(2 * t) + 6 * Math.cos(5 * t) : 44 + 10 * Math.sin(3 * t);
-            path.add(new double[]{Math.cos(t) * r * 1.25, Math.sin(t) * r});
+            double r = map == 2 ? 40 + 14 * Math.sin(4 * t) + 4 * Math.cos(7 * t) : olympus ? 46 + 12 * Math.sin(2 * t) + 6 * Math.cos(5 * t) : 44 + 10 * Math.sin(3 * t);
+            path.add(new double[]{Math.cos(t) * r * (map == 2 ? 1.35 : 1.25), Math.sin(t) * r * (map == 2 ? 0.95 : 1)});
         }
     }
     private static long key(int x, int z) { return ((long) x << 32) ^ (z & 0xffffffffL); }

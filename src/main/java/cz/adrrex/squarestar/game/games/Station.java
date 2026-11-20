@@ -38,14 +38,17 @@ public final class Station extends Game {
         this.hide = hide;
     }
 
-    @Override public List<String> maps() { return List.of("Základna Alfa", "Temná základna"); }
+    @Override public List<String> maps() { return List.of("Základna Alfa", "Temná základna", "Laboratoř"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {
         int y = oy;
-        boolean dark = map == 1;
-        Material light = dark ? Material.SHROOMLIGHT : Material.SEA_LANTERN, grid = dark ? Material.RED_NETHER_BRICKS : Material.LIGHT_GRAY_CONCRETE,
-                floor = dark ? Material.POLISHED_BLACKSTONE : Material.SMOOTH_QUARTZ, wallM = dark ? Material.DEEPSLATE_TILES : Material.WHITE_CONCRETE,
-                topM = dark ? Material.POLISHED_BLACKSTONE_BRICKS : Material.IRON_BLOCK, window = dark ? Material.RED_STAINED_GLASS : Material.CYAN_STAINED_GLASS;
+        boolean dark = map == 1, lab = map == 2;
+        Material light = dark ? Material.SHROOMLIGHT : lab ? Material.VERDANT_FROGLIGHT : Material.SEA_LANTERN,
+                grid = dark ? Material.RED_NETHER_BRICKS : lab ? Material.LIME_CONCRETE : Material.LIGHT_GRAY_CONCRETE,
+                floor = dark ? Material.POLISHED_BLACKSTONE : lab ? Material.WHITE_CONCRETE : Material.SMOOTH_QUARTZ,
+                wallM = dark ? Material.DEEPSLATE_TILES : lab ? Material.LIGHT_GRAY_CONCRETE : Material.WHITE_CONCRETE,
+                topM = dark ? Material.POLISHED_BLACKSTONE_BRICKS : lab ? Material.WAXED_COPPER_BLOCK : Material.IRON_BLOCK,
+                window = dark ? Material.RED_STAINED_GLASS : lab ? Material.LIME_STAINED_GLASS : Material.CYAN_STAINED_GLASS;
         for (int x = -H; x <= H; x++) for (int z = -H; z <= H; z++) {
             Material f = (x % 6 == 0 && z % 6 == 0) ? light : (x % 6 == 0 || z % 6 == 0) ? grid : floor;
             b.set(ox + x, y, oz + z, f);
