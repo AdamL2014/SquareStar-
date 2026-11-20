@@ -29,6 +29,10 @@ public final class Dropper extends Game {
     @Override protected int voidY() { return oy - 30; }
     /** trochu silnější gravitace než v lobby, ať padání netrvá věčnost */
     @Override public Double gravity() { return 0.045; }
+    /** čekárna vysoko nad šachtami (dřív zasahovala do šachty levelu 5) */
+    @Override protected int waitY() { return oy + H + 25; }
+    /** max rychlost pádu (bloků za tick) – ať se dá mezi patry včas přesunout */
+    private static final double MAX_FALL = 0.55;
 
     private int sx(int lvl) { return ox + (lvl - LEVELS / 2) * 22; }
 
@@ -66,9 +70,10 @@ public final class Dropper extends Game {
                             b.set(cx + i, oy + y, cz + k, l == 7 && (i + k) % 5 == 0 ? Material.MAGMA_BLOCK : ((i + k) % 2 == 0 ? obst : obst2)); } }
                     case 2 -> { if (y % 16 == 0) for (int c = 0; c < 4; c++) { int px = r.nextInt(2 * IN + 1) - IN, pz = r.nextInt(2 * IN + 1) - IN, len = 5 + r.nextInt(7);
                         for (int k = 0; k < len; k++) b.set(cx + px, oy + y - k, cz + pz, k % 4 == 0 ? stripe : obst); } }
-                    case 3 -> { if (y % 12 == 0) { q = (q + 1) % 4;
+                    case 3 -> { if (y % 14 == 0) { q = (q + 1) % 4;
+                        // otevřená čtvrtina (5x5) se s tou předchozí překrývá v řadě i=0 / k=0 -> vždy průchozí
                         for (int i = -IN; i <= IN; i++) for (int k = -IN; k <= IN; k++) {
-                            boolean open = switch (q) { case 0 -> i >= 1 && k >= 1; case 1 -> i <= -1 && k >= 1; case 2 -> i <= -1 && k <= -1; default -> i >= 1 && k <= -1; };
+                            boolean open = switch (q) { case 0 -> i >= 0 && k >= 0; case 1 -> i <= 0 && k >= 0; case 2 -> i <= 0 && k <= 0; default -> i >= 0 && k <= 0; };
                             if (!open) b.set(cx + i, oy + y, cz + k, obst2);
                         } } }
                     case 4 -> { if (y % 10 == 0) { boolean diag = (y / 10) % 2 == 0;
@@ -108,6 +113,8 @@ public final class Dropper extends Game {
         for (Player p : new ArrayList<>(alive)) {
             Location l = p.getLocation();
             int lv = level.getOrDefault(p, 0);
+            var v = p.getVelocity();
+            if (v.getY() < -MAX_FALL && l.getY() < oy + H) p.setVelocity(v.setY(-MAX_FALL));
             // dopad do vody = level splněn
             if (l.getBlock().getType() == Material.WATER && l.getY() < oy + 3) {
                 lv++;

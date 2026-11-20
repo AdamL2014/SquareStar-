@@ -249,7 +249,7 @@ public final class Crates implements Listener {
                     U.title(p, "&6&l✦ VÝHRA! ✦", "&f" + win.amount() + "x " + plain(prize));
                     p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1.2f);
                     p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1.4f);
-                    if (tier(t).equals("legendary")) Bukkit.broadcast(U.c("&6&l✦ &e" + p.getName() + " &7vyhrál z " + t.name() + "&7: &f" + plain(prize) + " &6&l✦"));
+                    if (tier(t).equals("legendary")) U.all("&6&l✦ &e" + p.getName() + " &7vyhrál z " + t.name() + "&7: &f" + plain(prize) + " &6&l✦");
                     Bukkit.getScheduler().runTaskLater(pl, () -> { if (p.getOpenInventory().getTopInventory() == h.inv) p.closeInventory(); }, 50);
                 }
             }

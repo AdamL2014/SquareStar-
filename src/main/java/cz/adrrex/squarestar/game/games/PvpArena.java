@@ -228,6 +228,7 @@ public final class PvpArena extends Game {
         streak.put(victim, 0);
         if (killer == null || killer == victim || !alive.contains(killer)) return;
         int s = streak.merge(killer, 1, Integer::sum);
+        if (sumo || state != State.RUNNING || alive.size() <= 2) { U.bar(killer, "&a+1 zabití"); return; } // v Sumu a na konci hry žádná jablka
         killer.getInventory().addItem(new ItemStack(Material.GOLDEN_APPLE));
         killer.setHealth(Math.min(killer.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue(), killer.getHealth() + 6));
         U.sound(killer, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.2f);

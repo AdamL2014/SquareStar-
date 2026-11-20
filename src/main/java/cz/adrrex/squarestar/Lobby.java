@@ -109,9 +109,11 @@ public final class Lobby implements Listener {
     public void send(Player p) {
         var pdc = p.getPersistentDataContainer();
         byte[] saved = pdc.get(U.key("lobby_inv"), org.bukkit.persistence.PersistentDataType.BYTE_ARRAY);
+        // bez uloženého inventáře: z minihry nic nepřenášet (žádná zlatá jablka do lobby), jinak nechat co má
+        boolean fromGame = pl.isArena(p.getWorld()) || (pl.redstone != null && p.getWorld() == pl.redstone.world);
         org.bukkit.inventory.ItemStack[] contents = saved != null
                 ? org.bukkit.inventory.ItemStack.deserializeItemsFromBytes(saved)
-                : p.getInventory().getContents().clone();
+                : fromGame ? new org.bukkit.inventory.ItemStack[0] : p.getInventory().getContents().clone();
         pdc.remove(U.key("lobby_inv"));
         U.reset(p, GameMode.ADVENTURE);
         try { p.getInventory().setContents(contents); } catch (IllegalArgumentException ex) { pl.getLogger().warning("Inventar " + p.getName() + " nelze obnovit: " + ex.getMessage()); }

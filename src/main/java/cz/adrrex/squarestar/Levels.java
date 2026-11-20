@@ -25,7 +25,7 @@ public final class Levels {
         if (after > before) {
             U.title(p, "&6&l✦ LEVEL " + after + " ✦", "&eNový level! Jen tak dál!");
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1.4f);
-            Bukkit.broadcast(U.c("&6✦ &e" + p.getName() + " &7dosáhl &6levelu " + after + "&7!"));
+            U.all("&6✦ &e" + p.getName() + " &7dosáhl &6levelu " + after + "&7!");
             // každých 5 levelů bonusový klíč
             if (after % 5 == 0) {
                 var k = pl.crates.key(after % 10 == 0 ? "legendary" : "rare", 1);

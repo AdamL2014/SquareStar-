@@ -127,4 +127,9 @@ public final class U {
         if (k != null) for (java.io.File c : k) deleteDir(c);
         f.delete();
     }
+    /** zpráva všem online hráčům, každému v jeho jazyce */
+    public static void all(String s) {
+        for (org.bukkit.entity.Player p : org.bukkit.Bukkit.getOnlinePlayers()) p.sendMessage(c(Lang.t(p, s)));
+        org.bukkit.Bukkit.getConsoleSender().sendMessage(c(s));
+    }
 }

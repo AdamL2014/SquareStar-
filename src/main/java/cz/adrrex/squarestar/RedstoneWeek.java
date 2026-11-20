@@ -76,7 +76,7 @@ public final class RedstoneWeek implements Listener {
             String name = data.getString("names." + best.get().getKey(), "?");
             data.set("last-winner", name + " (" + best.get().getValue() + " bodů)");
             data.set("pending-reward", best.get().getKey());
-            Bukkit.broadcast(U.c("&c&l⚡ REDSTONE TÝDEN &7- vítěz: &e&l" + name + " &7(" + best.get().getValue() + " bodů)! Nové téma: &6" + theme()));
+            U.all("&c&l⚡ REDSTONE TÝDEN &7- vítěz: &e&l" + name + " &7(" + best.get().getValue() + " bodů)! Nové téma: &6" + theme());
         }
         data.set("votes", null);
         data.set("week", now);

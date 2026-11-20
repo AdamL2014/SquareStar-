@@ -186,7 +186,7 @@ public final class SpeedrunFE extends Game {
         });
         var old = sb.getObjective("sr");
         if (old != null) old.unregister();
-        var o = sb.registerNewObjective("sr", org.bukkit.scoreboard.Criteria.DUMMY, U.c("&e&lSPEEDRUN &7Free Edition"));
+        var o = sb.registerNewObjective("sr", org.bukkit.scoreboard.Criteria.DUMMY, U.c(cz.adrrex.squarestar.Lang.t(p, "&e&lSPEEDRUN &7Free Edition")));
         o.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
         o.numberFormat(io.papermc.paper.scoreboard.numbers.NumberFormat.blank());
         Map<Material, Integer> m = bag.getOrDefault(p, Map.of());
@@ -203,7 +203,7 @@ public final class SpeedrunFE extends Game {
         lines.add("  ");
         lines.add(done(p) ? "&6&l➹ Běž k raketě!" : "&7Rozbíjej barevnou vlnu");
         int score = lines.size();
-        for (String l : lines) o.getScore(l.replace('&', '§')).setScore(score--);
+        for (String l : lines) o.getScore(cz.adrrex.squarestar.Lang.t(p, l).replace('&', '§')).setScore(score--);
     }
 
     private void win(Player p) {

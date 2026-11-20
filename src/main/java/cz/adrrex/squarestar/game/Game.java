@@ -80,7 +80,9 @@ public abstract class Game {
     protected String status() { return "&7Naživu: &a" + alive.size() + " &8| &7Čas: &e" + fmt(time); }
 
     // ---------- společná logika ----------
-    public Location waitSpot() { return U.center(w, ox, oy + 46, oz); }
+    /** výška čekárny (nesmí zasahovat do mapy) */
+    protected int waitY() { return oy + 45; }
+    public Location waitSpot() { return U.center(w, ox, waitY() + 1, oz); }
     protected Location specSpot() { return U.center(w, ox, oy + 15, oz); }
     public boolean joinable() { return (state == State.BUILDING || state == State.WAITING || state == State.COUNTDOWN) && players.size() < type.max; }
     public boolean isPlaced(Block b) { return placed.contains(U.pack(b.getX(), b.getY(), b.getZ())); }
@@ -90,7 +92,7 @@ public abstract class Game {
     void build() {
         U.BlockQueue.Builder b = pl.queue.builder(w);
         // čekárna nad mapou
-        int y = oy + 45;
+        int y = waitY();
         b.fill(ox - 5, y, oz - 5, ox + 5, y, oz + 5, Material.LIGHT_BLUE_STAINED_GLASS);
         b.fill(ox - 5, y + 1, oz - 5, ox + 5, y + 4, oz - 5, Material.BARRIER);
         b.fill(ox - 5, y + 1, oz + 5, ox + 5, y + 4, oz + 5, Material.BARRIER);
