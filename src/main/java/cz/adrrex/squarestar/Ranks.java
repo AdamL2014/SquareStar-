@@ -119,6 +119,12 @@ public final class Ranks implements Listener {
                 "minecraft.command.kill", "minecraft.command.say", "minecraft.command.difficulty", "minecraft.command.gamerule", "grim.*", "grim.exempt.false"));
         DEF.put(Rank.OWNER, admin); DEF.put(Rank.ADMIN, admin); DEF.put(Rank.MODERATOR, mod); DEF.put(Rank.HELPER, helper); DEF.put(Rank.BUILDER, builder);
     }
+    /** je hráč (podle UUID) v týmu? – funguje i před připojením */
+    public boolean staffByUuid(UUID id) {
+        String r = data.getString("players." + id);
+        return r != null && (r.equals("OWNER") || r.equals("ADMIN"));
+    }
+
     public void applyPerms(Player p) {
         var old = perms.remove(p.getUniqueId());
         if (old != null) try { p.removeAttachment(old); } catch (IllegalArgumentException ignored) {}

@@ -61,6 +61,7 @@ public final class SquareStar extends JavaPlugin {
         intro = new Intro(this);
         pm.registerEvents(intro, this);
         pm.registerEvents(new Gui(), this);
+        pm.registerEvents(new IpLimit(this), this);
         pack = new Pack(this);
         pm.registerEvents(pack, this);
         motd = new Motd(this);

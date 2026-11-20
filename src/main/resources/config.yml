@@ -113,3 +113,7 @@ resource-pack:
   enabled: true
   required: true
   url: "https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip"
+
+# Ochrana proti multiúčtům: max hráčů z jedné IP adresy (0 = vypnuto). Owner a Admin mají výjimku.
+security:
+  max-per-ip: 5
