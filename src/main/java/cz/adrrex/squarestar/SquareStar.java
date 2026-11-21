@@ -29,6 +29,12 @@ public final class SquareStar extends JavaPlugin {
     public Ranks ranks;
     public LobbyFx fx;
     public Cosmetics cosmetics;
+    public Stats stats;
+    public Friends friends;
+    public News news;
+    public Fly fly;
+    public Updater updater;
+    public EventManager events;
 
     @Override public void onEnable() {
         I = this;
@@ -66,6 +72,16 @@ public final class SquareStar extends JavaPlugin {
         pm.registerEvents(pack, this);
         motd = new Motd(this);
         pm.registerEvents(motd, this);
+        stats = new Stats(this);
+        friends = new Friends(this); pm.registerEvents(friends, this);
+        news = new News(this); pm.registerEvents(news, this);
+        fly = new Fly(this);
+        events = new EventManager(this); pm.registerEvents(events, this);
+        updater = new Updater(this);
+        bind("pritel", friends, friends);
+        bind("event", events, events);
+        bind("fly", fly, null);
+        bind("novinky", (s, c, l, a) -> { if (s instanceof Player p) news.open(p); return true; }, null);
         Emotes em = new Emotes(this);
         var mc = getCommand("udrzba");
         if (mc != null) mc.setExecutor((s, c, l, a) -> {
@@ -81,13 +97,20 @@ public final class SquareStar extends JavaPlugin {
         if (pc != null) { pc.setExecutor(cmd); pc.setTabCompleter(cmd); }
         lobby.ensureBuilt();
         fx.start();
+        Bukkit.getScheduler().runTaskLater(this, stats::spawnBoards, 60);
         for (Player p : Bukkit.getOnlinePlayers()) ranks.apply(p);
         // gravitace + efekty vesmírného oblečení každých 10 ticků
         Bukkit.getScheduler().runTaskTimer(this, () -> { for (Player p : Bukkit.getOnlinePlayers()) applyGravity(p); }, 20, 10);
         getLogger().info("SquareStar zapnut! Mars ceka. Gravitace: " + getConfig().getDouble("gravity.value"));
     }
 
-    @Override public void onDisable() { if (games != null) games.stopAll(); }
+    @Override public void onDisable() { if (games != null) games.stopAll(); if (stats != null) stats.save(); }
+
+    private void bind(String name, org.bukkit.command.CommandExecutor ex, org.bukkit.command.TabCompleter tc) {
+        var c = getCommand(name);
+        if (c == null) { getLogger().warning("Prikaz chybi v plugin.yml: " + name); return; }
+        c.setExecutor(ex); if (tc != null) c.setTabCompleter(tc);
+    }
 
     public final java.util.Map<cz.adrrex.squarestar.game.GameType, World> gameWorlds = new java.util.EnumMap<>(cz.adrrex.squarestar.game.GameType.class);
     public World world(cz.adrrex.squarestar.game.GameType t) { return gameWorlds.getOrDefault(t, arenas); }
@@ -123,7 +146,7 @@ public final class SquareStar extends JavaPlugin {
     public void applyGravity(Player p) {
         boolean space = isSpaceWorld(p.getWorld()) && getConfig().getBoolean("gravity.enabled", true);
         double g = space ? getConfig().getDouble("gravity.value", 0.03) : 0.08;
-        if (space && games != null) { var gm = games.of(p); if (gm != null && gm.gravity() != null) g = gm.gravity(); }
+        if (space && games != null) { var gm = games.of(p); if (gm != null && gm.eventGravity != null) g = gm.eventGravity; else if (gm != null && gm.gravity() != null) g = gm.gravity(); }
         double fall = space ? getConfig().getDouble("gravity.safe-fall-distance", 12) : 3;
         ItemStack boots = p.getInventory().getBoots();
         double jump = 0.41999998688697815;

@@ -147,6 +147,8 @@ public final class BedWars extends Game implements Listener {
     }
     private Location genOf(Team t) { BlockFace f = toward(t); return U.center(w, ox + t.dx - f.getModX() * 7, oy + 1, oz + t.dz - f.getModZ() * 7); }
 
+    @Override public List<String> teamNames() { return teams.stream().map(t -> t.color + "&l" + t.name).toList(); }
+    @Override protected List<Material> teamIcons() { return teams.stream().map(t -> t.wool).toList(); }
     @Override protected GameMode mode() { return GameMode.SURVIVAL; }
     @Override protected Dmg damage() { return Dmg.NORMAL; }
     @Override protected int voidY() { return oy - 30; }
@@ -154,9 +156,21 @@ public final class BedWars extends Game implements Listener {
 
     @Override protected void start() {
         int n = Math.max(2, Math.min(4, players.size()));
+        // kdo si vybral tým, dostane ho (pokud je tým v této hře použitý a není přeplněný); ostatní se doplní do nejmenších týmů
+        int cap = (int) Math.ceil(players.size() / (double) n);
         List<Player> shuffled = new ArrayList<>(players);
         Collections.shuffle(shuffled, rnd);
-        for (int i = 0; i < shuffled.size(); i++) { Team t = teams.get(i % n); t.members.add(shuffled.get(i)); teamOf.put(shuffled.get(i), t); }
+        List<Player> rest = new ArrayList<>();
+        for (Player p : shuffled) {
+            Integer pick = teamPick.get(p);
+            if (pick != null && pick < n && teams.get(pick).members.size() < cap) { teams.get(pick).members.add(p); teamOf.put(p, teams.get(pick)); }
+            else rest.add(p);
+        }
+        for (Player p : rest) {
+            Team t = teams.subList(0, n).stream().min(Comparator.comparingInt(x -> x.members.size())).orElseThrow();
+            t.members.add(p); teamOf.put(p, t);
+            if (teamPick.containsKey(p)) U.msg(p, "&eTvůj tým byl plný, hraješ za " + t.color + t.name);
+        }
         for (int i = 0; i < teams.size(); i++) {
             Team t = teams.get(i);
             t.used = i < n;
@@ -295,7 +309,8 @@ public final class BedWars extends Game implements Listener {
                 new Offer(sharp(), Material.DIAMOND, 4),
                 new Offer(unbreak(new ItemStack(Material.DIAMOND_CHESTPLATE)), Material.DIAMOND, 6),
                 new Offer(unbreak(new ItemStack(Material.DIAMOND_PICKAXE)), Material.DIAMOND, 3),
-                new Offer(it.get("gravity_boots", 1), Material.DIAMOND, 2));
+                new Offer(it.get("gravity_boots", 1), Material.DIAMOND, 2),
+                new Offer(it.get("black_hole", 1), Material.EMERALD, 3));
     }
     private static ItemStack sharp() { ItemStack s = unbreak(new ItemStack(Material.DIAMOND_SWORD)); s.addUnsafeEnchantment(Enchantment.SHARPNESS, 1); return s; }
 

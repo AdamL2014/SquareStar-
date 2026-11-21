@@ -211,7 +211,39 @@ public final class RedstoneWeek implements Listener {
         if (p.hasPermission("squarestar.admin") && p.isSneaking()) return true;
         if (voting()) return false;
         Integer n = plotAt(b.getLocation());
-        return n != null && b.getY() > Y && b.getY() < Y + 40 && p.getUniqueId().toString().equals(ownerOf(n));
+        if (n == null || b.getY() <= Y || b.getY() >= Y + 40 || b.getType() == Material.BARRIER) return false;
+        String owner = ownerOf(n);
+        return owner != null && (owner.equals(p.getUniqueId().toString()) || data.getStringList("trust." + owner).contains(p.getUniqueId().toString()));
+    }
+
+    /** kooperace: /ss redstone pridat|odebrat <hráč> – kamarád může stavět na tvém pozemku */
+    public void trust(Player p, String name, boolean add) {
+        String me = p.getUniqueId().toString();
+        var l = new java.util.ArrayList<>(data.getStringList("trust." + me));
+        if (add) {
+            Player t = Bukkit.getPlayerExact(name);
+            if (t == null || t == p) { U.msg(p, "&cHráč musí být online."); return; }
+            if (!l.contains(t.getUniqueId().toString())) l.add(t.getUniqueId().toString());
+            data.set("names." + t.getUniqueId(), t.getName());
+            U.msg(p, "&a&l⚙ &e" + t.getName() + " &ateď může stavět na tvém pozemku!");
+            U.msg(t, "&a&l⚙ &e" + p.getName() + " &ati dovolil stavět na svém redstone pozemku! &7(/ss redstone navstivit " + p.getName() + ")");
+        } else {
+            l.removeIf(id -> name.equalsIgnoreCase(data.getString("names." + id, "")));
+            U.msg(p, "&7" + name + " už na tvém pozemku stavět nemůže.");
+        }
+        data.set("trust." + me, l); save();
+    }
+
+    /** teleport na pozemek kamaráda (spolupráce) */
+    public void visitPlayer(Player p, String name) {
+        Player t = Bukkit.getPlayerExact(name);
+        if (t == null) { U.msg(p, "&cHráč není online."); return; }
+        var plots = data.getConfigurationSection("plots");
+        if (plots == null || !plots.contains(t.getUniqueId().toString())) { U.msg(p, "&c" + name + " zatím nemá pozemek."); return; }
+        if (p.getWorld() != world) join(p);
+        int[] o = origin(plots.getInt(t.getUniqueId().toString()));
+        p.teleport(new org.bukkit.Location(world, o[0] + PLOT / 2.0, Y + 1, o[1] - 2.0));
+        U.msg(p, "&aJsi na pozemku hráče &e" + name);
     }
     @EventHandler(priority = EventPriority.HIGH) public void brk(BlockBreakEvent e) { if (e.getBlock().getWorld() == world && !mayEdit(e.getPlayer(), e.getBlock())) e.setCancelled(true); }
     @EventHandler(priority = EventPriority.HIGH) public void place(BlockPlaceEvent e) { if (e.getBlock().getWorld() == world && !mayEdit(e.getPlayer(), e.getBlock())) e.setCancelled(true); }

@@ -188,10 +188,13 @@ public final class Lobby implements Listener {
 
     public void giveItems(Player p) {
         place(p, 0, Gui.skin(p, U.tag(U.item(Material.COMPASS, 1, "&6&l✦ Minihry &7(pravý klik)", "&7Vyber si minihru na Marsu"), "ss_lobby", "games"), "icon_menu_games"));
+        place(p, 2, Gui.skin(p, U.tag(U.item(Material.PLAYER_HEAD, 1, "&d&l♥ Přátelé &7(pravý klik)", "&7Kdo je online a co hraje"), "ss_lobby", "friends"), "icon_menu_friends"));
         place(p, 4, Gui.skin(p, pl.cosmetics.menuItem(), "icon_menu_cosmetics"));
+        place(p, 6, Gui.skin(p, U.tag(U.item(Material.WRITABLE_BOOK, 1, "&e&l✦ Co je nové &7(pravý klik)", "&7Novinky na serveru"), "ss_lobby", "news"), "icon_menu_news"));
         place(p, 8, Gui.skin(p, U.tag(U.item(Material.ENDER_EYE, 1, "&b&lZpět na spawn", "&7Teleport na náměstí"), "ss_lobby", "spawn"), "icon_menu_spawn"));
         pl.cosmetics.apply(p);
         pl.levels.showBar(p);
+        pl.fly.restore(p);
     }
 
     /** dá lobby item do slotu; co tam bylo (klíče, odměny), se jen přesune jinam */
@@ -228,6 +231,8 @@ public final class Lobby implements Listener {
         if (t.equals("games")) pl.games.openMenu(e.getPlayer());
         else if (t.equals("spawn")) e.getPlayer().teleport(spawn());
         else if (t.equals("cosmetics")) pl.cosmetics.open(e.getPlayer());
+        else if (t.equals("friends")) pl.friends.open(e.getPlayer());
+        else if (t.equals("news")) pl.news.open(e.getPlayer());
     }
 
     private boolean admin(Player p) { return p.hasPermission("squarestar.admin") && p.getGameMode() == GameMode.CREATIVE; }
@@ -243,6 +248,7 @@ public final class Lobby implements Listener {
     @EventHandler public void swap(PlayerSwapHandItemsEvent e) { if (inLobby(e.getPlayer()) && !admin(e.getPlayer())) e.setCancelled(true); }
 
     public static List<String> help() {
-        return List.of("&6/ss hry &7- menu miniher", "&6/ss join <hra> &7- připojit se", "&6/ss leave &7- opustit hru", "&6/ss lobby &7- zpět na Mars", "&6/ss lag &7- výkon serveru");
+        return List.of("&6/ss hry &7- menu miniher", "&6/ss join <hra> &7- připojit se", "&6/ss leave &7- opustit hru", "&6/ss lobby &7- zpět na Mars", "&6/ss top &7- tvoje statistiky", "&6/ss novinky &7- co je nové",
+                "&6/pritel &7- přátelé", "&6/fly &7- létání (VIP+, YouTuber...)", "&6/ss redstone pridat <hráč> &7- spoluhráč na pozemku", "&6/ss lag &7- výkon serveru");
     }
 }

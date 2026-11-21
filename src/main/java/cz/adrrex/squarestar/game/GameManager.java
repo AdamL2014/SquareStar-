@@ -35,6 +35,9 @@ public final class GameManager implements Listener {
     public static final class KitHolder implements InventoryHolder {
         final Game game; Inventory inv; KitHolder(Game g) { game = g; } @Override public @NotNull Inventory getInventory() { return inv; }
     }
+    public static final class TeamHolder implements InventoryHolder {
+        final Game game; Inventory inv; TeamHolder(Game g) { game = g; } @Override public @NotNull Inventory getInventory() { return inv; }
+    }
     public static final class VoteHolder implements InventoryHolder {
         final Game game; Inventory inv; VoteHolder(Game g) { game = g; } @Override public @NotNull Inventory getInventory() { return inv; }
     }
@@ -73,7 +76,7 @@ public final class GameManager implements Listener {
 
     public void join(Player p, GameType type) {
         if (map.containsKey(p)) { U.msg(p, "&cUž jsi ve hře. &7Napiš &e/ss leave"); return; }
-        Game g = games.stream().filter(x -> x.type == type && x.joinable()).findFirst().orElse(null);
+        Game g = games.stream().filter(x -> x.type == type && x.joinable() && !x.event).findFirst().orElse(null);
         if (g == null) {
             int max = pl.getConfig().getInt("max-arenas", 6);
             if (games.size() >= max) { U.msg(p, "&cVšechny arény jsou plné, zkus to za chvíli."); return; }
@@ -87,6 +90,27 @@ public final class GameManager implements Listener {
         map.put(p, g);
         g.addPlayer(p);
     }
+
+    /** vytvoří soukromou hru pro event (nikdo se nepřipojí přes menu) */
+    public Game createEvent(GameType type, int max, Double gravity) {
+        int maxA = pl.getConfig().getInt("max-arenas", 6) + 1;
+        if (games.size() >= maxA) return null;
+        int slot = slots.nextClearBit(1);
+        slots.set(slot);
+        Game g = type.create(this, slot);
+        g.event = true; g.eventHold = true; g.eventMax = max; g.eventGravity = gravity;
+        games.add(g);
+        g.build();
+        return g;
+    }
+    public boolean joinEvent(Player p, Game g) {
+        if (map.containsKey(p) || g == null || !g.joinable()) return false;
+        pl.lobby.saveInv(p);
+        map.put(p, g);
+        g.addPlayer(p);
+        return true;
+    }
+    public void startEvent(Game g) { g.eventHold = false; g.checkStart(); }
 
     public void leave(Player p) {
         Game g = map.get(p);
@@ -130,6 +154,13 @@ public final class GameManager implements Listener {
         if (!(e.getInventory().getHolder() instanceof VoteHolder h)) return;
         e.setCancelled(true);
         if (e.getWhoClicked() instanceof Player p && e.getClickedInventory() == e.getInventory() && map.get(p) == h.game) h.game.vote(p, e.getSlot());
+    }
+
+    @EventHandler public void teamClick(InventoryClickEvent e) {
+        if (!(e.getInventory().getHolder() instanceof TeamHolder h)) return;
+        e.setCancelled(true);
+        String id = U.tagOf(e.getCurrentItem(), "ss_team");
+        if (id != null && e.getWhoClicked() instanceof Player p && map.get(p) == h.game) h.game.chooseTeam(p, Integer.parseInt(id));
     }
 
     @EventHandler public void kitClick(InventoryClickEvent e) {
@@ -215,6 +246,7 @@ public final class GameManager implements Listener {
         if ("leave".equals(tag)) { e.setCancelled(true); leave(e.getPlayer()); return; }
         if ("vote".equals(tag)) { e.setCancelled(true); g.openVote(e.getPlayer()); return; }
         if ("kit".equals(tag)) { e.setCancelled(true); g.openKits(e.getPlayer()); return; }
+        if ("team".equals(tag)) { e.setCancelled(true); g.openTeams(e.getPlayer()); return; }
         if (g.state == Game.State.RUNNING) g.onInteract(e);
     }
 

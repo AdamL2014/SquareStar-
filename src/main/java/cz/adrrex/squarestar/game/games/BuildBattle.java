@@ -75,7 +75,7 @@ public final class BuildBattle extends Game {
     @Override protected int voidY() { return oy - 10; }
     @Override protected int timeLimit() { return buildTime + VOTE_TIME * Math.max(1, owners.size()) + 30; }
     @Override public boolean canPlace(Player p, Block b) { int[] c = plots.get(p); return building() && c != null && inside(c, b); }
-    @Override public boolean canBreak(Player p, Block b) { return canPlace(p, b); }
+    @Override public boolean canBreak(Player p, Block b) { return b.getType() != Material.BARRIER && canPlace(p, b); }
     @Override public boolean allowFlow(Block to) { for (int[] c : plots.values()) if (inside(c, to)) return true; return false; }
     @Override protected void checkWin() { if (state == State.RUNNING && alive.isEmpty()) end(List.of()); }
     @Override public void onVoid(Player p) { int[] c = plots.get(p); p.teleport(U.center(w, c != null ? c[0] : ox, oy + 2, c != null ? c[1] : oz)); }

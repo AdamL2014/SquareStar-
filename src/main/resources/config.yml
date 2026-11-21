@@ -117,3 +117,9 @@ resource-pack:
 # Ochrana proti multiúčtům: max hráčů z jedné IP adresy (0 = vypnuto). Owner a Admin mají výjimku.
 security:
   max-per-ip: 5
+
+# automaticka aktualizace z GitHubu (download/version.txt + SquareStar.jar)
+auto-update:
+  enabled: true
+  check-minutes: 10
+  countdown-seconds: 60

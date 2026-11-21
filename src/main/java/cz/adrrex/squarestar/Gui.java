@@ -19,6 +19,7 @@ public final class Gui implements org.bukkit.event.Listener {
     }
     /** obyčejnému itemu dá vlastní ikonku z resource packu (jen Java hráčům) */
     public static org.bukkit.inventory.ItemStack skin(Player p, org.bukkit.inventory.ItemStack it, String model) {
+        it = Lang.item(p, it);
         if (p != null && Ranks.bedrock(p)) return it;
         var m = it.getItemMeta(); m.setItemModel(new org.bukkit.NamespacedKey("squarestar", model)); it.setItemMeta(m);
         return it;
@@ -46,13 +47,13 @@ public final class Gui implements org.bukkit.event.Listener {
     /** vesmírný panel (minihry, kosmetika, hlasování, obchod) */
     public static Component title(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }
     /** zlato-modrý panel pro bedny */
-    public static Component crate(int size, String legacy) { return make((char) (0xE210 + rows(size)), legacy); }
+    public static Component crate(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }
     /** růžový panel pro kosmetiku */
-    public static Component cosmetics(int size, String legacy) { return make((char) (0xE230 + rows(size)), legacy); }
+    public static Component cosmetics(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }
     /** zelený panel pro hlasování */
-    public static Component vote(int size, String legacy) { return make((char) (0xE240 + rows(size)), legacy); }
+    public static Component vote(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }
     /** dřevěný panel pro obchod */
-    public static Component shop(int size, String legacy) { return make((char) (0xE250 + rows(size)), legacy); }
+    public static Component shop(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }
     /** otevírání bedny se zvýrazněným výherním políčkem */
     public static Component crateOpen(String legacy) { return make('', legacy); }
 

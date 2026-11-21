@@ -69,6 +69,11 @@ public abstract class Game {
     protected boolean hideNames() { return false; }
     /** vlastní gravitace hry (null = nízká marsovská) */
     public Double gravity() { return null; }
+    // ---- event (pořádá majitel přes /event) ----
+    public boolean event, eventHold;
+    public int eventMax = -1;
+    public Double eventGravity;
+    public int maxPlayers() { return event && eventMax > 0 ? eventMax : type.max; }
     /** smí hráč vystoupit z vozidla? */
     public boolean canExitVehicle(Player p) { return true; }
     public boolean canBreak(Player p, Block b) { return false; }
@@ -91,7 +96,7 @@ public abstract class Game {
     protected int waitY() { return oy + 45; }
     public Location waitSpot() { return U.center(w, ox, waitY() + 1, oz); }
     protected Location specSpot() { return U.center(w, ox, oy + 15, oz); }
-    public boolean joinable() { return (state == State.BUILDING || state == State.WAITING || state == State.COUNTDOWN) && players.size() < type.max; }
+    public boolean joinable() { return (state == State.BUILDING || state == State.WAITING || state == State.COUNTDOWN) && players.size() < maxPlayers(); }
     public boolean isPlaced(Block b) { return placed.contains(U.pack(b.getX(), b.getY(), b.getZ())); }
     public void markPlaced(Block b) { if (placed.add(U.pack(b.getX(), b.getY(), b.getZ()))) placedList.add(new int[]{b.getX(), b.getY(), b.getZ()}); }
     public boolean owns(Location l) { return l.getWorld() == w && Math.abs(l.getBlockX() - ox) < 450 && Math.abs(l.getBlockZ() - oz) < 450; }
@@ -156,6 +161,44 @@ public abstract class Game {
         p.closeInventory();
     }
 
+    // ---------------- výběr týmu (např. BedWars) ----------------
+    public final Map<Player, Integer> teamPick = new HashMap<>();
+    /** barevné názvy týmů, které si hráč může vybrat (prázdné = bez výběru) */
+    public List<String> teamNames() { return List.of(); }
+    protected List<Material> teamIcons() { return List.of(); }
+    public void openTeams(Player p) {
+        GameManager.TeamHolder h = new GameManager.TeamHolder(this);
+        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.title(27, cz.adrrex.squarestar.Lang.t(p, "&f&lVyber tým")));
+        List<String> t = teamNames();
+        int start = 13 - t.size() / 2;
+        int cap = (int) Math.ceil(Math.max(players.size(), 2) / (double) t.size());
+        for (int i = 0; i < t.size(); i++) {
+            final int idx = i;
+            List<String> who = teamPick.entrySet().stream().filter(x -> x.getValue() == idx).map(x -> x.getKey().getName()).toList();
+            List<String> lore = new ArrayList<>();
+            lore.add("&7Hráči: &f" + who.size());
+            for (String n : who) lore.add("&8- &f" + n);
+            lore.add("");
+            lore.add(Integer.valueOf(idx).equals(teamPick.get(p)) ? "&a✔ Tvůj tým" : "&eKlikni pro výběr");
+            ItemStack it = U.tag(U.item(teamIcons().get(i), Math.max(1, who.size()), t.get(i), lore.toArray(new String[0])), "ss_team", String.valueOf(i));
+            if (Integer.valueOf(idx).equals(teamPick.get(p))) { var m = it.getItemMeta(); m.setEnchantmentGlintOverride(true); it.setItemMeta(m); }
+            h.inv.setItem(start + i, it);
+        }
+        h.inv.setItem(22, U.tag(U.item(Material.ENDER_EYE, 1, "&7&lNáhodný tým", "&7Rozdělí tě hra"), "ss_team", "-1"));
+        p.openInventory(h.inv);
+    }
+    void chooseTeam(Player p, int i) {
+        if (state != State.WAITING && state != State.COUNTDOWN && state != State.BUILDING) { U.msg(p, "&cHra už začala."); p.closeInventory(); return; }
+        if (i < 0) { teamPick.remove(p); U.msg(p, "&7Tým ti vybere hra."); openTeams(p); return; }
+        int cap = (int) Math.ceil(Math.max(players.size(), 2) / (double) Math.min(teamNames().size(), Math.max(2, players.size())));
+        long in = teamPick.entrySet().stream().filter(x -> x.getValue() == i && x.getKey() != p).count();
+        if (in >= cap) { U.msg(p, "&cTento tým je plný – vyber jiný, ať je to fér."); return; }
+        teamPick.put(p, i);
+        U.msg(p, "&aVybral sis tým " + teamNames().get(i));
+        U.sound(p, Sound.UI_BUTTON_CLICK, 1.5f);
+        openTeams(p);
+    }
+
     public void openVote(Player p) {
         GameManager.VoteHolder h = new GameManager.VoteHolder(this);
         h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.vote(27, cz.adrrex.squarestar.Lang.t(p, "&f&lHlasování o mapě")));
@@ -187,17 +230,19 @@ public abstract class Game {
         p.getInventory().setItem(8, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.RED_BED, 1, "&c&lOpustit hru &7(pravý klik)"), "ss_game", "leave"), "icon_menu_leave"));
         if (allMaps().size() > 1) p.getInventory().setItem(4, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.MAP, 1, "&e&lHlasování o mapě &7(pravý klik)", "&7Mapy: &f" + String.join("&7, &f", allMaps())), "ss_game", "vote"), "icon_menu_vote"));
         if (!kits().isEmpty()) p.getInventory().setItem(0, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.CHEST, 1, "&6&lVyber kit &7(pravý klik)", "&7Tvůj kit: &f" + kitOf(p)), "ss_game", "kit"), "icon_menu_kit"));
+        if (!teamNames().isEmpty()) p.getInventory().setItem(2, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.WHITE_WOOL, 1, "&b&lVyber tým &7(pravý klik)", "&7S kým chceš hrát?"), "ss_game", "team"), "icon_menu_team"));
         if (state == State.BUILDING) U.msg(p, "&ePřipravuji čekárnu... &7(" + type.display + ")");
         else p.teleport(waitSpot());
         if (hideNames()) gm.hideName(p, true);
         pl.applyGravity(p);
-        broadcast("&a" + p.getName() + " &7se připojil &8(" + players.size() + "/" + type.max + ")");
+        broadcast("&a" + p.getName() + " &7se připojil &8(" + players.size() + "/" + maxPlayers() + ")");
         checkStart();
     }
 
     void removePlayer(Player p, boolean toLobby) {
         players.remove(p);
         votes.remove(p);
+        teamPick.remove(p);
         boolean wasAlive = alive.remove(p);
         gm.map.remove(p);
         gm.hideName(p, false);
@@ -211,7 +256,8 @@ public abstract class Game {
 
     protected void onLeave(Player p) {}
 
-    private void checkStart() {
+    void checkStart() {
+        if (eventHold) return;
         if (state == State.WAITING && players.size() >= type.min) { state = State.COUNTDOWN; countdown = pl.getConfig().getInt("countdown", 15); }
     }
 
@@ -227,7 +273,8 @@ public abstract class Game {
         l.add("&fHra: &6" + type.display);
         if (state == State.WAITING || state == State.COUNTDOWN) {
             l.add("&fMapa: &a" + (allMaps().size() > 1 ? "hlasuje se" : maps().get(0)));
-            l.add("&fHráči: &a" + players.size() + "&7/" + type.max);
+            l.add("&fHráči: &a" + players.size() + "&7/" + maxPlayers());
+            if (event) l.add("&d&l★ EVENT");
             l.add(state == State.COUNTDOWN ? "&fStart za: &e" + countdown + " s" : "&fČekáme na &e" + Math.max(0, type.min - players.size()) + " &fhráče");
         } else {
             l.add("&fMapa: &a" + mapName());
@@ -277,7 +324,7 @@ public abstract class Game {
             case WAITING -> { for (Player p : players) U.bar(p, "&eČekáme na hráče &f" + players.size() + "&7/&f" + type.min + " &8| &6" + type.display); }
             case COUNTDOWN -> {
                 if (players.size() < type.min) { state = State.WAITING; broadcast("&cMálo hráčů, odpočet zrušen."); return; }
-                if (players.size() >= type.max && countdown > 5) countdown = 5;
+                if (players.size() >= maxPlayers() && countdown > 5) countdown = 5;
                 for (Player p : players) {
                     U.bar(p, "&aStart za &f" + countdown + " s &8| &6" + type.display);
                     if (countdown <= 5) { U.title(p, "&6" + countdown, "&7" + type.display); U.sound(p, Sound.BLOCK_NOTE_BLOCK_HAT, 1.5f); }
@@ -339,6 +386,7 @@ public abstract class Game {
 
     public void eliminate(Player p, Player killer) {
         if (!alive.remove(p)) return;
+        if (killer != null && killer != p && pl.stats != null) pl.stats.add(killer, "kills", 1);
         if (killer != null && killer != p) broadcast("&c☠ " + p.getName() + " &7byl vyřazen hráčem &c" + killer.getName());
         else broadcast("&c☠ " + p.getName() + " &7je vyřazen!");
         if (canDrop()) for (ItemStack it : p.getInventory().getContents()) if (it != null && it.getType() != Material.AIR) w.dropItemNaturally(p.getLocation(), it);
@@ -362,6 +410,7 @@ public abstract class Game {
             U.title(p, win ? "&6&l✦ VÍTĚZSTVÍ ✦" : "&c&lKONEC HRY", "&7Vyhrál: &a" + names);
             U.sound(p, win ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_WITHER_DEATH, 1f);
         }
+        if (pl.stats != null) for (Player p : players) { pl.stats.add(p, "games", 1); if (winners.contains(p)) pl.stats.add(p, "wins", 1); }
         for (Player p : players) pl.levels.add(p, winners.contains(p) ? 100 : 25, winners.contains(p) ? "výhra" : "odehraná hra");
         String keyType = pl.getConfig().getString("win-reward.key", "common");
         int amount = pl.getConfig().getInt("win-reward.amount", 1);

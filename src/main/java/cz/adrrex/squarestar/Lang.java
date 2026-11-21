@@ -49,6 +49,29 @@ public final class Lang {
 
     private static void a(String cs, String en) { D.add(new String[]{cs, en}); }
     static {
+        // --- v4.0: přátelé, eventy, žebříčky, novinky, týmy, aktualizace ---
+        a("Klikni = připojit se k němu", "Click = join them"); a("Klikni = teleport k němu", "Click = teleport to them"); a("Není online", "Not online");
+        a("můžeš se přidat", "you can join"); a("Redstone týden", "Redstone week"); a("V lobby", "In lobby"); a("Hraje ", "Playing ");
+        a("Zatím nemáš přátele", "No friends yet"); a("Přidej si někoho:", "Add someone:"); a("Přidat kamaráda", "Add a friend"); a("Přátelé", "Friends");
+        a("Kdo je online a co hraje", "Who is online and what they play"); a("ti posílá žádost o přátelství!", "sent you a friend request!");
+        a("Žádost o přátelství poslána hráči", "Friend request sent to"); a("jste teď přátelé!", "are now friends!"); a("PŘIJMOUT", "ACCEPT"); a("ODMÍTNOUT", "DECLINE");
+        a("se připojil na server.", "joined the server."); a("se odpojil.", "left."); a("Hráč není online.", "Player is not online.");
+        a("OZNÁMIT EVENT", "ANNOUNCE EVENT"); a("SPUSTIT EVENT", "START EVENT"); a("Zrušit event", "Cancel event"); a("Pošle všem pozvánku", "Sends everyone an invite");
+        a("Přihlášeno:", "Joined:"); a("Klikni = start hry", "Click = start the game"); a("Hráči se připojí přes", "Players join with"); a("Kolik lidí se může připojit", "How many people can join");
+        a("Nízká (Mars)", "Low (Mars)"); a("Normální (Země)", "Normal (Earth)"); a("Klikni pro přepnutí", "Click to toggle"); a("1 hráč", "1 player"); a("Vybráno", "Selected");
+        a("Pořádání eventu", "Event setup"); a("pořádá event:", "is hosting an event:"); a("KLIKNI A PŘIPOJ SE", "CLICK TO JOIN"); a("Max. hráčů:", "Max players:");
+        a("Gravitace:", "Gravity:"); a("nízká", "low"); a("normální", "normal"); a("napiš", "type"); a("Jsi v eventu!", "You are in the event!");
+        a("Event byl zrušen.", "The event was cancelled."); a("začíná!", "is starting!"); a("hráčů", "players");
+        a("Co je nové", "What's new"); a("Novinky na serveru", "Server news"); a("NOVÁ VERZE", "NEW VERSION"); a("ZOBRAZIT NOVINKY", "SHOW NEWS"); a("CO JE NOVÉ", "WHAT'S NEW");
+        a("Tvoje statistiky:", "Your stats:"); a("Výhry:", "Wins:"); a("Hry:", "Games:"); a("Zabití:", "Kills:");
+        a("Vyber tým", "Choose team"); a("S kým chceš hrát?", "Who do you want to play with?"); a("Náhodný tým", "Random team"); a("Rozdělí tě hra", "The game picks for you");
+        a("Tvůj tým", "Your team"); a("Klikni pro výběr", "Click to select"); a("Vybral sis tým", "You picked team"); a("Tento tým je plný – vyber jiný, ať je to fér.", "This team is full – pick another so it's fair.");
+        a("Červení", "Red"); a("Modří", "Blue"); a("Zelení", "Green"); a("Žlutí", "Yellow");
+        a("AKTUALIZACE", "UPDATE"); a("Restart za", "Restart in"); a("Server se aktualizuje na verzi", "Server is updating to version");
+        a("Restartuje se – připoj se znovu za minutku!", "Restarting – join again in a minute!");
+        a("Létání zapnuto!", "Flight enabled!"); a("Létání vypnuto.", "Flight disabled."); a("Létat můžeš jen v lobby.", "You can only fly in the lobby.");
+        a("Mini černá díra", "Mini black hole"); a("Pravý klik: hodíš ji před sebe", "Right click: throw it ahead"); a("Přitáhne a podrží hráče!", "Pulls and holds players!");
+        a("Zničíš ji úderem, jinak zmizí za", "Hit it to destroy it, otherwise it vanishes in"); a("Drží tě černá díra!", "A black hole holds you!"); a("Udeř do ní!", "Hit it!"); a("Černá díra", "Black hole"); a("Jsi na pozemku hráče", "You are on the plot of"); a("teď může stavět na tvém pozemku!", "can now build on your plot!");
         // --- menu, lobby, itemy ---
         a("Minihry na Marsu", "Minigames on Mars"); a("Minihry", "Minigames"); a("pravý klik", "right click");
         a("Kosmetika", "Cosmetics"); a("Hlasování o mapě", "Map voting"); a("Obchod", "Shop");

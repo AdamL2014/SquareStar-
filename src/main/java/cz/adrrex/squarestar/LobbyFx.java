@@ -564,7 +564,7 @@ public final class LobbyFx implements Listener {
 
     // ---------------- dvojskok ----------------
     private boolean canDouble(Player p) {
-        return p.getWorld() == pl.mars && pl.games.of(p) == null && (p.getGameMode() == GameMode.ADVENTURE || p.getGameMode() == GameMode.SURVIVAL)
+        return p.getWorld() == pl.mars && pl.games.of(p) == null && !pl.fly.on(p) && (p.getGameMode() == GameMode.ADVENTURE || p.getGameMode() == GameMode.SURVIVAL)
                 && pl.getConfig().getBoolean("lobby.double-jump", true);
     }
 

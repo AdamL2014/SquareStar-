@@ -14,6 +14,7 @@ public final class Levels {
     public int xp(Player p) { return p.getPersistentDataContainer().getOrDefault(XP, PersistentDataType.INTEGER, 0); }
     /** XP potřebné na další level: 100, 150, 200, ... */
     public static int need(int level) { return 100 + (level - 1) * 50; }
+    public static int levelOf(int x) { int l = 1; while (x >= need(l)) { x -= need(l); l++; } return l; }
     public int level(Player p) { int x = xp(p), l = 1; while (x >= need(l)) { x -= need(l); l++; } return l; }
     private int rest(Player p) { int x = xp(p), l = 1; while (x >= need(l)) { x -= need(l); l++; } return x; }
 
@@ -21,6 +22,7 @@ public final class Levels {
         int before = level(p);
         p.getPersistentDataContainer().set(XP, PersistentDataType.INTEGER, xp(p) + amount);
         int after = level(p);
+        if (pl.stats != null) pl.stats.setXp(p, xp(p));
         U.msg(p, "&b+" + amount + " XP &7(" + why + ") &8| &7Level &e" + after + " &8(" + rest(p) + "/" + need(after) + ")");
         if (after > before) {
             U.title(p, "&6&l✦ LEVEL " + after + " ✦", "&eNový level! Jen tak dál!");

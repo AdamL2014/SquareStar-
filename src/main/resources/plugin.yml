@@ -1,5 +1,5 @@
 name: SquareStar
-version: '3.2.0'
+version: '4.0.0'
 main: cz.adrrex.squarestar.SquareStar
 api-version: '1.21.11'
 author: AdrrexStudio
@@ -14,6 +14,17 @@ commands:
   emote:
     description: Emoty (/emote hi)
     aliases: [e, emoty]
+  pritel:
+    description: Pratele (/pritel pridat|prijmout|odebrat)
+    aliases: [friend, friends, f, pratele]
+  event:
+    description: Eventy - poradani (majitel/admin) a pripojeni (/event join)
+  fly:
+    description: Letani v lobby (VIP+, influenceri, tym)
+    aliases: [letat]
+  novinky:
+    description: Co je noveho na serveru
+    aliases: [news, changelog]
 permissions:
   squarestar.admin:
     description: Admin prikazy (give, key, rebuildlobby)
