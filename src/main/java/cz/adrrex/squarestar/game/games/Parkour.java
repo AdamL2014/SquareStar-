@@ -22,6 +22,12 @@ public final class Parkour extends Game {
 
     public Parkour(GameManager gm, int slot) { super(gm, GameType.PARKOUR, slot); }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Zlatá dráha", 0, Material.RED_NETHER_BRICKS, Material.GOLD_BLOCK, Material.RED_SANDSTONE, Material.YELLOW_CONCRETE, Material.RED_TERRACOTTA, Material.YELLOW_TERRACOTTA, Material.ORANGE_TERRACOTTA, Material.HONEYCOMB_BLOCK, Material.BLACKSTONE, Material.SMOOTH_SANDSTONE},
+                new Object[]{"Lávová dráha", 0, Material.RED_SANDSTONE, Material.MAGMA_BLOCK, Material.RED_TERRACOTTA, Material.BLACKSTONE, Material.ORANGE_TERRACOTTA, Material.NETHERRACK, Material.RED_NETHER_BRICKS, Material.POLISHED_BLACKSTONE_BRICKS, Material.BLACKSTONE, Material.BASALT}};
+    }
+
     @Override public List<String> maps() { return List.of("Rudé kaňony", "Ledová kometa", "Neonová dráha"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {

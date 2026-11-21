@@ -53,6 +53,12 @@ public final class BedWars extends Game implements Listener {
         if (t.dx < 0) return BlockFace.EAST; return BlockFace.WEST;
     }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Ledový svět", 0, Material.RED_SAND, Material.SNOW_BLOCK, Material.RED_SANDSTONE, Material.PACKED_ICE, Material.RED_TERRACOTTA, Material.BLUE_ICE, Material.TERRACOTTA, Material.CALCITE, Material.SMOOTH_RED_SANDSTONE, Material.SMOOTH_QUARTZ, Material.RED_NETHER_BRICKS, Material.PRISMARINE_BRICKS, Material.RED_NETHER_BRICK_WALL, Material.PRISMARINE_WALL, Material.SHROOMLIGHT, Material.SEA_LANTERN, Material.BLACKSTONE, Material.PACKED_ICE, Material.ORANGE_TERRACOTTA, Material.LIGHT_BLUE_TERRACOTTA},
+                new Object[]{"Lávová planeta", 0, Material.RED_SAND, Material.NETHERRACK, Material.RED_SANDSTONE, Material.BLACKSTONE, Material.RED_TERRACOTTA, Material.MAGMA_BLOCK, Material.TERRACOTTA, Material.BASALT, Material.SMOOTH_RED_SANDSTONE, Material.POLISHED_BLACKSTONE, Material.RED_NETHER_BRICKS, Material.NETHER_BRICKS, Material.RED_NETHER_BRICK_WALL, Material.NETHER_BRICK_FENCE, Material.ORANGE_TERRACOTTA, Material.CRIMSON_NYLIUM}};
+    }
+
     @Override public List<String> maps() { return List.of("Rudá planeta", "Orbitální stanice", "Krystalová mlhovina"); }
 
     private Material top(boolean edge) {

@@ -27,6 +27,12 @@ public final class SkyWars extends Game {
     private static final Material[] LAVA = {Material.BASALT, Material.BLACKSTONE, Material.POLISHED_BASALT, Material.NETHERRACK, Material.MAGMA_BLOCK, Material.SMOOTH_BASALT};
     private static final Material[] ICE = {Material.SNOW_BLOCK, Material.PACKED_ICE, Material.CALCITE, Material.DIORITE, Material.WHITE_CONCRETE, Material.BLUE_ICE};
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Krystalové ostrovy", 0, Material.END_STONE, Material.AMETHYST_BLOCK, Material.STONE, Material.CALCITE, Material.ANDESITE, Material.PURPUR_BLOCK, Material.BLACKSTONE, Material.SMOOTH_BASALT, Material.TUFF, Material.AMETHYST_BLOCK, Material.RED_SAND, Material.MOSS_BLOCK},
+                new Object[]{"Zelené ostrovy", 0, Material.END_STONE, Material.MOSSY_COBBLESTONE, Material.STONE, Material.STONE, Material.ANDESITE, Material.COBBLESTONE, Material.BLACKSTONE, Material.DEEPSLATE, Material.TUFF, Material.MOSSY_STONE_BRICKS, Material.RED_SAND, Material.GRASS_BLOCK}};
+    }
+
     @Override public java.util.List<String> maps() { return java.util.List.of("Asteroidy", "Ledové měsíce", "Sopečné ostrovy"); }
 
     private void asteroid(U.BlockQueue.Builder b, int cx, int cy, int cz, int r) {

@@ -48,6 +48,12 @@ public final class RoverRace extends Game {
 
     public RoverRace(GameManager gm, int slot) { super(gm, GameType.ROVER, slot); }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Noční Valles", 0, Material.RED_SAND, Material.BLACK_CONCRETE_POWDER, Material.RED_SANDSTONE, Material.BLACKSTONE, Material.BLACK_CONCRETE, Material.GRAY_CONCRETE, Material.GRAY_CONCRETE, Material.BLACK_CONCRETE, Material.RED_TERRACOTTA, Material.BLUE_CONCRETE, Material.SHROOMLIGHT, Material.SEA_LANTERN, Material.RED_STAINED_GLASS_PANE, Material.BLUE_STAINED_GLASS_PANE},
+                new Object[]{"Ledový Fobos", 2, Material.RED_SAND, Material.SNOW_BLOCK, Material.RED_SANDSTONE, Material.PACKED_ICE, Material.TERRACOTTA, Material.CALCITE, Material.RED_TERRACOTTA, Material.LIGHT_BLUE_CONCRETE, Material.ORANGE_TERRACOTTA, Material.LIGHT_BLUE_CONCRETE, Material.GRANITE, Material.DIORITE, Material.RED_STAINED_GLASS_PANE, Material.LIGHT_BLUE_STAINED_GLASS_PANE}};
+    }
+
     @Override public List<String> maps() { return List.of("Kaňon Valles", "Olympus okruh", "Fobos sprint"); }
     @Override protected int timeLimit() { return 420; }
     @Override protected int voidY() { return oy - 15; }

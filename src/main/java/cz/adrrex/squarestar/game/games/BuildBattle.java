@@ -31,6 +31,12 @@ public final class BuildBattle extends Game {
         buildTime = gm.pl.getConfig().getInt("build-battle.build-seconds", 300);
     }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Lesní studio", 0, Material.SMOOTH_QUARTZ, Material.MOSS_BLOCK, Material.WHITE_CONCRETE, Material.GRASS_BLOCK, Material.RED_TERRACOTTA, Material.DIRT, Material.RED_NETHER_BRICKS, Material.OAK_LOG},
+                new Object[]{"Zlaté studio", 0, Material.SMOOTH_QUARTZ, Material.GOLD_BLOCK, Material.WHITE_CONCRETE, Material.YELLOW_CONCRETE, Material.RED_TERRACOTTA, Material.SMOOTH_SANDSTONE, Material.RED_NETHER_BRICKS, Material.CUT_SANDSTONE}};
+    }
+
     @Override public List<String> maps() { return List.of("Marsovská dílna", "Měsíční studio", "Neonové studio"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {

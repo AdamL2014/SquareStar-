@@ -38,6 +38,12 @@ public final class Station extends Game {
         this.hide = hide;
     }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Kosmická loď", 0, Material.SMOOTH_QUARTZ, Material.GRAY_CONCRETE, Material.WHITE_CONCRETE, Material.IRON_BLOCK, Material.IRON_BLOCK, Material.WAXED_OXIDIZED_COPPER, Material.LIGHT_GRAY_CONCRETE, Material.BLACK_CONCRETE, Material.CYAN_STAINED_GLASS, Material.BLUE_STAINED_GLASS, Material.SEA_LANTERN, Material.REDSTONE_LAMP},
+                new Object[]{"Skleník", 0, Material.SMOOTH_QUARTZ, Material.MOSS_BLOCK, Material.WHITE_CONCRETE, Material.GLASS, Material.IRON_BLOCK, Material.OAK_PLANKS, Material.LIGHT_GRAY_CONCRETE, Material.GREEN_CONCRETE, Material.CYAN_STAINED_GLASS, Material.LIME_STAINED_GLASS, Material.SEA_LANTERN, Material.OCHRE_FROGLIGHT}};
+    }
+
     @Override public List<String> maps() { return List.of("Základna Alfa", "Temná základna", "Laboratoř"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {

@@ -34,6 +34,15 @@ public final class PvpArena extends Game {
     }
     private boolean teams() { return teamSize >= 5; }
 
+    @Override protected Object[][] themes() {
+        if (sumo) return new Object[][]{
+                new Object[]{"Neonový talíř", 0, Material.LIGHT_BLUE_CONCRETE, Material.MAGENTA_CONCRETE, Material.WHITE_CONCRETE, Material.BLACK_CONCRETE, Material.CALCITE, Material.CYAN_CONCRETE},
+                new Object[]{"Zlatý talíř", 0, Material.LIGHT_BLUE_CONCRETE, Material.GOLD_BLOCK, Material.WHITE_CONCRETE, Material.YELLOW_CONCRETE, Material.CALCITE, Material.SMOOTH_SANDSTONE}};
+        return new Object[][]{
+                new Object[]{"Ledová aréna", 0, Material.RED_SANDSTONE, Material.PACKED_ICE, Material.SMOOTH_SANDSTONE, Material.SNOW_BLOCK, Material.SMOOTH_RED_SANDSTONE, Material.BLUE_ICE, Material.SANDSTONE, Material.CALCITE, Material.RED_NETHER_BRICKS, Material.PRISMARINE_BRICKS, Material.RED_TERRACOTTA, Material.LIGHT_BLUE_CONCRETE, Material.RED_SAND, Material.SNOW_BLOCK, Material.TERRACOTTA, Material.CALCITE, Material.BLACKSTONE, Material.PACKED_ICE, Material.WHITE_CONCRETE, Material.LIGHT_BLUE_CONCRETE, Material.CALCITE, Material.SNOW_BLOCK, Material.SHROOMLIGHT, Material.SEA_LANTERN},
+                new Object[]{"Lávová aréna", 1, Material.RED_SAND, Material.NETHERRACK, Material.RED_TERRACOTTA, Material.MAGMA_BLOCK, Material.TERRACOTTA, Material.BLACKSTONE, Material.BLACKSTONE, Material.BASALT, Material.WHITE_CONCRETE, Material.NETHER_BRICKS, Material.CALCITE, Material.BLACKSTONE, Material.LIGHT_BLUE_CONCRETE, Material.NETHER_BRICKS, Material.SEA_LANTERN, Material.SHROOMLIGHT}};
+    }
+
     @Override public List<String> maps() { return sumo ? List.of("Měsíční talíř", "Rudý talíř", "Ledový talíř") : List.of("Koloseum", "Kráter", "Neonová aréna"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {

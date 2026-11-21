@@ -380,6 +380,7 @@ public final class LobbyFx implements Listener {
                 else m.setRotation((float) Math.toDegrees(Math.atan2(m.getLocation().getX(), -m.getLocation().getZ())), 0);
             }
             if (tick % 2 == 0) logoWave(tick * 0.12);
+            ambient();
             if (tick % 10 == 0 && !title.isEmpty()) {
                 phase += 0.55;
                 for (Pixel px : title) {
@@ -421,6 +422,41 @@ public final class LobbyFx implements Listener {
                 }
             }
         }, 40, 2);
+    }
+
+    // ---------------- atmosféra lobby: prach, padající hvězdy, polární záře nad kopulí, světlušky ----------------
+    private final java.util.Random fxr = new java.util.Random();
+    private void ambient() {
+        var w = pl.mars;
+        if (w.getPlayers().isEmpty()) return;
+        // marsovský prach ve větru
+        for (int i = 0; i < 3; i++) {
+            double a = fxr.nextDouble() * Math.PI * 2, d = 18 + fxr.nextDouble() * 30;
+            w.spawnParticle(Particle.DUST, new Location(w, Math.cos(a) * d, Lobby.Y + 1.5 + fxr.nextDouble() * 4, Math.sin(a) * d), 1, 0.5, 0.2, 0.5, 0, new Particle.DustOptions(Color.fromRGB(205, 110, 60), 1.4f));
+        }
+        // polární záře – rotující prstenec nad kopulí
+        double base = tick * 0.05;
+        for (int i = 0; i < 4; i++) {
+            double a = base + i * Math.PI / 2;
+            Color c = Color.fromRGB(java.awt.Color.HSBtoRGB((float) ((tick * 0.004 + i * 0.25) % 1), 0.7f, 1f) & 0xFFFFFF);
+            w.spawnParticle(Particle.DUST, new Location(w, Math.cos(a) * 20, Lobby.Y + 21 + Math.sin(a * 3) * 1.5, Math.sin(a) * 20), 2, 0.3, 0.3, 0.3, 0, new Particle.DustOptions(c, 2.2f));
+        }
+        // světlušky uvnitř kopule
+        if (tick % 2 == 0) w.spawnParticle(Particle.GLOW, new Location(w, fxr.nextGaussian() * 7, Lobby.Y + 1.5 + fxr.nextDouble() * 5, fxr.nextGaussian() * 7), 1, 0, 0, 0, 0);
+        // jiskry nad hvězdou uprostřed
+        if (tick % 4 == 0) w.spawnParticle(Particle.WAX_OFF, new Location(w, 0.5, Lobby.Y + 1.2, 0.5), 2, 0.8, 0.1, 0.8, 0);
+        // padající hvězda přes oblohu (každé ~4 s)
+        if (tick % 40 == 0) {
+            double sx = fxr.nextInt(120) - 60, sz = fxr.nextInt(120) - 60, y = Lobby.Y + 60 + fxr.nextInt(25);
+            double vx = (fxr.nextBoolean() ? 1 : -1) * (1.5 + fxr.nextDouble()), vz = fxr.nextDouble() - 0.5;
+            for (int k = 0; k < 18; k++) w.spawnParticle(Particle.END_ROD, new Location(w, sx + vx * k, y - k * 0.6, sz + vz * k), 1, 0, 0, 0, 0, null, true);
+            w.spawnParticle(Particle.FIREWORK, new Location(w, sx + vx * 18, y - 10.8, sz + vz * 18), 6, 0.3, 0.3, 0.3, 0.05, null, true);
+        }
+        // krystalové věže jemně září
+        if (tick % 6 == 0) for (int i = 0; i < 6; i++) {
+            double a = i * Math.PI / 3 + Math.toRadians(15);
+            w.spawnParticle(Particle.WITCH, new Location(w, Math.cos(a) * 30 + 0.5, Lobby.Y + 9, Math.sin(a) * 30 + 0.5), 2, 0.6, 2, 0.6, 0);
+        }
     }
 
     // ---------------- VidRift postava: „podívej se na film" ----------------

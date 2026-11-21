@@ -24,6 +24,12 @@ public final class Dropper extends Game {
 
     public Dropper(GameManager gm, int slot) { super(gm, GameType.DROPPER, slot); }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Krystalové šachty", 0, Material.ORANGE_STAINED_GLASS, Material.PURPLE_STAINED_GLASS, Material.SHROOMLIGHT, Material.PEARLESCENT_FROGLIGHT, Material.RED_TERRACOTTA, Material.AMETHYST_BLOCK, Material.RED_SANDSTONE, Material.PURPUR_BLOCK, Material.SMOOTH_RED_SANDSTONE, Material.CALCITE},
+                new Object[]{"Zlaté šachty", 0, Material.ORANGE_STAINED_GLASS, Material.YELLOW_STAINED_GLASS, Material.SHROOMLIGHT, Material.OCHRE_FROGLIGHT, Material.RED_TERRACOTTA, Material.GOLD_BLOCK, Material.RED_SANDSTONE, Material.YELLOW_CONCRETE, Material.SMOOTH_RED_SANDSTONE, Material.SMOOTH_SANDSTONE}};
+    }
+
     @Override public List<String> maps() { return List.of("Marsovské šachty", "Neonové šachty", "Ledové šachty"); }
     @Override protected int timeLimit() { return 900; }
     @Override protected int voidY() { return oy - 30; }

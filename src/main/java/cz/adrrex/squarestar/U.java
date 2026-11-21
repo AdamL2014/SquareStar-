@@ -94,7 +94,9 @@ public final class U {
             private final World w; private final LinkedHashMap<Long, Object[]> map = new LinkedHashMap<>();
             private final Map<Material, BlockData> cache = new HashMap<>();
             Builder(World w) { this.w = w; }
-            public Builder set(int x, int y, int z, Material m) { return set(x, y, z, cache.computeIfAbsent(m, Material::createBlockData)); }
+            /** záměna bloků pro barevné varianty map (null = beze změny) */
+            public Map<Material, Material> remap;
+            public Builder set(int x, int y, int z, Material m) { if (remap != null) m = remap.getOrDefault(m, m); return set(x, y, z, cache.computeIfAbsent(m, Material::createBlockData)); }
             public Builder set(int x, int y, int z, BlockData d) { map.put(pack(x, y, z), new Object[]{x, y, z, d}); return this; }
             public Builder fill(int x1, int y1, int z1, int x2, int y2, int z2, Material m) {
                 for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++)

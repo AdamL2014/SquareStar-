@@ -20,6 +20,12 @@ public final class LuckyTower extends Game {
 
     public LuckyTower(GameManager gm, int slot) { super(gm, GameType.LUCKYTOWER, slot); }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Krystalové věže", 0, Material.CRYING_OBSIDIAN, Material.AMETHYST_BLOCK, Material.BEDROCK, Material.PURPUR_PILLAR, Material.RED_TERRACOTTA, Material.AMETHYST_BLOCK},
+                new Object[]{"Zlaté věže", 0, Material.CRYING_OBSIDIAN, Material.GOLD_BLOCK, Material.BEDROCK, Material.SMOOTH_SANDSTONE, Material.RED_TERRACOTTA, Material.YELLOW_TERRACOTTA}};
+    }
+
     @Override public List<String> maps() { return List.of("Obsidiánové věže", "Ledové věže", "Lávové věže"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {

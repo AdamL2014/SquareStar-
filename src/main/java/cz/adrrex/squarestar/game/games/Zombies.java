@@ -28,6 +28,12 @@ public final class Zombies extends Game {
 
     public Zombies(GameManager gm, int slot) { super(gm, GameType.ZOMBIES, slot); }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Lávová základna", 0, Material.LIGHT_GRAY_CONCRETE, Material.BLACKSTONE, Material.GRAY_CONCRETE, Material.POLISHED_BLACKSTONE, Material.WHITE_CONCRETE, Material.NETHER_BRICKS, Material.CYAN_TERRACOTTA, Material.RED_TERRACOTTA, Material.SEA_LANTERN, Material.SHROOMLIGHT, Material.STONE, Material.NETHERRACK, Material.CRYING_OBSIDIAN, Material.MAGMA_BLOCK},
+                new Object[]{"Krystalová základna", 0, Material.LIGHT_GRAY_CONCRETE, Material.CALCITE, Material.GRAY_CONCRETE, Material.AMETHYST_BLOCK, Material.WHITE_CONCRETE, Material.PURPUR_BLOCK, Material.CYAN_TERRACOTTA, Material.PURPLE_STAINED_GLASS, Material.SEA_LANTERN, Material.PEARLESCENT_FROGLIGHT, Material.STONE, Material.SMOOTH_BASALT}};
+    }
+
     @Override public List<String> maps() { return List.of("Měsíční základna", "Kráter Tycho", "Ledová stanice"); }
     @Override protected GameMode mode() { return GameMode.ADVENTURE; }
     @Override protected Dmg damage() { return Dmg.NORMAL; }

@@ -34,6 +34,12 @@ public final class SpeedrunFE extends Game {
 
     public SpeedrunFE(GameManager gm, int slot) { super(gm, GameType.SPEEDRUN, slot); }
 
+    @Override protected Object[][] themes() {
+        return new Object[][]{
+                new Object[]{"Ledová vlna", 0, Material.WHITE_WOOL, Material.SNOW_BLOCK, Material.LIGHT_GRAY_WOOL, Material.WHITE_WOOL, Material.BROWN_WOOL, Material.CYAN_WOOL, Material.LIME_WOOL, Material.BLUE_WOOL},
+                new Object[]{"Noční planeta", 0, Material.WHITE_WOOL, Material.BLACK_WOOL, Material.LIGHT_GRAY_WOOL, Material.PURPLE_WOOL, Material.BROWN_WOOL, Material.MAGENTA_WOOL, Material.LIME_WOOL, Material.PINK_WOOL}};
+    }
+
     @Override public List<String> maps() { return List.of("Vlněný měsíc", "Levná planeta", "Duhová planeta"); }
     @Override protected GameMode mode() { return GameMode.SURVIVAL; }
     @Override protected Dmg damage() { return Dmg.NORMAL; }

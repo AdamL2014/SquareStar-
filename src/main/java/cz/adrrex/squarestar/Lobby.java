@@ -80,8 +80,71 @@ public final class Lobby implements Listener {
             if (y < 3 || (x == 0 && z == 0)) b.set(rx + x, Y + 17 + y, rz + z, Material.RED_CONCRETE);
         for (int[] f : new int[][]{{3, 0}, {-3, 0}, {0, 3}, {0, -3}}) b.fill(rx + f[0], Y + 1, rz + f[1], rx + f[0], Y + 4, rz + f[1], Material.GRAY_CONCRETE);
         b.set(rx, Y + 9, rz - 2, Material.LIGHT_BLUE_STAINED_GLASS);
+        decorate(b, r);
         earth(b);
         b.submit(done);
+    }
+
+    /** Vylepšení lobby: mozaika náměstí, cesty s lampami, krystalové věže, moduly základny, radar, solární pole. */
+    private void decorate(U.BlockQueue.Builder b, java.util.Random r) {
+        // mozaika náměstí: soustředné kruhy, 8 paprsků a hvězda uprostřed
+        for (int x = -14; x <= 14; x++) for (int z = -14; z <= 14; z++) {
+            double d = Math.sqrt(x * x + z * z);
+            if (d > 14.5) continue;
+            double ang = Math.toDegrees(Math.atan2(z, x)); if (ang < 0) ang += 360;
+            boolean spoke = d > 3 && d < 14 && (Math.abs(ang % 45) < 3 || Math.abs(ang % 45) > 42);
+            Material m = null;
+            if (Math.abs(d - 6) < 0.5 || Math.abs(d - 13) < 0.5) m = Material.POLISHED_BLACKSTONE_BRICKS;
+            else if (spoke) m = ((int) d % 3 == 0) ? Material.OCHRE_FROGLIGHT : Material.CUT_RED_SANDSTONE;
+            else if (d < 3) { double a5 = Math.abs(Math.cos(Math.atan2(z, x) * 2.5)); m = d < 1.2 + a5 * 1.8 ? Material.GOLD_BLOCK : Material.ORANGE_GLAZED_TERRACOTTA; }
+            if (m != null) b.set(x, Y, z, m);
+        }
+        // 4 cesty od vchodů ven, lampy po stranách
+        for (int[] dir : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) {
+            for (int t = 18; t <= 44; t++) for (int w2 = -1; w2 <= 1; w2++) {
+                int x = dir[0] * t + dir[1] * w2, z = dir[1] * t + dir[0] * w2;
+                b.set(x, Y, z, w2 == 0 ? Material.POLISHED_BLACKSTONE : Material.POLISHED_BLACKSTONE_BRICKS);
+                for (int y = 1; y <= 3; y++) b.set(x, Y + y, z, Material.AIR);
+            }
+            for (int t = 20; t <= 44; t += 6) for (int side : new int[]{-2, 2}) {
+                int x = dir[0] * t + dir[1] * side, z = dir[1] * t + dir[0] * side;
+                b.fill(x, Y + 1, z, x, Y + 3, z, Material.POLISHED_BLACKSTONE_WALL);
+                b.set(x, Y + 4, z, Material.SEA_LANTERN);
+            }
+        }
+        // krystalové věže (6 kolem kopule)
+        for (int i = 0; i < 6; i++) {
+            double a = i * Math.PI / 3 + Math.toRadians(15);
+            int cx = (int) Math.round(Math.cos(a) * 30), cz = (int) Math.round(Math.sin(a) * 30);
+            int hgt = 7 + r.nextInt(6);
+            for (int y = 0; y < hgt; y++) {
+                int rad = Math.max(0, 2 - y * 3 / hgt);
+                for (int dx = -rad; dx <= rad; dx++) for (int dz = -rad; dz <= rad; dz++)
+                    if (dx * dx + dz * dz <= rad * rad + 1) b.set(cx + dx, Y + 1 + y, cz + dz, y % 3 == 0 ? Material.AMETHYST_BLOCK : Material.PURPLE_STAINED_GLASS);
+            }
+            b.set(cx, Y + 1 + hgt, cz, Material.END_ROD);
+            for (int k = 0; k < 4; k++) b.set(cx + r.nextInt(5) - 2, Y + 1, cz + r.nextInt(5) - 2, Material.AMETHYST_CLUSTER);
+        }
+        // moduly základny (malé kopule s okny)
+        for (int[] m : new int[][]{{-14, -40}, {-30, -26}, {36, -14}}) {
+            for (int x = -4; x <= 4; x++) for (int y = 0; y <= 4; y++) for (int z = -4; z <= 4; z++) {
+                double d = Math.sqrt(x * x + y * y + z * z);
+                if (d > 4.3 || d <= 3.3) continue;
+                b.set(m[0] + x, Y + 1 + y, m[1] + z, y == 2 && (x == 0 || z == 0) ? Material.LIGHT_BLUE_STAINED_GLASS : y == 4 ? Material.SEA_LANTERN : Material.WHITE_CONCRETE);
+            }
+            b.fill(m[0] - 1, Y + 1, m[1] - 4, m[0] + 1, Y + 2, m[1] - 4, Material.AIR);
+        }
+        // radar (talíř na stožáru)
+        int dx0 = 26, dz0 = -34;
+        b.fill(dx0, Y + 1, dz0, dx0, Y + 8, dz0, Material.IRON_BARS);
+        for (int x = -3; x <= 3; x++) for (int z = -3; z <= 3; z++) if (x * x + z * z <= 10) b.set(dx0 + x, Y + 9 + (x * x + z * z) / 5, dz0 + z, Material.WHITE_CONCRETE);
+        b.set(dx0, Y + 10, dz0, Material.REDSTONE_LAMP); b.set(dx0, Y + 11, dz0, Material.REDSTONE_BLOCK);
+        // solární pole
+        for (int row = 0; row < 3; row++) for (int col = 0; col < 5; col++) {
+            int x = -44 + col * 3, z = 8 + row * 4;
+            b.set(x, Y + 1, z, Material.IRON_BARS);
+            b.fill(x - 1, Y + 2, z - 1, x + 1, Y + 2, z + 1, Material.DAYLIGHT_DETECTOR);
+        }
     }
 
     /** Úklid staré blokové Země (od verze 2.2 je Země 3D model, který se točí). */

@@ -31,7 +31,7 @@ public final class Spleef extends Game {
         this.floor = tnt ? Material.TNT : Material.SNOW_BLOCK;
     }
 
-    @Override public List<String> maps() { return tnt ? List.of("Kruhová patra", "Hvězdná patra") : List.of("Sněžný měsíc", "Čtvercový krystal"); }
+    @Override public List<String> maps() { return tnt ? List.of("Kruhová patra", "Hvězdná patra", "Prstencová patra", "Křížová patra", "Diamantová patra") : List.of("Sněžný měsíc", "Čtvercový krystal", "Prstenec", "Kříž", "Diamant"); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {
         for (int layer = 0; layer < 3; layer++) {
@@ -43,9 +43,12 @@ public final class Spleef extends Game {
                     double a = Math.atan2(z, x), star = R * (0.62 + 0.38 * Math.abs(Math.cos(2.5 * a)));
                     in = d <= star;
                 } else if (map == 1) in = Math.abs(x) <= R - 1 && Math.abs(z) <= R - 1 && !(Math.abs(x) <= 1 && Math.abs(z) <= 1 && layer == 0);
+                else if (map == 2) in = d <= R && d >= 4 + layer;                       // prstenec s dírou uprostřed
+                else if (map == 3) in = (Math.abs(x) <= 4 || Math.abs(z) <= 4) && d <= R; // kříž
+                else if (map == 4) in = Math.abs(x) + Math.abs(z) <= R;                  // diamant
                 else in = d <= R;
                 if (in) b.set(ox + x, y, oz + z, floor);
-                else if (d <= R + 1.2 && layer == 0) b.set(ox + x, y - 1, oz + z, map == 1 ? Material.AMETHYST_BLOCK : Material.RED_NETHER_BRICKS);
+                else if (d <= R + 1.2 && layer == 0) b.set(ox + x, y - 1, oz + z, map == 1 ? Material.AMETHYST_BLOCK : map == 2 ? Material.SEA_LANTERN : map == 3 ? Material.GOLD_BLOCK : map == 4 ? Material.PRISMARINE_BRICKS : Material.RED_NETHER_BRICKS);
             }
         }
     }
@@ -57,8 +60,13 @@ public final class Spleef extends Game {
 
     @Override protected void start() {
         for (Player p : players) {
-            double a = rnd.nextDouble() * Math.PI * 2, d = rnd.nextDouble() * (R - 3);
-            p.teleport(new Location(w, ox + Math.cos(a) * d + 0.5, oy + 1, oz + Math.sin(a) * d + 0.5));
+            Location l = null;
+            for (int k = 0; k < 60 && l == null; k++) { // náhodné místo, které je opravdu na podlaze (prstenec/kříž/diamant)
+                double a = rnd.nextDouble() * Math.PI * 2, d = rnd.nextDouble() * (R - 3);
+                Location c = new Location(w, ox + Math.cos(a) * d + 0.5, oy + 1, oz + Math.sin(a) * d + 0.5);
+                if (c.clone().add(0, -1, 0).getBlock().getType() == floor) l = c;
+            }
+            p.teleport(l != null ? l : new Location(w, ox + R - 2.5, oy + 1, oz + 0.5));
             if (!tnt) {
                 ItemStack shovel = new ItemStack(Material.DIAMOND_SHOVEL);
                 ItemMeta m = shovel.getItemMeta(); m.setUnbreakable(true); m.addEnchant(Enchantment.EFFICIENCY, 5, true); shovel.setItemMeta(m);
