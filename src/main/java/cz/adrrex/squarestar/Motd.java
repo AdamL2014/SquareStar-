@@ -28,7 +28,7 @@ public final class Motd implements Listener {
 
     public boolean staff(Player p) {
         if (p.isOp() || p.hasPermission("squarestar.admin")) return true;
-        return switch (pl.ranks.of(p)) { case OWNER, ADMIN, MODERATOR, HELPER, BUILDER -> true; default -> false; };
+        return switch (pl.ranks.of(p)) { case OWNER, ADMIN, DEVELOPER, MODERATOR, HELPER, BUILDER -> true; default -> false; };
     }
 
     private Component kickMsg() {

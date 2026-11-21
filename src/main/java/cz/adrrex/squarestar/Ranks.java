@@ -24,10 +24,13 @@ import java.util.*;
 /** Ranky s pixel-art odznaky (resource pack font). Bez packu se ukáže barevný text. */
 public final class Ranks implements Listener {
     public enum Rank {
-        OWNER("&4&l", true), ADMIN("&c&l", true), MODERATOR("&e&l", false), HELPER("&a&l", false), BUILDER("&6&l", false),
-        YOUTUBER("&c&l", false), STREAMER("&5&l", false), VIDRIFTER("&b&l", false), LEGENDA("&d&l", false), MVP("&b&l", false), VIP("&a&l", false), HRAC("&7", false);
-        public final String color; public final boolean admin;
-        Rank(String c, boolean a) { color = c; admin = a; }
+        // POZOR: nové ranky přidávat jen NA KONEC (pořadí = obrázek v resource packu); řazení v tabu určuje „sort"
+        OWNER("&4&l", true, 0), ADMIN("&c&l", true, 1), MODERATOR("&e&l", false, 3), HELPER("&a&l", false, 4), BUILDER("&6&l", false, 5),
+        YOUTUBER("&c&l", false, 7), STREAMER("&5&l", false, 12), VIDRIFTER("&b&l", false, 13), LEGENDA("&d&l", false, 14), MVP("&b&l", false, 15), VIP("&a&l", false, 16), HRAC("&7", false, 17),
+        TIKTOKER("&d&l", false, 8), DEVELOPER("&2&l", true, 2), PARTNER("&6&l", false, 6),
+        KICK("&a&l", false, 10), TWITCH("&5&l", false, 9), INSTAGRAM("&d&l", false, 11);
+        public final String color; public final boolean admin; public final int sort;
+        Rank(String c, boolean a, int s) { color = c; admin = a; sort = s; }
         public char glyph() { return (char) (0xE000 + ordinal()); }
     }
 
@@ -75,6 +78,8 @@ public final class Ranks implements Listener {
     private Component textBadge(Rank r) {
         if (r == Rank.HRAC) return Component.empty();
         if (r == Rank.VIDRIFTER) return link(U.c("&8[&b&lVID&d&lRIFTER&8]")).append(Component.text(" "));
+        if (r == Rank.TIKTOKER) return U.c("&8[&b&lTIK&d&lTOKER&8] ");
+        if (r == Rank.INSTAGRAM) return U.c("&8[&5&lINSTA&d&lGRAM&8] ");
         return U.c("&8[" + r.color + r.name() + "&8] ");
     }
     private Component glyphBadge(Rank r) {
@@ -117,12 +122,12 @@ public final class Ranks implements Listener {
         admin.addAll(builder);
         admin.addAll(List.of("squarestar.admin", "minecraft.command.whitelist", "minecraft.command.op", "minecraft.command.deop", "minecraft.command.effect",
                 "minecraft.command.kill", "minecraft.command.say", "minecraft.command.difficulty", "minecraft.command.gamerule", "grim.*", "grim.exempt.false"));
-        DEF.put(Rank.OWNER, admin); DEF.put(Rank.ADMIN, admin); DEF.put(Rank.MODERATOR, mod); DEF.put(Rank.HELPER, helper); DEF.put(Rank.BUILDER, builder);
+        DEF.put(Rank.OWNER, admin); DEF.put(Rank.ADMIN, admin); DEF.put(Rank.DEVELOPER, admin); DEF.put(Rank.MODERATOR, mod); DEF.put(Rank.HELPER, helper); DEF.put(Rank.BUILDER, builder);
     }
     /** je hráč (podle UUID) v týmu? – funguje i před připojením */
     public boolean staffByUuid(UUID id) {
         String r = data.getString("players." + id);
-        return r != null && (r.equals("OWNER") || r.equals("ADMIN"));
+        return r != null && (r.equals("OWNER") || r.equals("ADMIN") || r.equals("DEVELOPER"));
     }
 
     public void applyPerms(Player p) {
@@ -153,7 +158,7 @@ public final class Ranks implements Listener {
         boolean g = glyphsEverywhere();
         p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName() + " " + pl.levels.tag(p).trim())));
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
-        String tn = String.format("ss_r%02d", r.ordinal());
+        String tn = String.format("ss_s%02d", r.sort);
         Team t = sb.getTeam(tn);
         if (t == null) t = sb.registerNewTeam(tn);
         // vždy přepsat (starý tým z dřívější verze by držel textový prefix)
