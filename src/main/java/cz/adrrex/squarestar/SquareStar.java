@@ -147,7 +147,7 @@ public final class SquareStar extends JavaPlugin {
     }
 
     public boolean isSpaceWorld(World w) {
-        if (w == mars || isArena(w)) return true;
+        if (w == mars || isArena(w) || w.getName().equals("ss_event")) return true;
         List<String> extra = getConfig().getStringList("gravity.extra-worlds");
         return extra.contains(w.getName());
     }
@@ -156,6 +156,7 @@ public final class SquareStar extends JavaPlugin {
         boolean space = isSpaceWorld(p.getWorld()) && getConfig().getBoolean("gravity.enabled", true);
         double g = space ? getConfig().getDouble("gravity.value", 0.03) : 0.08;
         if (space && games != null) { var gm = games.of(p); if (gm != null && gm.eventGravity != null) g = gm.eventGravity; else if (gm != null && gm.gravity() != null) g = gm.gravity(); }
+        if (space && events != null && events.inCustom(p)) g = events.gravity();
         double fall = space ? getConfig().getDouble("gravity.safe-fall-distance", 12) : 3;
         ItemStack boots = p.getInventory().getBoots();
         double jump = 0.41999998688697815;

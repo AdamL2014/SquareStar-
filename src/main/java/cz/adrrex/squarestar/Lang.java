@@ -52,6 +52,12 @@ public final class Lang {
         a("Hraje:", "Playing:"); a("= vypnout", "= turn off"); a("Hudba v lobby", "Lobby music"); a("vypnuta", "off"); a("zapnuta!", "on!"); a("hudba zap/vyp", "music on/off");
         a("Jetpack se přehřál!", "Jetpack overheated!"); a("Pauza", "Cooldown"); a("do přehřátí", "until overheat"); a("Moc vysoko – jetpack už víc nevyletí!", "Too high – the jetpack won't go higher!");
         a("…nebo klikni na", "…or click the"); a("před bednami na spawnu!", "in front of the crates at spawn!"); a("Klikni = připojit se", "Click = join");
+        a("Bedrocková místnost", "Bedrock room"); a("Builder event", "Builder event"); a("Všichni jsou spolu zavření", "Everyone is locked together"); a("v bedrockové místnosti.", "in a bedrock room.");
+        a("Ty jim tam něco uspořádáš.", "You host something for them."); a("Každý hráč dostane svůj", "Every player gets their own"); a("pozemek a staví v kreativu.", "plot and builds in creative."); a("Okraje nejdou rozbít.", "Borders can't be broken.");
+        a("STAVĚJTE!", "BUILD!"); a("Tvůj pozemek je tvůj – ukaž, co umíš!", "Your plot is yours – show what you can do!"); a("EVENT ZAČÍNÁ", "EVENT STARTS"); a("Poslouchej", "Listen to");
+        a("Event skončil.", "The event is over."); a("Díky všem!", "Thanks everyone!"); a("Opustit event", "Leave event"); a("Tohle je tvůj pozemek.", "This is your plot."); a("Stavěj!", "Build!");
+        a("Stavět můžeš, až", "You can build once"); a("event spustí.", "starts the event."); a("Jsi v bedrockové místnosti!", "You are in the bedrock room!"); a("Počkej na pokyny od", "Wait for instructions from");
+        a("přišel na event", "joined the event"); a("Event je plný", "The event is full"); a("Už jsi v eventu.", "You are already in the event."); a("Připravuji svět eventu...", "Preparing the event world...");
         // --- v4.1: příkazy, kosmetika, nápověda ---
         a("SQUARESTAR – PŘÍKAZY", "SQUARESTAR – COMMANDS"); a("menu miniher", "minigame menu"); a("zpět na Mars", "back to Mars"); a("opustit hru", "leave the game");
         a("soukromé zprávy", "private messages"); a("stopy, čepice, balónky", "trails, hats, balloons"); a("emoty", "emotes"); a("statistiky", "stats");
