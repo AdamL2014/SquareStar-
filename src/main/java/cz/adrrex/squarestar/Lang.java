@@ -27,6 +27,19 @@ public final class Lang {
     /** přeloží text (s &-barvami) podle jazyka hráče */
     /** poslední hráč, pro kterého se překládalo (Gui podle něj pozná hráče z Bedrocku) */
     public static Player last;
+    private static List<String[]> R;
+    private static List<java.util.regex.Pattern> RP;
+    /** zpětný překlad EN -> CZ (jen pro staré itemy bez zálohy) */
+    public static synchronized String toCs(String s) {
+        if (R == null) {
+            R = new ArrayList<>(); RP = new ArrayList<>();
+            for (String[] e : D) if (e[1].length() >= 4 && !e[1].equals(e[0]) && e[1].matches(".*[a-zA-Z].*")) R.add(new String[]{e[1], e[0]});
+            R.sort((x, y) -> y[0].length() - x[0].length());
+            for (String[] e : R) RP.add(java.util.regex.Pattern.compile("(?<!(?<!&)\\p{L})" + java.util.regex.Pattern.quote(e[0]) + "(?![\\p{L}])"));
+        }
+        for (int i = 0; i < R.size(); i++) if (s.contains(R.get(i)[0])) s = RP.get(i).matcher(s).replaceAll(java.util.regex.Matcher.quoteReplacement(R.get(i)[1]));
+        return s;
+    }
     /** překlad do angličtiny bez hráče (hologramy) */
     public static String toEn(String s) {
         if (s == null) return null;
@@ -41,9 +54,36 @@ public final class Lang {
     }
 
     /** přeloží jméno a popis itemu (pro menu a lobby itemy) */
+    private static final NamespacedKey CS = new NamespacedKey("squarestar", "cs_text");
     public static ItemStack item(Player p, ItemStack it) {
-        if (it == null || it.getType() == Material.AIR || !en(p) || !it.hasItemMeta()) return it;
+        if (it == null || it.getType() == Material.AIR || !it.hasItemMeta()) return it;
         ItemMeta m = it.getItemMeta();
+        var pdc = m.getPersistentDataContainer();
+        if (!en(p)) {
+            // hráč přepnul zpět na češtinu -> vrátit původní české texty
+            String orig = pdc.get(CS, PersistentDataType.STRING);
+            if (orig == null) {
+                // starší anglický item bez zálohy -> zpětný překlad
+                boolean ch = false;
+                if (m.hasDisplayName()) { String a = LEG.serialize(m.displayName()), b = toCs(a); if (!a.equals(b)) { m.displayName(U.c(b)); ch = true; } }
+                if (m.hasLore()) { List<Component> l = new ArrayList<>(); for (Component c : Objects.requireNonNull(m.lore())) { String a = LEG.serialize(c), b = toCs(a); ch |= !a.equals(b); l.add(U.c(b)); } m.lore(l); }
+                if (ch) it.setItemMeta(m);
+                return it;
+            }
+            var gs = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson();
+            String[] parts = orig.split("\u0000", -1);
+            if (!parts[0].isEmpty()) m.displayName(gs.deserialize(parts[0]));
+            if (parts.length > 1) { List<Component> l = new ArrayList<>(); for (int i = 1; i < parts.length; i++) l.add(gs.deserialize(parts[i])); m.lore(l); }
+            pdc.remove(CS);
+            it.setItemMeta(m);
+            return it;
+        }
+        if (!pdc.has(CS, PersistentDataType.STRING)) {
+            var gs = net.kyori.adventure.text.serializer.gson.GsonComponentSerializer.gson();
+            StringBuilder b = new StringBuilder(m.hasDisplayName() ? gs.serialize(m.displayName()) : "");
+            if (m.hasLore()) for (Component c : Objects.requireNonNull(m.lore())) b.append('\u0000').append(gs.serialize(c));
+            pdc.set(CS, PersistentDataType.STRING, b.toString());
+        }
         if (m.hasDisplayName()) m.displayName(comp(p, m.displayName()));
         if (m.hasLore()) { List<Component> l = new ArrayList<>(); for (Component c : Objects.requireNonNull(m.lore())) l.add(comp(p, c)); m.lore(l); }
         it.setItemMeta(m);
@@ -55,6 +95,16 @@ public final class Lang {
 
     private static void a(String cs, String en) { D.add(new String[]{cs, en}); }
     static {
+        a("Parkour na Marsu", "Mars Parkour");
+        a("Útěk před TNT", "TNT Run");
+        a("Války asteroidů", "SkyWars: Asteroids");
+        a("Bitva o postele: Mars", "Bed Wars: Mars");
+        a("Vrah mezi námi", "Murder Mystery");
+        a("Šťastná věž", "Lucky Tower");
+        a("Stavitelská bitva", "Build Battle");
+        a("Speedrun: Edice zdarma", "Speedrun: Free Edition");
+        a("Pád šachtou", "Dropper");
+        a("Bitva o postele, Války asteroidů, Stavitelská bitva a další", "Bed Wars, SkyWars, Build Battle and more"); a("edice zdarma", "Free Edition"); a("Edice zdarma", "Free Edition"); a("EDICE ZDARMA!", "FREE EDITION!");
         a("Letí nad tebou v lobby", "Floats above you in the lobby"); a("klíč!", "key!"); a("Klíče získáš za výhry v minihrách.", "You get keys by winning minigames.");
         a("Emoty jen v lobby a v čekárně.", "Emotes only in the lobby and waiting room."); a("REDSTONE TÝDEN", "REDSTONE WEEK"); a("V neděli se hlasuje!", "Voting on Sunday!");
         a("bodů)! Nové téma:", "points)! New theme:"); a("Téma:", "Theme:"); a("Redstone týden", "Redstone week"); a("Poslouchej tým serveru.", "Listen to the server staff.");

@@ -71,7 +71,7 @@ public final class Intro implements Listener {
                 l.setDirection(look.subtract(pos));
                 p.teleport(l);
                 if (t == perSeg * 2) U.title(p, "&b&lNízká gravitace", "&7všude na Marsu");
-                if (t == perSeg * 3) U.title(p, "&e&l18 miniher", "&7Bed Wars, SkyWars, Build Battle a další");
+                if (t == perSeg * 3) U.title(p, "&e&l18 miniher", "&7Bitva o postele, Války asteroidů, Stavitelská bitva a další");
                 if (t % 20 == 0) p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.8f, 0.8f + t / 400f);
                 if (t == 2) U.bar(p, "&7Přeskočit: &eShift");
                 t++;

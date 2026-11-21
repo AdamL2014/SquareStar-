@@ -102,7 +102,7 @@ public final class SpeedrunFE extends Game {
             double a = i++ * Math.PI * 2 / players.size();
             p.teleport(loc(Math.cos(a) * 20 + 0.5, 12, Math.sin(a) * 20 + 0.5));
             ItemStack sh = new ItemStack(Material.SHEARS);
-            ItemMeta m = sh.getItemMeta(); m.displayName(U.c("&e&lLevné nůžky &7(Free Edition)")); m.setUnbreakable(true); sh.setItemMeta(m);
+            ItemMeta m = sh.getItemMeta(); m.displayName(U.c("&e&lLevné nůžky &7(edice zdarma)")); m.setUnbreakable(true); sh.setItemMeta(m);
             p.getInventory().setItem(0, sh);
             ItemStack sw = new ItemStack(Material.WOODEN_SWORD);
             ItemMeta sm = sw.getItemMeta(); sm.displayName(U.c("&6&lDřevěný meč &7(zdarma)")); sm.setUnbreakable(true); sw.setItemMeta(sm);
@@ -111,7 +111,7 @@ public final class SpeedrunFE extends Game {
             bag.put(p, new HashMap<>()); tech.put(p, 0);
         }
         startMs = System.currentTimeMillis();
-        broadcast("&e&lSPEEDRUN: FREE EDITION! &7Svět je z vlny, moby jsou jen hlavy. Posbírej díly a odleť raketou &6uprostřed&7!");
+        broadcast("&e&lSPEEDRUN: EDICE ZDARMA! &7Svět je z vlny, moby jsou jen hlavy. Posbírej díly a odleť raketou &6uprostřed&7!");
         broadcast("&7Úkoly vidíš &fvpravo&7: rozbíjej &8šedou&7, &ežlutou&7, &bsvětle modrou &7a &cčervenou &7vlnu, zabij &d3 hlavy &7a doběhni na &6zlatou rampu&7.");
         for (int k = 0; k < 6 + players.size() * 2; k++) spawnHead();
         for (Player p : players) board(p);
@@ -192,7 +192,7 @@ public final class SpeedrunFE extends Game {
         });
         var old = sb.getObjective("sr");
         if (old != null) old.unregister();
-        var o = sb.registerNewObjective("sr", org.bukkit.scoreboard.Criteria.DUMMY, U.c(cz.adrrex.squarestar.Lang.t(p, "&e&lSPEEDRUN &7Free Edition")));
+        var o = sb.registerNewObjective("sr", org.bukkit.scoreboard.Criteria.DUMMY, U.c(cz.adrrex.squarestar.Lang.t(p, "&e&lSPEEDRUN &7Edice zdarma")));
         o.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
         o.numberFormat(io.papermc.paper.scoreboard.numbers.NumberFormat.blank());
         Map<Material, Integer> m = bag.getOrDefault(p, Map.of());

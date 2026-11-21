@@ -258,6 +258,8 @@ public final class Lobby implements Listener {
     }
 
     public void giveItems(Player p) {
+        // úklid zdvojených lobby itemů (mimo jejich sloty)
+        for (int i = 9; i < 36; i++) if (U.tagOf(p.getInventory().getItem(i), "ss_lobby") != null) p.getInventory().setItem(i, null);
         place(p, 0, Gui.skin(p, U.tag(U.item(Material.COMPASS, 1, "&6&l✦ Minihry &7(pravý klik)", "&7Vyber si minihru na Marsu"), "ss_lobby", "games"), "icon_menu_games"));
         place(p, 2, Gui.skin(p, U.tag(U.item(Material.PLAYER_HEAD, 1, "&d&l♥ Přátelé &7(pravý klik)", "&7Kdo je online a co hraje"), "ss_lobby", "friends"), "icon_menu_friends"));
         place(p, 4, Gui.skin(p, pl.cosmetics.menuItem(), "icon_menu_cosmetics"));

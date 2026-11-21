@@ -62,7 +62,6 @@ public final class Holo {
     /** anglickým hráčům přeloží jména itemů v inventáři (kity, obchod, vesmírné itemy) */
     private static void items() {
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!Lang.en(p)) continue;
             var inv = p.getInventory();
             for (int i = 0; i < inv.getSize(); i++) {
                 var it = inv.getItem(i);
