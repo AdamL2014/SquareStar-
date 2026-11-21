@@ -130,7 +130,10 @@ public final class Christmas implements Listener, CommandExecutor {
     }
     /** smaže starý (x0=0,z0=14) i nový strom */
     private void clearTree(U.BlockQueue.Builder b) {
-        b.fill(-3, Lobby.Y + 1, 11, 3, Lobby.Y + 12, 17, Material.AIR);
+        // starý strom (4.4.1, x0=0,z0=14): mazat jen jeho bloky – sklo kopule se nesmí dotknout (dělalo díru)
+        java.util.Set<Material> mine = java.util.EnumSet.of(Material.SPRUCE_LOG, Material.SPRUCE_LEAVES, Material.RED_CONCRETE, Material.GOLD_BLOCK, Material.SHROOMLIGHT, Material.LIGHT_BLUE_CONCRETE, Material.SEA_LANTERN);
+        for (int x = -3; x <= 3; x++) for (int y = Lobby.Y + 1; y <= Lobby.Y + 12; y++) for (int z = 11; z <= 17; z++)
+            if (mine.contains(pl.mars.getBlockAt(x, y, z).getType()) && !(y >= Lobby.Y + 1 + 25)) b.set(x, y, z, Material.AIR);
         b.fill(5, Lobby.Y + 1, 2, 11, Lobby.Y + 13, 8, Material.AIR);
     }
     private final Map<UUID, Long> giftCd = new HashMap<>();

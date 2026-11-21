@@ -36,26 +36,28 @@ public final class Lobby implements Listener {
         if (old) pl.mars.getPersistentDataContainer().set(verKey, org.bukkit.persistence.PersistentDataType.INTEGER, LOBBY_VER);
         var domeKey = new org.bukkit.NamespacedKey("squarestar", "dome_ver");
         int dv = pl.mars.getPersistentDataContainer().getOrDefault(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 0);
-        if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR && dv < 3) {
-            pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 3);
+        if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR && dv < 6) {
+            pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 6);
             pl.getLogger().info("Upravuji kopuli lobby...");
-            if (dv < 2) upgradeDome(() -> pl.getLogger().info("Kopule hotova!")); else closeDoors(() -> pl.getLogger().info("Vchody zmenseny!"));
+            if (dv < 2) upgradeDome(() -> pl.getLogger().info("Kopule hotova!")); else openDoors(() -> pl.getLogger().info("Vchody vraceny na puvodni velikost."));
         }
-        if (old) pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 3);
+        if (old) pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 6);
         if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) { spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); return; }
         pl.getLogger().info("Stavim Mars lobby...");
         build(() -> { pl.getLogger().info("Mars lobby hotova!"); spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); });
     }
 
     static final int D = 18, DH = 28;
-    /** vchod do kopule: 1 blok široký, 3 vysoký (dřív 3x5) */
-    static boolean door(int x, int y, int z) { return y <= 2 && (x == 0 || z == 0); }
-    /** jednorázově: zasklít staré velké vchody (3x5), nechat jen malé */
-    private void closeDoors(Runnable done) {
+    /** vchod do kopule: 3 bloky široký, 5 vysoký (původní velikost) */
+    static boolean door(int x, int y, int z) { return y <= 4 && (Math.abs(x) <= 1 || Math.abs(z) <= 1); }
+    /** jednorázově: vchody 3x5 (původní velikost) a zacelení všech děr ve skle kopule (i po starém stromu) */
+    private void openDoors(Runnable done) {
         U.BlockQueue.Builder b = pl.queue.builder(pl.mars);
-        for (int x = -D; x <= D; x++) for (int y = 0; y <= 4; y++) for (int z = -D; z <= D; z++) {
-            if (!inDomeShell(x, y, z, D, DH) || door(x, y, z) || !(Math.abs(x) <= 1 || Math.abs(z) <= 1)) continue;
-            b.set(x, Y + 1 + y, z, Material.LIGHT_BLUE_STAINED_GLASS);
+        for (int x = -D; x <= D; x++) for (int y = 0; y <= DH; y++) for (int z = -D; z <= D; z++) {
+            if (!inDomeShell(x, y, z, D, DH)) continue;
+            Material m = pl.mars.getBlockAt(x, Y + 1 + y, z).getType();
+            if (door(x, y, z)) { if (m == Material.LIGHT_BLUE_STAINED_GLASS) b.set(x, Y + 1 + y, z, Material.AIR); }
+            else if (m.isAir()) b.set(x, Y + 1 + y, z, y > DH - 3 ? Material.SEA_LANTERN : Material.LIGHT_BLUE_STAINED_GLASS);
         }
         b.submit(done);
     }

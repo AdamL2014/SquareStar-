@@ -1,5 +1,5 @@
 name: SquareStar
-version: '4.4.5'
+version: '4.4.7'
 main: cz.adrrex.squarestar.SquareStar
 api-version: '1.21.11'
 author: AdrrexStudio
