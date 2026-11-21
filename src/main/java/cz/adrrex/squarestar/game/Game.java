@@ -165,7 +165,7 @@ public abstract class Game {
         for (int i = 0; i < m.size() && i < 7; i++) {
             final int idx = i;
             long n = votes.values().stream().filter(v -> v == idx).count();
-            h.inv.setItem(Math.max(10, start + i), U.item(icons[i % icons.length], (int) Math.max(1, n), "&e&l" + m.get(i), "&7Hlasů: &a" + n, votes.get(p) != null && votes.get(p) == i ? "&a✔ Tvůj hlas" : "&eKlikni pro hlas"));
+            h.inv.setItem(Math.max(10, start + i), cz.adrrex.squarestar.Gui.skin(p, U.item(icons[i % icons.length], (int) Math.max(1, n), "&e&l" + m.get(i), "&7Hlasů: &a" + n, votes.get(p) != null && votes.get(p) == i ? "&a✔ Tvůj hlas" : "&eKlikni pro hlas"), "icon_menu_vote"));
         }
         p.openInventory(h.inv);
     }
