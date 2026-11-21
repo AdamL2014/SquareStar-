@@ -19,6 +19,8 @@ import java.util.Random;
 /** Mars lobby: postaví se samo při prvním spuštění. */
 public final class Lobby implements Listener {
     private final SquareStar pl;
+    /** zvyš, když se změní stavba lobby – server ji pak sám přestaví */
+    public static final int LOBBY_VER = 41;
     public static final int Y = 99; // podlaha náměstí
     public Lobby(SquareStar pl) { this.pl = pl; }
 
@@ -28,7 +30,11 @@ public final class Lobby implements Listener {
         pl.mars.setSpawnLocation(0, Y + 1, 0);
         // lobby drž pořád načtenou, jinak by 3D nápis, raketa a NPC zmizely
         for (int cx = -4; cx <= 4; cx++) for (int cz = -2; cz <= 5; cz++) pl.mars.addPluginChunkTicket(cx, cz, pl);
-        if (pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) { spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); return; }
+        // nová verze lobby -> postavit znovu (přes starou), aby se objevily novinky na mapě
+        var verKey = new org.bukkit.NamespacedKey("squarestar", "lobby_ver");
+        boolean old = pl.mars.getPersistentDataContainer().getOrDefault(verKey, org.bukkit.persistence.PersistentDataType.INTEGER, 0) < LOBBY_VER;
+        if (old) pl.mars.getPersistentDataContainer().set(verKey, org.bukkit.persistence.PersistentDataType.INTEGER, LOBBY_VER);
+        if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) { spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); return; }
         pl.getLogger().info("Stavim Mars lobby...");
         build(() -> { pl.getLogger().info("Mars lobby hotova!"); spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); });
     }
@@ -144,6 +150,71 @@ public final class Lobby implements Listener {
             int x = -44 + col * 3, z = 8 + row * 4;
             b.set(x, Y + 1, z, Material.IRON_BARS);
             b.fill(x - 1, Y + 2, z - 1, x + 1, Y + 2, z + 1, Material.DAYLIGHT_DETECTOR);
+        }
+        // ---- v4.1: krátery, skleník, vlajky, balvany, žhnoucí praskliny, podstavce žebříčků ----
+        for (int[] c : new int[][]{{-26, 36, 6}, {40, 24, 5}, {-42, -12, 5}, {14, -46, 4}, {40, -30, 4}}) {
+            int cx = c[0], cz = c[1], rc = c[2];
+            for (int x = -rc - 2; x <= rc + 2; x++) for (int z = -rc - 2; z <= rc + 2; z++) {
+                double d = Math.sqrt(x * x + z * z);
+                if (d <= rc) {
+                    int depth = (int) Math.round((1 - (d / rc) * (d / rc)) * 3) + 1;
+                    for (int y = Y - depth + 1; y <= Y + 4; y++) b.set(cx + x, y, cz + z, Material.AIR);
+                    b.set(cx + x, Y - depth, cz + z, d < 1.5 ? Material.MAGMA_BLOCK : d < rc * 0.5 ? Material.BLACKSTONE : Material.BROWN_TERRACOTTA);
+                    if (d < 1) b.set(cx + x, Y - depth + 1, cz + z, Material.AMETHYST_CLUSTER);
+                } else if (d <= rc + 1.6) { b.set(cx + x, Y + 1, cz + z, Material.RED_TERRACOTTA); if (r.nextInt(4) == 0) b.set(cx + x, Y + 2, cz + z, Material.RED_SAND); }
+            }
+        }
+        // skleník (zelená kopule – „první zahrada na Marsu")
+        int gx = 26, gz = 36;
+        for (int x = -6; x <= 6; x++) for (int z = -6; z <= 6; z++) {
+            double d = Math.sqrt(x * x + z * z);
+            if (d > 6.5) continue;
+            b.set(gx + x, Y, gz + z, d > 5.5 ? Material.POLISHED_BLACKSTONE : (x + z) % 4 == 0 ? Material.MOSS_BLOCK : Material.GRASS_BLOCK);
+            for (int y = 1; y <= 6; y++) b.set(gx + x, Y + y, gz + z, Material.AIR);
+        }
+        for (int x = -6; x <= 6; x++) for (int y = 0; y <= 6; y++) for (int z = -6; z <= 6; z++) {
+            double d = Math.sqrt(x * x + y * y + z * z);
+            if (d <= 6.5 && d > 5.6) b.set(gx + x, Y + 1 + y, gz + z, y % 3 == 0 ? Material.WHITE_CONCRETE : Material.LIGHT_GRAY_STAINED_GLASS);
+        }
+        b.fill(gx - 1, Y + 1, gz - 6, gx + 1, Y + 3, gz - 6, Material.AIR);   // vchod směrem k náměstí
+        b.fill(gx, Y + 1, gz, gx, Y + 3, gz, Material.OAK_LOG);
+        for (int x = -2; x <= 2; x++) for (int y = 3; y <= 5; y++) for (int z = -2; z <= 2; z++) if (Math.abs(x) + Math.abs(z) + (y - 3) <= 3 && !(x == 0 && z == 0 && y == 3)) b.set(gx + x, Y + y, gz + z, Material.AZALEA_LEAVES);
+        Material[] fl = {Material.POPPY, Material.DANDELION, Material.CORNFLOWER, Material.ALLIUM, Material.FERN, Material.SHORT_GRASS};
+        for (int i = 0; i < 18; i++) { int x = r.nextInt(9) - 4, z = r.nextInt(9) - 4; if (Math.abs(x) + Math.abs(z) > 1) b.set(gx + x, Y + 1, gz + z, fl[r.nextInt(fl.length)]); }
+        b.set(gx, Y + 6, gz, Material.SEA_LANTERN);
+        // vlajky SquareStar u každého východu
+        for (int[] f : new int[][]{{3, 18, 1, 0}, {-3, -18, -1, 0}, {18, -3, 0, -1}, {-18, 3, 0, 1}}) {
+            b.fill(f[0], Y + 1, f[1], f[0], Y + 6, f[1], Material.IRON_BARS);
+            b.set(f[0], Y + 7, f[1], Material.END_ROD);
+            for (int k = 1; k <= 3; k++) for (int y = 4; y <= 6; y++)
+                b.set(f[0] + f[2] * k, Y + y, f[1] + f[3] * k, y == 5 && k == 2 ? Material.GOLD_BLOCK : (y + k) % 2 == 0 ? Material.RED_CONCRETE : Material.ORANGE_CONCRETE);
+        }
+        // balvany v krajině
+        Material[] rock = {Material.TUFF, Material.BLACKSTONE, Material.RED_TERRACOTTA, Material.BROWN_TERRACOTTA, Material.BASALT};
+        for (int i = 0; i < 16; i++) {
+            double a = r.nextDouble() * Math.PI * 2, d = 22 + r.nextDouble() * 26;
+            int cx = (int) (Math.cos(a) * d), cz = (int) (Math.sin(a) * d);
+            if (Math.abs(cx) <= 4 || Math.abs(cz) <= 4) continue;   // ne na cestách
+            int rr = 1 + r.nextInt(2);
+            for (int x = -rr; x <= rr; x++) for (int y = 0; y <= rr; y++) for (int z = -rr; z <= rr; z++)
+                if (x * x + y * y * 2 + z * z <= rr * rr + 1) b.set(cx + x, Y + 1 + y, cz + z, rock[r.nextInt(rock.length)]);
+        }
+        // žhnoucí praskliny v zemi
+        for (int i = 0; i < 4; i++) {
+            double a = Math.toRadians(45 + i * 90 + r.nextInt(20) - 10);
+            double x = Math.cos(a) * 20, z = Math.sin(a) * 20;
+            for (int k = 0; k < 22; k++) {
+                a += (r.nextDouble() - 0.5) * 0.5;
+                x += Math.cos(a); z += Math.sin(a);
+                b.set((int) x, Y, (int) z, k % 5 == 0 ? Material.SHROOMLIGHT : Material.MAGMA_BLOCK);
+            }
+        }
+        // podstavce pod žebříčky (po stranách náměstí)
+        for (int[] p : new int[][]{{-14, 5}, {-9, 12}, {8, 12}, {13, 5}}) {
+            b.fill(p[0] - 1, Y, p[1] - 1, p[0] + 1, Y, p[1] + 1, Material.POLISHED_BLACKSTONE);
+            b.set(p[0], Y, p[1], Material.SEA_LANTERN);
+            b.set(p[0], Y + 1, p[1], Material.POLISHED_BLACKSTONE_WALL);
+            b.set(p[0], Y + 2, p[1], Material.END_ROD);
         }
     }
 

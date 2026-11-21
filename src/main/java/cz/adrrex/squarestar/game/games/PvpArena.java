@@ -242,7 +242,7 @@ public final class PvpArena extends Game {
         killer.setHealth(Math.min(killer.getAttribute(org.bukkit.attribute.Attribute.MAX_HEALTH).getValue(), killer.getHealth() + 6));
         U.sound(killer, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.2f);
         U.bar(killer, "&a+1 zabití &8| &6Série: &f" + s);
-        if (s == 3) broadcast("&6🔥 " + killer.getName() + " &emá sérii &63 zabití&e!");
+        if (s == 3) broadcast("&6✹ " + killer.getName() + " &emá sérii &63 zabití&e!");
         if (s == 5) broadcast("&c&l⚡ " + killer.getName() + " &cje NEZASTAVITELNÝ! &7(5 zabití)");
     }
 

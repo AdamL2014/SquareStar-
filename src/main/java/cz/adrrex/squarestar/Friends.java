@@ -52,7 +52,7 @@ public final class Friends implements CommandExecutor, TabCompleter, Listener {
     /** kde hráč je – pro seznam přátel */
     public String status(Player o) {
         Game g = pl.games.of(o);
-        if (g != null) return "&e🎮 Hraje " + g.type.display + (g.joinable() ? " &a(můžeš se přidat)" : "");
+        if (g != null) return "&e✪ Hraje " + g.type.display + (g.joinable() ? " &a(můžeš se přidat)" : "");
         if (o.getWorld().getName().equals("ss_redstone")) return "&c⚙ Redstone týden";
         return "&a● V lobby";
     }
@@ -64,7 +64,7 @@ public final class Friends implements CommandExecutor, TabCompleter, Listener {
         switch (sub) {
             case "pridat", "add" -> {
                 if (t == null) { U.msg(p, "&cHráč není online. &7Použití: &e/pritel pridat <jméno>"); return true; }
-                if (t == p) { U.msg(p, "&7Sám se sebou kamarád už jsi 😄"); return true; }
+                if (t == p) { U.msg(p, "&7Sám se sebou kamarád už jsi ☺"); return true; }
                 if (are(p, t)) { U.msg(p, "&e" + t.getName() + " &7už je tvůj kamarád."); return true; }
                 if (list(p.getUniqueId()).size() >= MAX) { U.msg(p, "&cMáš už max. " + MAX + " přátel."); return true; }
                 // když už mi poslal žádost on, rovnou přijmout

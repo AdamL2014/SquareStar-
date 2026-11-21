@@ -22,6 +22,7 @@ import java.util.*;
 
 /** Vlastní vesmírné itemy (náhrada Oraxenu). Vzhled dodává resource pack přes item_model "squarestar:<id>". */
 public final class SpaceItems implements Listener {
+    private final java.util.Map<java.util.UUID, Integer> jetUses = new java.util.HashMap<>();
     public record Def(String id, Material base, String name, String[] lore, Color color) {}
     public final Map<String, Def> defs = new LinkedHashMap<>();
     private final SquareStar pl;
@@ -29,7 +30,7 @@ public final class SpaceItems implements Listener {
     public SpaceItems(SquareStar pl) {
         this.pl = pl;
         add("laser_pistol", Material.IRON_HOE, "&c&lLaserová pistole", null, "&7Pravý klik: laserový paprsek", "&7Poškození: &c5 &7| Nabíjení: &e1 s");
-        add("jetpack", Material.FIREWORK_STAR, "&b&lJetpack", null, "&7Pravý klik: vystřelí tě nahoru", "&7Nabíjení: &e2 s");
+        add("jetpack", Material.FIREWORK_STAR, "&b&lJetpack", null, "&7Pravý klik: vystřelí tě nahoru", "&7Nabíjení: &e2 s", "&7Ve hrách: 3× pak pauza &e14 s");
         add("meteor_grenade", Material.SNOWBALL, "&6&lMeteoritový granát", null, "&7Hoď ho! Výbuch neničí mapu");
         add("gravity_boots", Material.LEATHER_BOOTS, "&d&lGravitační boty", Color.fromRGB(0x8A2BE2), "&7Obuj si je: skáčeš mnohem výš");
         add("oxygen_helmet", Material.LEATHER_HELMET, "&f&lKyslíková helma", Color.fromRGB(0xDDEEFF), "&7Dýchání pod vodou + noční vidění");
@@ -70,8 +71,19 @@ public final class SpaceItems implements Listener {
             case "jetpack" -> {
                 e.setCancelled(true);
                 if (p.hasCooldown(it)) return;
-                p.setCooldown(it, 40);
-                Vector v = p.getLocation().getDirection().multiply(0.6).setY(0.9);
+                boolean inGame = pl.games.of(p) != null;
+                double up = 0.9;
+                if (inGame) {
+                    // ve hrách (PvP, BedWars...): 3 použití, pak 14 s pauza; a žádné létání do nebe
+                    int n = jetUses.merge(p.getUniqueId(), 1, Integer::sum);
+                    if (n >= 3) { jetUses.remove(p.getUniqueId()); p.setCooldown(it, 280); U.bar(p, "&c&lJetpack se přehřál! &7Pauza &e14 s"); }
+                    else { p.setCooldown(it, 40); U.bar(p, "&bJetpack: &e" + (3 - n) + "&7× do přehřátí"); }
+                    var hit = p.getWorld().rayTraceBlocks(p.getLocation(), new Vector(0, -1, 0), 40, org.bukkit.FluidCollisionMode.NEVER, true);
+                    double ground = hit == null ? 40 : p.getLocation().getY() - hit.getHitPosition().getY();
+                    up = ground > 7 ? 0.12 : 0.55;           // vysoko nad zemí už nevyletí
+                    if (ground > 7) U.bar(p, "&cMoc vysoko – jetpack už víc nevyletí!");
+                } else p.setCooldown(it, 40);
+                Vector v = p.getLocation().getDirection().multiply(0.6).setY(up);
                 p.setVelocity(v);
                 p.getWorld().spawnParticle(Particle.FLAME, p.getLocation(), 30, 0.2, 0.1, 0.2, 0.05);
                 p.getWorld().playSound(p.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH, 1, 0.8f);

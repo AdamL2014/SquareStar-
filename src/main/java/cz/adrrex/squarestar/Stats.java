@@ -53,16 +53,17 @@ public final class Stats {
     }
 
     private static final String[][] BOARDS = {
-            {"wins", "&6&l🏆 NEJVÍC VÝHER", "-6.5", "13"},
-            {"level", "&b&l⭐ NEJVYŠŠÍ LEVEL", "-2", "15"},
-            {"kills", "&c&l⚔ NEJVÍC ZABITÍ", "3", "15"},
-            {"games", "&a&l🎮 NEJVÍC HER", "7.5", "13"}};
+            // po stranách náměstí (ne na cestách ani přímo za nimi)
+            {"wins", "&6&l♛ NEJVÍC VÝHER", "-14", "5"},
+            {"level", "&b&l★ NEJVYŠŠÍ LEVEL", "-9", "12"},
+            {"kills", "&c&l⚔ NEJVÍC ZABITÍ", "8.5", "12"},
+            {"games", "&a&l✪ NEJVÍC HER", "13.5", "5"}};
 
     public void spawnBoards() {
         for (Entity e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(TAG)) e.remove();
         boards.clear();
         for (String[] b : BOARDS) {
-            Location l = new Location(pl.mars, Double.parseDouble(b[2]) + 0.5, Lobby.Y + 3.6, Double.parseDouble(b[3]) + 0.5);
+            Location l = new Location(pl.mars, Double.parseDouble(b[2]) + 0.5, Lobby.Y + 3.2, Double.parseDouble(b[3]) + 0.5);
             boards.add(pl.mars.spawn(l, TextDisplay.class, d -> {
                 d.setBillboard(Display.Billboard.VERTICAL);
                 d.setBackgroundColor(Color.fromARGB(170, 40, 10, 5));

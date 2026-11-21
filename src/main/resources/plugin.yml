@@ -1,5 +1,5 @@
 name: SquareStar
-version: '4.0.0'
+version: '4.1.0'
 main: cz.adrrex.squarestar.SquareStar
 api-version: '1.21.11'
 author: AdrrexStudio
@@ -7,7 +7,7 @@ description: Minihry na Marsu s nizkou gravitaci
 commands:
   ss:
     description: SquareStar minihry
-    aliases: [squarestar, hry]
+    aliases: [squarestar]
   udrzba:
     description: Udrzba serveru (/udrzba on|off) - pripoji se jen tym
     aliases: [maintenance]
@@ -22,9 +22,75 @@ commands:
   fly:
     description: Letani v lobby (VIP+, influenceri, tym)
     aliases: [letat]
+  spawn:
+    description: Zpet na spawn / do lobby
+    aliases: [lobby, hub, l]
+  hudba:
+    description: Hudba v lobby zap/vyp
+    aliases: [music]
   novinky:
     description: Co je noveho na serveru
     aliases: [news, changelog]
+  msg:
+    description: Soukroma zprava
+    aliases: [tell, w, m, whisper, zprava]
+  r:
+    description: Odpoved na zpravu
+    aliases: [reply, odpoved]
+  ping:
+    description: Tvuj ping
+    aliases: []
+  pravidla:
+    description: Pravidla serveru
+    aliases: [rules]
+  discord:
+    description: Odkaz na Discord
+    aliases: [dc]
+  afk:
+    description: AFK
+    aliases: []
+  online:
+    description: Kdo je online
+    aliases: [players, hraci]
+  report:
+    description: Nahlasit hrace
+    aliases: [nahlasit]
+  helpop:
+    description: Zprava tymu
+    aliases: [pomoc]
+  stats:
+    description: Statistiky
+    aliases: [statistiky, top]
+  kosmetika:
+    description: Kosmetika
+    aliases: [cosmetics]
+  jazyk:
+    description: Jazyk / Language
+    aliases: [lang, language]
+  hry:
+    description: Menu miniher
+    aliases: [games, play, hrat]
+  sc:
+    description: Chat tymu
+    aliases: [staffchat, tym]
+  vanish:
+    description: Neviditelnost (tym)
+    aliases: [v]
+  gm:
+    description: Herni rezim (admin)
+    aliases: []
+  bc:
+    description: Oznameni (admin)
+    aliases: [broadcast, oznameni]
+  clearchat:
+    description: Vycistit chat (tym)
+    aliases: [cc]
+  heal:
+    description: Vylecit (admin)
+    aliases: []
+  tphere:
+    description: Teleport hrace k sobe (tym)
+    aliases: [s]
 permissions:
   squarestar.admin:
     description: Admin prikazy (give, key, rebuildlobby)

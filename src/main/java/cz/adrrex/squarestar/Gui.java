@@ -24,6 +24,14 @@ public final class Gui implements org.bukkit.event.Listener {
         var m = it.getItemMeta(); m.setItemModel(new org.bukkit.NamespacedKey("squarestar", model)); it.setItemMeta(m);
         return it;
     }
+    private static org.bukkit.inventory.ItemStack meteor() {
+        var it = new org.bukkit.inventory.ItemStack(org.bukkit.Material.PAPER);
+        var m = it.getItemMeta();
+        m.setItemModel(new org.bukkit.NamespacedKey("squarestar", "gui_meteor"));
+        m.setHideTooltip(true);
+        it.setItemMeta(m);
+        return U.tag(it, "ss_btn", "meteor");
+    }
     public static org.bukkit.inventory.ItemStack closeButton() { return U.tag(icon("icon_close", "&c&l✖ Zavřít"), "ss_btn", "close"); }
 
     /** při otevření našeho menu: přeložit itemy + přidat tlačítko Zavřít */
@@ -34,6 +42,8 @@ public final class Gui implements org.bukkit.event.Listener {
         if (h instanceof Crates.Holder ch && ch.anim) return; // animace otevírání
         int last = inv.getSize() - 1;
         if (inv.getItem(last) == null) inv.setItem(last, closeButton());
+        // občas menu přelétne padající meteor (animovaná textura, jen Java s resource packem)
+        if (enabled && !Ranks.bedrock(p)) for (int s : new int[]{0, 8, 1, 7, 9}) if (s < inv.getSize() && inv.getItem(s) == null) { inv.setItem(s, meteor()); break; }
         for (int i = 0; i < inv.getSize(); i++) { var it = inv.getItem(i); if (it != null) inv.setItem(i, Lang.item(p, it)); }
     }
     @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST) public void click(org.bukkit.event.inventory.InventoryClickEvent e) {

@@ -49,6 +49,31 @@ public final class Lang {
 
     private static void a(String cs, String en) { D.add(new String[]{cs, en}); }
     static {
+        a("Hraje:", "Playing:"); a("= vypnout", "= turn off"); a("Hudba v lobby", "Lobby music"); a("vypnuta", "off"); a("zapnuta!", "on!"); a("hudba zap/vyp", "music on/off");
+        a("Jetpack se přehřál!", "Jetpack overheated!"); a("Pauza", "Cooldown"); a("do přehřátí", "until overheat"); a("Moc vysoko – jetpack už víc nevyletí!", "Too high – the jetpack won't go higher!");
+        a("…nebo klikni na", "…or click the"); a("před bednami na spawnu!", "in front of the crates at spawn!"); a("Klikni = připojit se", "Click = join");
+        // --- v4.1: příkazy, kosmetika, nápověda ---
+        a("SQUARESTAR – PŘÍKAZY", "SQUARESTAR – COMMANDS"); a("menu miniher", "minigame menu"); a("zpět na Mars", "back to Mars"); a("opustit hru", "leave the game");
+        a("soukromé zprávy", "private messages"); a("stopy, čepice, balónky", "trails, hats, balloons"); a("emoty", "emotes"); a("statistiky", "stats");
+        a("co je nové", "what's new"); a("připojit se k eventu", "join an event"); a("létání", "flying"); a("nahlásit", "report"); a("zeptat se týmu", "ask the staff");
+        a("Tenhle příkaz neexistuje.", "This command does not exist."); a("Nápověda:", "Help:"); a("Tento server běží na", "This server runs on");
+        a("vlastních pluginech", "custom plugins"); a("na míru od", "made by"); a("Tenhle příkaz je jen pro tým serveru.", "This command is for staff only.");
+        a("Nemáš komu odpovědět.", "Nobody to reply to."); a("je AFK", "is AFK"); a("je teď", "is now"); a("už není AFK", "is no longer AFK");
+        a("Další report můžeš poslat za minutu.", "You can send another report in a minute."); a("Díky! Report jsme poslali týmu serveru.", "Thanks! The report was sent to the staff.");
+        a("Zpráva odeslána týmu. Brzy ti někdo odpoví.", "Message sent to the staff. Someone will answer soon."); a("Ty", "You");
+        a("PRAVIDLA SQUARESTAR", "SQUARESTAR RULES"); a("Buď slušný – žádné nadávky, urážky ani spam.", "Be nice – no swearing, insults or spam.");
+        a("Žádné cheaty, hacky, makra ani X-ray.", "No cheats, hacks, macros or X-ray."); a("Nezneužívej chyby (bugy) – nahlas je přes", "Don't abuse bugs – report them with");
+        a("Žádná reklama na jiné servery.", "No advertising other servers."); a("Nesdílej osobní údaje (adresa, telefon...).", "Don't share personal info (address, phone...).");
+        a("Poslouchej tým serveru.", "Listen to the server staff."); a("Porušení = varování, kick nebo ban.", "Breaking rules = warning, kick or ban.");
+        a("Discord zatím nemáme – sleduj", "No Discord yet – follow"); a("Online", "Online"); a("Jsi vyléčený", "You are healed");
+        a("Létání má jen", "Flying is only for"); a("a influenceři", "and influencers"); a("Balónky", "Balloons"); a("Letí nad tebou v lobby", "Floats above you in the lobby");
+        a("Sundat vše", "Remove all"); a("Nasazeno", "Equipped"); a("Částice, když chodíš po lobby", "Particles while walking in the lobby"); a("Potřebuje resource pack", "Needs the resource pack");
+        a("Červený balónek", "Red balloon"); a("Modrý balónek", "Blue balloon"); a("Fialový balónek", "Purple balloon"); a("Zlatý balónek", "Gold balloon"); a("Zelený balónek", "Green balloon"); a("Bílý balónek", "White balloon");
+        a("Kyslíková helma", "Oxygen helmet"); a("Koruna", "Crown"); a("Svatozář", "Halo"); a("Mimozemská tykadla", "Alien antennae"); a("Čepice s vrtulkou", "Propeller cap");
+        a("Satelit", "Satellite"); a("Planeta Mars", "Planet Mars"); a("Čarodějný klobouk", "Witch hat"); a("Mini raketa", "Mini rocket"); a("Planeta Země", "Planet Earth"); a("Hvězda", "Star");
+        a("Ohnivá stopa", "Fire trail"); a("Srdíčka", "Hearts"); a("Noty", "Notes"); a("Hvězdný prach", "Stardust"); a("Duše", "Souls"); a("Vesmírná magie", "Space magic"); a("Duha", "Rainbow");
+        a("Sněžení", "Snowfall"); a("Elektřina", "Electricity"); a("Obláček", "Little cloud"); a("Sculk duše", "Sculk souls"); a("Kouzla", "Enchant"); a("Záře", "Glow"); a("Portál", "Portal"); a("Jiskřičky", "Sparkles");
+        a("NEJVÍC VÝHER", "MOST WINS"); a("NEJVYŠŠÍ LEVEL", "HIGHEST LEVEL"); a("NEJVÍC ZABITÍ", "MOST KILLS"); a("NEJVÍC HER", "MOST GAMES");
         // --- v4.0: přátelé, eventy, žebříčky, novinky, týmy, aktualizace ---
         a("Klikni = připojit se k němu", "Click = join them"); a("Klikni = teleport k němu", "Click = teleport to them"); a("Není online", "Not online");
         a("můžeš se přidat", "you can join"); a("Redstone týden", "Redstone week"); a("V lobby", "In lobby"); a("Hraje ", "Playing ");

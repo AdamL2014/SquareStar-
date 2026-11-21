@@ -24,6 +24,8 @@ public final class U {
     public static final String PREFIX = "&8[&c✦ &6SquareStar&8] &7";
 
     public static Component c(String s) { return LEG.deserialize(s).decoration(TextDecoration.ITALIC, false); }
+    /** text pro příjemce příkazu – hráči se přeloží podle jeho jazyka */
+    public static Component tc(org.bukkit.command.CommandSender to, String s) { return c(to instanceof Player p ? Lang.t(p, s) : s); }
     public static void msg(Player p, String s) { p.sendMessage(c(PREFIX + Lang.t(p, s))); }
     public static void bar(Player p, String s) { p.sendActionBar(c(Lang.t(p, s))); }
     public static void title(Player p, String t, String sub) {

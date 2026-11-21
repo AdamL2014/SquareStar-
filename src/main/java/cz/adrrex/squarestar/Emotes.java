@@ -26,7 +26,7 @@ public final class Emotes implements CommandExecutor, TabCompleter {
         E.put("hi", new String[]{"&e&l✌ Ahoj!", "mává", "waves"});
         E.put("dance", new String[]{"&d&l♪ ♫ ♪", "tancuje", "is dancing"});
         E.put("twerk", new String[]{"&d&l♫ ♫ ♫", "twerkuje", "twerks"});
-        E.put("spin", new String[]{"&b&l🌀 Tornádo!", "se točí jako tornádo", "spins like a tornado"});
+        E.put("spin", new String[]{"&b&l✺ Tornádo!", "se točí jako tornádo", "spins like a tornado"});
         E.put("sleep", new String[]{"&9&lZzz...", "jde spát", "goes to sleep"});
         E.put("swim", new String[]{"&3&l≈ ≈ ≈", "plave vzduchem", "swims through the air"});
         E.put("fly", new String[]{"&f&l✈ Letím!", "dělá letadlo", "flies like a plane"});

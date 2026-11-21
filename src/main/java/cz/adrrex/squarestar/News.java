@@ -21,9 +21,10 @@ public final class News implements Listener {
 
     /** stránky knihy – nejnovější nahoře; při každé verzi sem přidej novou stránku */
     private static final String[][] PAGES = {
-            {"&4&lCO JE NOVÉ\n&8verze 4.0\n\n&0✦ &5Přátelé&0 – /pritel\n&0✦ &6Žebříčky&0 v lobby\n&0✦ &1Výběr týmu&0 v BedWars\n&0✦ &dEventy&0 – /event\n&0✦ &8Černá díra&0 v BedWars\n\n&7(další strana →)"},
-            {"&4&lCO JE NOVÉ 2\n\n&0✦ Všechna menu v &cMars&0 stylu\n&0✦ &2Kooperace&0 v Redstone týdnu\n&0✦ Bariéry nejdou rozbít\n&0✦ &bFly&0 pro VIP, MVP, YouTubery…\n&0✦ Automatické &aaktualizace\n&0✦ Lepší 3D modely"},
-            {"&4&lTIPY\n\n&0/pritel pridat <jméno>\n&0/ss top &8- statistiky\n&0/fly &8- létání v lobby\n&0/emote &8- emoty\n&0/ss jazyk &8- jazyk\n\n&5Hodně štěstí na Marsu!"}};
+            {"&4&lCO JE NOVÉ\n&8verze 4.1\n\n&0✦ &5Mars&0 inventář a truhly\n&0✦ &6Hudba&0 v lobby (/hudba)\n&0✦ &d8 nových čepic\n&0✦ &bBalónky\n&0✦ 9 nových stop\n&0✦ Lepší &cmapa spawnu\n\n&7(další strana →)"},
+            {"&4&lCO JE NOVÉ 2\n\n&0✦ &1/spawn&0 a &1/lobby\n&0✦ /msg, /r, /ping, /afk,\n&0   /report, /pravidla...\n&0✦ Jetpack ve hrách:\n&0   3× a pak pauza 14 s\n&0✦ Meteory v menu ☄\n&0✦ Žebříčky po stranách"},
+            {"&4&lVERZE 4.0\n\n&0✦ &5Přátelé&0 – /pritel\n&0✦ &6Žebříčky&0 v lobby\n&0✦ &1Výběr týmu&0 v BedWars\n&0✦ &dEventy&0 – /event\n&0✦ &8Černá díra&0 v BedWars\n&0✦ Automatické aktualizace"},
+            {"&4&lTIPY\n\n&0/help &8- všechny příkazy\n&0/pritel pridat <jméno>\n&0/stats &8- statistiky\n&0/fly &8- VIP+\n&0/kosmetika\n&0/jazyk &8- language\n\n&5Hodně štěstí na Marsu!"}};
 
     public void open(Player p) {
         List<Component> pages = new ArrayList<>();

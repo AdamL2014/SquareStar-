@@ -1,0 +1,1 @@
+{"textures": {"0": "squarestar:item/gui_meteor", "particle": "squarestar:item/gui_meteor"}, "elements": [{"from": [0, 0, 8], "to": [16, 16, 8], "faces": {"south": {"uv": [0, 0, 16, 16], "texture": "#0"}, "north": {"uv": [16, 0, 0, 16], "texture": "#0"}}}], "gui_light": "front", "display": {"gui": {"rotation": [0, 0, 0], "translation": [40, -24, 0], "scale": [4, 4, 1]}}}

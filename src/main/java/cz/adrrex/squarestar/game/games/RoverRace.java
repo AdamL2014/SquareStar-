@@ -226,13 +226,13 @@ public final class RoverRace extends Game {
             w.spawnParticle(Particle.DUST, cur.clone().add(Math.sin(f[1]) * 1.2, 0.2, -Math.cos(f[1]) * 1.2), 3, 0.3, 0.05, 0.3, 0, new Particle.DustOptions(c, 1.3f));
         } else if (dr > 0) {
             drift.put(p, 0);
-            if (dr > 20) { f[2] = Math.max(f[2], dr > 45 ? 30 : 16); U.sound(p, Sound.ENTITY_BLAZE_SHOOT, dr > 45 ? 1.8f : 1.4f); U.bar(p, dr > 45 ? "&6&l🔥 SUPER DRIFT TURBO!" : "&b&lDrift turbo!"); }
+            if (dr > 20) { f[2] = Math.max(f[2], dr > 45 ? 30 : 16); U.sound(p, Sound.ENTITY_BLAZE_SHOOT, dr > 45 ? 1.8f : 1.4f); U.bar(p, dr > 45 ? "&6&l✹ SUPER DRIFT TURBO!" : "&b&lDrift turbo!"); }
         }
         if (!frozen) {
             if (in.isForward()) v += ACC;
             else if (in.isBackward()) v -= v > 0 ? BRAKE : ACC * 0.6;
             else v *= DRAG;
-            if (in.isJump() && f[3] <= 0) { f[2] = 35; f[3] = 300; U.sound(p, Sound.ENTITY_BLAZE_SHOOT, 1.4f); U.bar(p, "&6&l🔥 TURBO!"); }
+            if (in.isJump() && f[3] <= 0) { f[2] = 35; f[3] = 300; U.sound(p, Sound.ENTITY_BLAZE_SHOOT, 1.4f); U.bar(p, "&6&l✹ TURBO!"); }
         } else v = 0;
         double max = (f[2] > 0 ? MAXV * 1.5 : MAXV) * (star.getOrDefault(p, 0) > 0 ? 1.15 : 1);
         v = Math.max(-0.25, Math.min(max, v));
@@ -429,7 +429,7 @@ public final class RoverRace extends Game {
     private void finish(Player p) {
         finished.add(p);
         int place = finished.size();
-        broadcast("&6&l🏁 " + p.getName() + " &edojel do cíle jako &f" + place + ". &7(" + fmt(time) + ")");
+        broadcast("&6&l⚑ " + p.getName() + " &edojel do cíle jako &f" + place + ". &7(" + fmt(time) + ")");
         U.title(p, place == 1 ? "&6&l1. MÍSTO!" : "&e&l" + place + ". místo", "&7Čas: &f" + fmt(time));
         w.spawnParticle(Particle.FIREWORK, p.getLocation().add(0, 1, 0), 40, 0.5, 0.5, 0.5, 0.1);
         if (place == 1 || finished.size() >= alive.size()) end(List.of(finished.get(0)));

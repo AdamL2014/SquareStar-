@@ -35,6 +35,7 @@ public final class SquareStar extends JavaPlugin {
     public Fly fly;
     public Updater updater;
     public EventManager events;
+    public Meteors meteors;
 
     @Override public void onEnable() {
         I = this;
@@ -81,11 +82,19 @@ public final class SquareStar extends JavaPlugin {
         bind("pritel", friends, friends);
         bind("event", events, events);
         bind("fly", fly, null);
+        pm.registerEvents(new CmdGuard(this), this);
+        org.bukkit.command.CommandExecutor toLobby = (s, c, l, a) -> { if (s instanceof Player p) { if (games.of(p) != null) games.leave(p); else lobby.send(p); } return true; };
+        bind("spawn", toLobby, null);
+        Basic basic = new Basic(this); pm.registerEvents(basic, this);
+        for (String n : Basic.PLAYER_CMDS) bind(n, basic, basic);
+        for (String n : Basic.STAFF_CMDS) bind(n, basic, basic);
+        bind("hudba", new Music(this), null);
+        meteors = new Meteors(this);
         bind("novinky", (s, c, l, a) -> { if (s instanceof Player p) news.open(p); return true; }, null);
         Emotes em = new Emotes(this);
         var mc = getCommand("udrzba");
         if (mc != null) mc.setExecutor((s, c, l, a) -> {
-            if (!s.hasPermission("squarestar.admin")) { s.sendMessage(U.c("&cNa tohle nemáš práva.")); return true; }
+            if (!s.hasPermission("squarestar.admin")) { s.sendMessage(U.tc(s, "&cNa tohle nemáš práva.")); return true; }
             boolean on = a.length > 0 ? a[0].equalsIgnoreCase("on") || a[0].equalsIgnoreCase("zap") : !motd.maintenance();
             motd.setMaintenance(on);
             U.all(on ? "&c&l⚠ ÚDRŽBA ZAPNUTA &7- na serveru zůstává jen tým." : "&a&l✔ Údržba skončila &7- server je zase otevřený!");
