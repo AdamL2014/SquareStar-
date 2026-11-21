@@ -145,7 +145,7 @@ public abstract class Game {
         kit.put(p, id);
         U.msg(p, "&aKit: &6&l" + kitOf(p));
         U.sound(p, Sound.ITEM_ARMOR_EQUIP_DIAMOND, 1.2f);
-        if (state != State.RUNNING) p.getInventory().setItem(0, U.tag(U.item(Material.CHEST, 1, "&6&lVyber kit &7(pravý klik)", "&7Tvůj kit: &f" + kitOf(p)), "ss_game", "kit"));
+        if (state != State.RUNNING) p.getInventory().setItem(0, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.CHEST, 1, "&6&lVyber kit &7(pravý klik)", "&7Tvůj kit: &f" + kitOf(p)), "ss_game", "kit"), "icon_menu_kit"));
         p.closeInventory();
     }
 
@@ -175,9 +175,9 @@ public abstract class Game {
     void addPlayer(Player p) {
         players.add(p);
         U.reset(p, GameMode.ADVENTURE);
-        p.getInventory().setItem(8, U.tag(U.item(Material.RED_BED, 1, "&c&lOpustit hru &7(pravý klik)"), "ss_game", "leave"));
-        if (maps().size() > 1) p.getInventory().setItem(4, U.tag(U.item(Material.MAP, 1, "&e&lHlasování o mapě &7(pravý klik)", "&7Mapy: &f" + String.join("&7, &f", maps())), "ss_game", "vote"));
-        if (!kits().isEmpty()) p.getInventory().setItem(0, U.tag(U.item(Material.CHEST, 1, "&6&lVyber kit &7(pravý klik)", "&7Tvůj kit: &f" + kitOf(p)), "ss_game", "kit"));
+        p.getInventory().setItem(8, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.RED_BED, 1, "&c&lOpustit hru &7(pravý klik)"), "ss_game", "leave"), "icon_menu_leave"));
+        if (maps().size() > 1) p.getInventory().setItem(4, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.MAP, 1, "&e&lHlasování o mapě &7(pravý klik)", "&7Mapy: &f" + String.join("&7, &f", maps())), "ss_game", "vote"), "icon_menu_vote"));
+        if (!kits().isEmpty()) p.getInventory().setItem(0, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.CHEST, 1, "&6&lVyber kit &7(pravý klik)", "&7Tvůj kit: &f" + kitOf(p)), "ss_game", "kit"), "icon_menu_kit"));
         if (state == State.BUILDING) U.msg(p, "&ePřipravuji čekárnu... &7(" + type.display + ")");
         else p.teleport(waitSpot());
         if (hideNames()) gm.hideName(p, true);
@@ -192,6 +192,7 @@ public abstract class Game {
         boolean wasAlive = alive.remove(p);
         gm.map.remove(p);
         gm.hideName(p, false);
+        dropBoard(p);
         onLeave(p);
         if (toLobby && p.isOnline()) pl.lobby.send(p);
         if (state == State.ENDING) return;
@@ -205,7 +206,64 @@ public abstract class Game {
         if (state == State.WAITING && players.size() >= type.min) { state = State.COUNTDOWN; countdown = pl.getConfig().getInt("countdown", 15); }
     }
 
+    // ---------------- sidebar vpravo (jako na Hypixelu) ----------------
+    private final Map<Player, org.bukkit.scoreboard.Scoreboard> boards = new HashMap<>();
+    /** hra má vlastní sidebar (např. Speedrun) */
+    protected boolean ownBoard() { return false; }
+    /** řádky sidebaru – hry si můžou přidat vlastní */
+    protected List<String> boardLines(Player p) {
+        List<String> l = new ArrayList<>();
+        l.add("&7" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " &8#" + slot);
+        l.add(" ");
+        l.add("&fHra: &6" + type.display);
+        if (state == State.WAITING || state == State.COUNTDOWN) {
+            l.add("&fMapa: &a" + (maps().size() > 1 ? "hlasuje se" : maps().get(0)));
+            l.add("&fHráči: &a" + players.size() + "&7/" + type.max);
+            l.add(state == State.COUNTDOWN ? "&fStart za: &e" + countdown + " s" : "&fČekáme na &e" + Math.max(0, type.min - players.size()) + " &fhráče");
+        } else {
+            l.add("&fMapa: &a" + maps().get(Math.min(map, maps().size() - 1)));
+            l.add("&fNaživu: &a" + alive.size() + "&7/" + players.size());
+            l.add("&fČas: &e" + fmt(time));
+        }
+        if (!kits().isEmpty()) l.add("&fKit: &6" + kitOf(p));
+        l.add("  ");
+        l.add("&fLevel: &b✦" + pl.levels.level(p));
+        l.add("   ");
+        l.add("&e&lSQUARESTAR");
+        return l;
+    }
+    private void updateBoard(Player p) {
+        if (ownBoard() || !p.isOnline()) return;
+        var sb = boards.computeIfAbsent(p, x -> { var b = Bukkit.getScoreboardManager().getNewScoreboard(); p.setScoreboard(b); return b; });
+        if (time % 5 == 0 || hideNames() || sb.getTeams().isEmpty()) copyRankTeams(sb);
+        var old = sb.getObjective("ss");
+        if (old != null) old.unregister();
+        var o = sb.registerNewObjective("ss", org.bukkit.scoreboard.Criteria.DUMMY, U.c(cz.adrrex.squarestar.Lang.t(p, "&6&l✦ &e&lSQUARE&6&lSTAR &6&l✦")));
+        o.setDisplaySlot(org.bukkit.scoreboard.DisplaySlot.SIDEBAR);
+        o.numberFormat(io.papermc.paper.scoreboard.numbers.NumberFormat.blank());
+        List<String> lines = boardLines(p);
+        int sc = lines.size();
+        for (String s : lines) o.getScore(cz.adrrex.squarestar.Lang.t(p, s).replace('&', '§')).setScore(sc--);
+    }
+    /** obrázky ranků nad hlavami i během hry */
+    private static void copyRankTeams(org.bukkit.scoreboard.Scoreboard sb) {
+        var main = Bukkit.getScoreboardManager().getMainScoreboard();
+        for (var t : main.getTeams()) {
+            if (!t.getName().startsWith("ss_")) continue;
+            var c = sb.getTeam(t.getName());
+            if (c == null) c = sb.registerNewTeam(t.getName());
+            c.prefix(t.prefix());
+            try { if (t.hasColor() && t.color() instanceof net.kyori.adventure.text.format.NamedTextColor nc) c.color(nc); } catch (IllegalStateException ignored) {}
+            for (var opt : org.bukkit.scoreboard.Team.Option.values()) c.setOption(opt, t.getOption(opt));
+            for (String e : t.getEntries()) if (!c.hasEntry(e)) c.addEntry(e);
+        }
+    }
+    private void dropBoard(Player p) {
+        if (boards.remove(p) != null && p.isOnline()) p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+    }
+
     private void tick() {
+        for (Player p : players) updateBoard(p);
         switch (state) {
             case WAITING -> { for (Player p : players) U.bar(p, "&eČekáme na hráče &f" + players.size() + "&7/&f" + type.min + " &8| &6" + type.display); }
             case COUNTDOWN -> {
@@ -337,6 +395,7 @@ public abstract class Game {
     protected void onDestroy() {}
 
     private void cleanupEntities() {
+        for (Player p : new ArrayList<>(boards.keySet())) dropBoard(p);
         onDestroy();
         for (Entity e : spawned) if (e.isValid()) e.remove();
         for (Entity e : w.getEntities()) if (!(e instanceof Player) && owns(e.getLocation())) e.remove();

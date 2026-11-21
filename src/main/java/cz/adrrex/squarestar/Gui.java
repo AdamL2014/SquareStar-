@@ -17,6 +17,12 @@ public final class Gui implements org.bukkit.event.Listener {
         var m = it.getItemMeta(); m.setItemModel(new org.bukkit.NamespacedKey("squarestar", model)); it.setItemMeta(m);
         return it;
     }
+    /** obyčejnému itemu dá vlastní ikonku z resource packu (jen Java hráčům) */
+    public static org.bukkit.inventory.ItemStack skin(Player p, org.bukkit.inventory.ItemStack it, String model) {
+        if (p != null && Ranks.bedrock(p)) return it;
+        var m = it.getItemMeta(); m.setItemModel(new org.bukkit.NamespacedKey("squarestar", model)); it.setItemMeta(m);
+        return it;
+    }
     public static org.bukkit.inventory.ItemStack closeButton() { return U.tag(icon("icon_close", "&c&l✖ Zavřít"), "ss_btn", "close"); }
 
     /** při otevření našeho menu: přeložit itemy + přidat tlačítko Zavřít */

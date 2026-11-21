@@ -57,12 +57,17 @@ public final class GameManager implements Listener {
             int playing = games.stream().filter(x -> x.type == g).mapToInt(x -> x.players.size()).sum();
             ItemStack it = U.item(g.icon, 1, "&6&l" + g.display, "&7" + g.desc, "",
                     "&7Hráči: &f" + g.min + "–" + g.max, "&7Čeká: &a" + waiting + " &8| &7Celkem hraje: &e" + playing, "", "&e▶ Klikni pro připojení");
+            // vlastní ikonka z resource packu (Bedrock ji nevidí -> zůstane obyčejný item)
+            if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var im = it.getItemMeta(); im.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_" + g.name().toLowerCase(java.util.Locale.ROOT))); if (playing > 0) im.setEnchantmentGlintOverride(true); it.setItemMeta(im); }
+            if (playing > 0) it.setAmount(Math.min(64, playing));
             h.inv.setItem(pos[i], U.tag(it, "ss_menu", g.name()));
         }
         // Redstone týden (trvalý režim, ne kolo minihry)
         boolean vote = cz.adrrex.squarestar.RedstoneWeek.voting();
-        h.inv.setItem(40, U.tag(U.item(Material.REDSTONE_BLOCK, 1, "&c&l⚡ Redstone týden", "&7Každý týden nové redstone téma.", "&7Postav nápad na svém pozemku,", "&7v neděli se hlasuje o nejlepší!", "",
-                "&7Téma: &e" + pl.redstone.theme(), vote ? "&d&lDnes se hlasuje!" : "&7Hlasování: &fneděle", "", "&e▶ Klikni pro vstup"), "ss_menu", "REDSTONE"));
+        ItemStack rsIcon = U.item(Material.REDSTONE_BLOCK, 1, "&c&l⚡ Redstone týden", "&7Každý týden nové redstone téma.", "&7Postav nápad na svém pozemku,", "&7v neděli se hlasuje o nejlepší!", "",
+                "&7Téma: &e" + pl.redstone.theme(), vote ? "&d&lDnes se hlasuje!" : "&7Hlasování: &fneděle", "", "&e▶ Klikni pro vstup");
+        if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var rm = rsIcon.getItemMeta(); rm.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_redstone")); rsIcon.setItemMeta(rm); }
+        h.inv.setItem(40, U.tag(rsIcon, "ss_menu", "REDSTONE"));
         p.openInventory(h.inv);
     }
 

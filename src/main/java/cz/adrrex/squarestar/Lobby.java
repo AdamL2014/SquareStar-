@@ -124,9 +124,9 @@ public final class Lobby implements Listener {
     }
 
     public void giveItems(Player p) {
-        place(p, 0, U.tag(U.item(Material.COMPASS, 1, "&6&l✦ Minihry &7(pravý klik)", "&7Vyber si minihru na Marsu"), "ss_lobby", "games"));
-        place(p, 4, pl.cosmetics.menuItem());
-        place(p, 8, U.tag(U.item(Material.ENDER_EYE, 1, "&b&lZpět na spawn", "&7Teleport na náměstí"), "ss_lobby", "spawn"));
+        place(p, 0, Gui.skin(p, U.tag(U.item(Material.COMPASS, 1, "&6&l✦ Minihry &7(pravý klik)", "&7Vyber si minihru na Marsu"), "ss_lobby", "games"), "icon_menu_games"));
+        place(p, 4, Gui.skin(p, pl.cosmetics.menuItem(), "icon_menu_cosmetics"));
+        place(p, 8, Gui.skin(p, U.tag(U.item(Material.ENDER_EYE, 1, "&b&lZpět na spawn", "&7Teleport na náměstí"), "ss_lobby", "spawn"), "icon_menu_spawn"));
         pl.cosmetics.apply(p);
         pl.levels.showBar(p);
     }

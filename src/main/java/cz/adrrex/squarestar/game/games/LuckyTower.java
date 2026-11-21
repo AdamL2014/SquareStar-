@@ -20,16 +20,23 @@ public final class LuckyTower extends Game {
 
     public LuckyTower(GameManager gm, int slot) { super(gm, GameType.LUCKYTOWER, slot); }
 
+    @Override public List<String> maps() { return List.of("Obsidiánové věže", "Ledové věže", "Lávové věže"); }
+
     @Override protected void buildMap(U.BlockQueue.Builder b) {
         int n = type.max;
+        Material top = map == 1 ? Material.BLUE_ICE : map == 2 ? Material.MAGMA_BLOCK : Material.CRYING_OBSIDIAN;
+        Material pillar = map == 1 ? Material.PACKED_ICE : map == 2 ? Material.BLACKSTONE : Material.BEDROCK;
+        Material stripe = map == 1 ? Material.SEA_LANTERN : map == 2 ? Material.SHROOMLIGHT : Material.BEDROCK;
         for (int i = 0; i < n; i++) {
             double a = i * Math.PI * 2 / n;
             int x = ox + (int) Math.round(Math.cos(a) * 11), z = oz + (int) Math.round(Math.sin(a) * 11);
-            for (int y = oy - 30; y <= oy; y++) b.set(x, y, z, y == oy ? Material.CRYING_OBSIDIAN : Material.BEDROCK);
+            for (int y = oy - 30; y <= oy; y++) b.set(x, y, z, y == oy ? top : (y % 6 == 0 ? stripe : pillar));
             tops.add(new int[]{x, oy + 1, z});
         }
-        // měsíc dole jako dekorace (pád = vyřazení)
-        b.sphere(ox, oy - 45, oz, 5, p -> b.set(p[0], p[1], p[2], Material.RED_TERRACOTTA));
+        // dekorace dole (pád = vyřazení)
+        if (map == 2) { b.sphere(ox, oy - 45, oz, 6, p -> b.set(p[0], p[1], p[2], Material.MAGMA_BLOCK)); b.fill(ox - 3, oy - 39, oz - 3, ox + 3, oy - 39, oz + 3, Material.LAVA); }
+        else if (map == 1) b.sphere(ox, oy - 45, oz, 6, p -> b.set(p[0], p[1], p[2], (p[1] + p[0]) % 3 == 0 ? Material.SNOW_BLOCK : Material.BLUE_ICE));
+        else b.sphere(ox, oy - 45, oz, 5, p -> b.set(p[0], p[1], p[2], Material.RED_TERRACOTTA));
     }
 
     @Override protected int voidY() { return oy - 32; }

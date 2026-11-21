@@ -31,8 +31,14 @@ public final class BuildBattle extends Game {
         buildTime = gm.pl.getConfig().getInt("build-battle.build-seconds", 300);
     }
 
+    @Override public List<String> maps() { return List.of("Marsovská dílna", "Měsíční studio", "Neonové studio"); }
+
     @Override protected void buildMap(U.BlockQueue.Builder b) {
         owners.clear(); owners.addAll(players);
+        Material f1 = map == 1 ? Material.WHITE_CONCRETE : map == 2 ? Material.BLACK_CONCRETE : Material.SMOOTH_QUARTZ;
+        Material f2 = map == 1 ? Material.LIGHT_GRAY_CONCRETE : map == 2 ? Material.GRAY_CONCRETE : Material.WHITE_CONCRETE;
+        Material base = map == 1 ? Material.SMOOTH_STONE : map == 2 ? Material.POLISHED_BLACKSTONE : Material.RED_TERRACOTTA;
+        Material rim = map == 1 ? Material.POLISHED_ANDESITE : map == 2 ? Material.MAGENTA_CONCRETE : Material.RED_NETHER_BRICKS;
         int n = owners.size();
         for (int i = 0; i < n; i++) {
             // pozemky v mřížce (max 4 v řadě), ne v jedné dlouhé čáře
@@ -41,11 +47,11 @@ public final class BuildBattle extends Game {
             int cx = ox + (int) Math.round((col - (inRow - 1) / 2.0) * SPACING), cz = oz + (int) Math.round((row - (rowsN - 1) / 2.0) * SPACING);
             plots.put(owners.get(i), new int[]{cx, cz});
             for (int x = -HALF; x <= HALF; x++) for (int z = -HALF; z <= HALF; z++) {
-                b.set(cx + x, oy, cz + z, (x + z) % 2 == 0 ? Material.SMOOTH_QUARTZ : Material.WHITE_CONCRETE);
-                b.set(cx + x, oy - 1, cz + z, Material.RED_TERRACOTTA);
+                b.set(cx + x, oy, cz + z, (x + z) % 2 == 0 ? f1 : f2);
+                b.set(cx + x, oy - 1, cz + z, base);
             }
             for (int i2 = -HALF - 1; i2 <= HALF + 1; i2++) for (int y = 0; y <= HEIGHT + 1; y++) {
-                Material m = y == 0 ? Material.RED_NETHER_BRICKS : Material.BARRIER;
+                Material m = y == 0 ? (map == 2 && (i2 & 1) == 0 ? Material.CYAN_CONCRETE : rim) : Material.BARRIER;
                 b.set(cx + i2, oy + y, cz - HALF - 1, m); b.set(cx + i2, oy + y, cz + HALF + 1, m);
                 b.set(cx - HALF - 1, oy + y, cz + i2, m); b.set(cx + HALF + 1, oy + y, cz + i2, m);
             }

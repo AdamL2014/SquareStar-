@@ -233,6 +233,7 @@ public final class SpeedrunFE extends Game {
 
     @Override public boolean onPvp(Player victim, Player attacker, org.bukkit.event.entity.EntityDamageByEntityEvent e) { return true; }
     @Override protected void checkWin() { if (state == State.RUNNING && alive.isEmpty()) end(List.of()); }
+    @Override protected boolean ownBoard() { return true; }
     @Override protected void onLeave(Player p) { boards.remove(p); p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard()); }
     @Override protected void onDestroy() {
         for (Player p : boards.keySet()) if (p.isOnline()) p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());

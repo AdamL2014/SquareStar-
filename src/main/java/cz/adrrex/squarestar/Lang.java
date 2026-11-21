@@ -296,6 +296,22 @@ public final class Lang {
         a("Item:", "Item:");
         a("Polštář", "Pillow");
         a("Zabij hlavy", "Kill heads"); a("Běž k raketě!", "Run to the rocket!"); a("Čas:", "Time:");
+        a("Hra:", "Game:");
+        a("Mapa:", "Map:");
+        a("hlasuje se", "voting");
+        a("Start za:", "Starting in:");
+        a("Čekáme na", "Waiting for");
+        a("hráče", "players");
+        a("Naživu:", "Alive:");
+        a("Level:", "Level:");
+        a("Obsidiánové věže", "Obsidian Towers");
+        a("Ledové věže", "Ice Towers");
+        a("Lávové věže", "Lava Towers");
+        a("Marsovská dílna", "Mars Workshop");
+        a("Měsíční studio", "Moon Studio");
+        a("Neonové studio", "Neon Studio");
+        a("Padej šachtou, nenaraz do ničeho a dopadni do vody. 8 levelů!", "Fall down the shaft, hit nothing and land in the water. 8 levels!");
+        a("Mario Kart na Marsu: itemy, drift a turbo. 3 kola!", "Mario Kart on Mars: items, drift and turbo. 3 laps!");
         D.sort((x, y) -> y[0].length() - x[0].length()); // nejdelší fráze první
         for (String[] e : D) P.add(java.util.regex.Pattern.compile("(?<!(?<!&)\\p{L})" + java.util.regex.Pattern.quote(e[0]) + "(?![\\p{L}])"));
     }
