@@ -23,6 +23,7 @@ public final class U {
     private static final LegacyComponentSerializer LEG = LegacyComponentSerializer.legacyAmpersand();
     public static final String PREFIX = "&8[&c✦ &6SquareStar&8] &7";
 
+    public static String fmtTime(int s) { s = Math.max(0, s); return String.format("%d:%02d", s / 60, s % 60); }
     public static Component c(String s) { return LEG.deserialize(s).decoration(TextDecoration.ITALIC, false); }
     /** text pro příjemce příkazu – hráči se přeloží podle jeho jazyka */
     public static Component tc(org.bukkit.command.CommandSender to, String s) { return c(to instanceof Player p ? Lang.t(p, s) : s); }

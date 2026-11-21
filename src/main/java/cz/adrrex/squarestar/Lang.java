@@ -95,6 +95,17 @@ public final class Lang {
 
     private static void a(String cs, String en) { D.add(new String[]{cs, en}); }
     static {
+        a("Pozemek hráče", "Plot of"); a("Tvůj pozemek", "Your plot"); a("Jsi pořadatel!", "You are the host!"); a("Ovládání eventu:", "Event controls:"); a("hvězda v ruce", "star in your hand");
+        a("Ovládání eventu", "Event controls"); a("Start, konec, čas, teleporty", "Start, end, time, teleports"); a("Běží", "Running"); a("Event už běží", "The event is running");
+        a("Spustí event a odpočet", "Starts the event and the countdown"); a("1 minuta", "1 minute"); a("Shift = -5 minut", "Shift = -5 minutes"); a("Shift = +5 minut", "Shift = +5 minutes");
+        a("Čas:", "Time:"); a("Pozastaveno", "Paused"); a("Odpočet běží", "Countdown running"); a("Nastav délku eventu", "Set the event length"); a("pokračovat", "resume"); a("pozastavit", "pause");
+        a("bez limitu / s limitem", "no limit / with limit"); a("KONEC", "END"); a("Ukončí event a pošle všechny do lobby", "Ends the event and sends everyone to the lobby");
+        a("Přivolat všechny k sobě", "Summon everyone to you"); a("Teleportuje hráče k tobě", "Teleports players to you"); a("Zpět nahoru", "Back up"); a("Na tvé místo pořadatele", "To your host spot");
+        a("Navštívit pozemky", "Visit plots"); a("Teleport na pozemek hráče", "Teleport to a player's plot"); a("Zastavit stavění", "Stop building"); a("Povolit stavění", "Allow building");
+        a("přestanou", "will stop"); a("začnou", "will start"); a("Znovu pozvat hráče", "Invite players again"); a("Pošle pozvánku do chatu", "Sends an invite to chat"); a("Hráčů v eventu:", "Players in the event:");
+        a("Pozemky hráčů", "Players' plots"); a("Klikni = teleport na pozemek", "Click = teleport to the plot"); a("Všichni jsou u tebe.", "Everyone is with you."); a("Stavění povoleno", "Building allowed");
+        a("Stavění je zastavené", "Building is stopped"); a("STOP!", "STOP!"); a("zbývá", "left"); a("pauza", "paused"); a("do konce eventu", "until the event ends"); a("ČAS VYPRŠEL!", "TIME'S UP!");
+        a("Stavění skončilo", "Building is over"); a("Konec", "The end"); a("Čas vypršel.", "Time's up."); a("Ukonči event přes", "End the event with"); a("v ovládání (hvězda).", "in the controls (star).");
         a("Parkour na Marsu", "Mars Parkour");
         a("Útěk před TNT", "TNT Run");
         a("Války asteroidů", "SkyWars: Asteroids");
