@@ -73,14 +73,17 @@ public final class Christmas implements Listener, CommandExecutor {
         }
     }
 
-    private static final Location TREE = new Location(null, 0.5, Lobby.Y + 1, 14.5);
+    private static final Location TREE = new Location(null, 8.5, Lobby.Y + 1, 5.5);   // uvnitř kopule (poloměr 18), mezi bednami a vchodem +X
     private void decorate() {
         decorated = true;
         pl.mars.getPersistentDataContainer().set(BUILT, PersistentDataType.BYTE, (byte) 1);
         for (var e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(TAG)) e.remove();
         TREE.setWorld(pl.mars);
         U.BlockQueue.Builder b = pl.queue.builder(pl.mars);
-        int x0 = 0, z0 = 14, y0 = Lobby.Y + 1;
+        int x0 = 8, z0 = 5, y0 = Lobby.Y + 1;
+        clearTree(b);   // starý strom (z verze 4.4.1) i nový
+        org.bukkit.block.data.type.Leaves leaves = (org.bukkit.block.data.type.Leaves) Material.SPRUCE_LEAVES.createBlockData();
+        leaves.setPersistent(true);   // listí neopadává
         b.fill(x0, y0, z0, x0, y0 + 2, z0, Material.SPRUCE_LOG);
         Material[] orn = {Material.RED_CONCRETE, Material.GOLD_BLOCK, Material.SHROOMLIGHT, Material.LIGHT_BLUE_CONCRETE, Material.SEA_LANTERN};
         Random r = new Random(24);
@@ -90,7 +93,7 @@ public final class Christmas implements Listener, CommandExecutor {
             for (int dx = -rad; dx <= rad; dx++) for (int dz = -rad; dz <= rad; dz++) {
                 if (dx * dx + dz * dz > rad * rad + 1) continue;
                 boolean edge = dx * dx + dz * dz >= (rad - 1) * (rad - 1) + 1 || rad == 0;
-                b.set(x0 + dx, y, z0 + dz, edge && r.nextInt(5) == 0 ? orn[r.nextInt(orn.length)] : Material.SPRUCE_LEAVES);
+                if (edge && r.nextInt(5) == 0) b.set(x0 + dx, y, z0 + dz, orn[r.nextInt(orn.length)]); else b.set(x0 + dx, y, z0 + dz, leaves);
             }
         }
         b.set(x0, y0 + 11, z0, Material.GOLD_BLOCK);
@@ -100,7 +103,12 @@ public final class Christmas implements Listener, CommandExecutor {
             String[] gifts = {"gift_red", "gift_green", "gift_blue", "gift_gold", "gift_red", "gift_gold"};
             for (int i = 0; i < gifts.length; i++) {
                 double a = i * Math.PI * 2 / gifts.length + 0.3;
-                item(TREE.clone().add(Math.cos(a) * 3.6, 0.35, Math.sin(a) * 3.6), gifts[i], 0.7f + (i % 3) * 0.15f, false);
+                Location gl = TREE.clone().add(Math.cos(a) * 3.6, 0.35, Math.sin(a) * 3.6);
+                item(gl, gifts[i], 0.7f + (i % 3) * 0.15f, false);
+                pl.mars.spawn(gl.clone().add(0, -0.3, 0), org.bukkit.entity.Interaction.class, in -> {
+                    in.setInteractionWidth(1.1f); in.setInteractionHeight(1.1f); in.setResponsive(true);
+                    in.addScoreboardTag(TAG); in.addScoreboardTag("ss_gift"); in.setPersistent(false);
+                });
             }
             TextDisplay t = pl.mars.spawn(TREE.clone().add(0, 13.3, 0), TextDisplay.class, d -> {
                 d.setBillboard(Display.Billboard.CENTER);
@@ -121,12 +129,38 @@ public final class Christmas implements Listener, CommandExecutor {
             d.addScoreboardTag(TAG); d.setPersistent(false);
         });
     }
+    /** smaže starý (x0=0,z0=14) i nový strom */
+    private void clearTree(U.BlockQueue.Builder b) {
+        b.fill(-3, Lobby.Y + 1, 11, 3, Lobby.Y + 12, 17, Material.AIR);
+        b.fill(5, Lobby.Y + 1, 2, 11, Lobby.Y + 13, 8, Material.AIR);
+    }
+    private final Map<UUID, Long> giftCd = new HashMap<>();
+    /** dárky pod stromem: zvuk + třpyt po kliknutí (pravé i levé tlačítko) */
+    private void giftFx(Player p, org.bukkit.entity.Entity en) {
+        long now = System.currentTimeMillis();
+        if (now - giftCd.getOrDefault(p.getUniqueId(), 0L) < 400) return;
+        giftCd.put(p.getUniqueId(), now);
+        Location l = en.getLocation().add(0, 0.8, 0);
+        float pitch = 0.8f + (float) Math.random() * 0.9f;
+        p.playSound(l, Sound.BLOCK_AMETHYST_BLOCK_CHIME, 1f, pitch);
+        p.playSound(l, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, pitch);
+        p.playSound(l, Sound.BLOCK_NOTE_BLOCK_BELL, 0.7f, pitch);
+        p.spawnParticle(Particle.FIREWORK, l, 14, 0.3, 0.3, 0.3, 0.04);
+        p.spawnParticle(Particle.END_ROD, l, 8, 0.3, 0.3, 0.3, 0.05);
+        U.bar(p, ("&c🎁 &fDárek je zabalený! &7Otevři si &e/advent &7– adventní kalendář."));
+    }
+    @EventHandler public void giftClick(org.bukkit.event.player.PlayerInteractEntityEvent e) {
+        if (e.getRightClicked().getScoreboardTags().contains("ss_gift")) { e.setCancelled(true); giftFx(e.getPlayer(), e.getRightClicked()); }
+    }
+    @EventHandler public void giftHit(org.bukkit.event.entity.EntityDamageByEntityEvent e) {
+        if (e.getEntity().getScoreboardTags().contains("ss_gift")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) giftFx(p, e.getEntity()); }
+    }
     private void undecorate() {
         decorated = false;
         pl.mars.getPersistentDataContainer().remove(BUILT);
         for (var e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(TAG)) e.remove();
         U.BlockQueue.Builder b = pl.queue.builder(pl.mars);
-        b.fill(-3, Lobby.Y + 1, 11, 3, Lobby.Y + 12, 17, Material.AIR);
+        clearTree(b);
         b.submit(null);
     }
 

@@ -1,5 +1,5 @@
 name: SquareStar
-version: '4.4.1'
+version: '4.4.2'
 main: cz.adrrex.squarestar.SquareStar
 api-version: '1.21.11'
 author: AdrrexStudio
@@ -26,7 +26,7 @@ commands:
     description: Zpet na spawn / do lobby
     aliases: [lobby, hub, l]
   hudba:
-    description: Hudba v lobby zap/vyp
+    description: Hudba v lobby – menu, playlist
     aliases: [music]
   mince:
     description: Mince a obchod (/mince, /obchod)

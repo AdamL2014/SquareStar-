@@ -94,7 +94,8 @@ public final class SquareStar extends JavaPlugin {
         Basic basic = new Basic(this); pm.registerEvents(basic, this);
         for (String n : Basic.PLAYER_CMDS) bind(n, basic, basic);
         for (String n : Basic.STAFF_CMDS) bind(n, basic, basic);
-        bind("hudba", new Music(this), null);
+        Music music = new Music(this); pm.registerEvents(music, this); pm.registerEvents(new Fun(), this);
+        bind("hudba", music, null);
         meteors = new Meteors(this);
         Holo.start(this);
         bind("novinky", (s, c, l, a) -> { if (s instanceof Player p) news.open(p); return true; }, null);

@@ -21,6 +21,7 @@ public final class News implements Listener {
 
     /** stránky knihy – nejnovější nahoře; při každé verzi sem přidej novou stránku */
     private static final String[][] PAGES = {
+            {"&4&lCO JE NOVÉ\n&8verze 4.4.2\n\n&0✦ &d/hudba&0 – vlastní\n&0   playlist a výběr\n&0✦ Strom se vejde,\n&0   dárky zvoní\n&0✦ ESC menu: nový styl\n&0✦ Koule a vejce\n&0   odstrkují"},
             {"&4&lCO JE NOVÉ\n&8verze 4.4\n\n&0✦ &6Mince ⛃&0 za hry,\n&0   výhry a levely\n&0✦ &a/obchod&0 – klíče\n&0✦ Kosmetika se kupuje\n&0   (zdarma jen helma)\n&0✦ &c❄ Vánoce&0: strom,\n&0   sníh, hudba\n&0✦ &c/advent&0 kalendář\n&0✦ ☕ Java / ☗ Bedrock"},
             {"&4&lCO JE NOVÉ\n&8verze 4.3\n\n&0✦ Builder event:\n&0   cedule &6Pozemek\n&6   hráče&0 + nápis\n&0   v liště\n&0✦ Pořadatel létá\n&0   vysoko nad eventem\n&0✦ &dOvládání eventu&0:\n&0   start, konec, čas,\n&0   pauza, teleporty"},
             {"&4&lCO JE NOVÉ\n&8verze 4.2\n\n&0✦ Nové eventy:\n&8 ■ &0Bedrocková\n&0   místnost\n&6 ■ &0Builder event –\n&0   každý svůj pozemek\n&0✦ Event NPC před\n&0   bednami\n&0✦ 3D meteority"},
