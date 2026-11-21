@@ -370,6 +370,8 @@ public final class Lang {
         a("mává", "waves");
         a("zuří", "rages");
         a("Hraje:", "Playing:"); a("= vypnout", "= turn off"); a("Hudba v lobby", "Lobby music"); a("vypnuta", "off"); a("zapnuta!", "on!"); a("hudba zap/vyp", "music on/off");
+        a("UFO nad", "UFO over"); a("kopulí", "the dome"); a("Vyšší kopule,", "Taller dome,"); a("malé vchody", "small entrances"); a("playlist", "playlist"); a("Disky vánočních", "Discs for the"); a("písniček", "Christmas songs"); a("Dárky skáčou", "Gifts hop");
+        a("Nad kopulí prolétá UFO!", "A UFO is flying over the dome!"); a("Podívej se na oblohu.", "Look at the sky.");
         a("Vyber skladbu a sestav playlist", "Pick a track and build a playlist");
         a("– vlastní", "– your own");
         a("playlist a výběr", "playlist & choice");

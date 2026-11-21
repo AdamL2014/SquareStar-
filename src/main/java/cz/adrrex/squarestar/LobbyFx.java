@@ -478,8 +478,8 @@ public final class LobbyFx implements Listener {
     // ---------------- VidRift postava: „podívej se na film" ----------------
     private Mannequin vidrift;
     private void spawnVidrift() {
-        Location l = new Location(pl.mars, 10.5, Lobby.Y + 1, 7.5);
-        l.setDirection(new Vector(-10, 0, -7));
+        Location l = new Location(pl.mars, -12.5, Lobby.Y + 1, 4.5);   // druhá strana než vánoční strom (8,5); vedle Redstone NPC (-9.5, 7.5)
+        l.setDirection(new Vector(12.5, 0, -4.5));
         vidrift = pl.mars.spawn(l, Mannequin.class, e -> {
             label(e, "&b&lVid&d&lRift\n&fPodívej se na film! &8| &eKlikni");
             e.setImmovable(true);

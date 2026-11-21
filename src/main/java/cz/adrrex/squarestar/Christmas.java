@@ -96,10 +96,9 @@ public final class Christmas implements Listener, CommandExecutor {
                 if (edge && r.nextInt(5) == 0) b.set(x0 + dx, y, z0 + dz, orn[r.nextInt(orn.length)]); else b.set(x0 + dx, y, z0 + dz, leaves);
             }
         }
-        b.set(x0, y0 + 11, z0, Material.GOLD_BLOCK);
         b.submit(() -> {
             // hvězda na špičce + dárky pod stromem (3D modely)
-            item(TREE.clone().add(0, 11.6, 0), "star_shard", 1.6f, true);
+            item(TREE.clone().add(0, 12.7, 0), "star_shard", 1.6f, true);
             String[] gifts = {"gift_red", "gift_green", "gift_blue", "gift_gold", "gift_red", "gift_gold"};
             for (int i = 0; i < gifts.length; i++) {
                 double a = i * Math.PI * 2 / gifts.length + 0.3;
@@ -110,7 +109,7 @@ public final class Christmas implements Listener, CommandExecutor {
                     in.addScoreboardTag(TAG); in.addScoreboardTag("ss_gift"); in.setPersistent(false);
                 });
             }
-            TextDisplay t = pl.mars.spawn(TREE.clone().add(0, 13.3, 0), TextDisplay.class, d -> {
+            TextDisplay t = pl.mars.spawn(TREE.clone().add(0, 14.4, 0), TextDisplay.class, d -> {
                 d.setBillboard(Display.Billboard.CENTER);
                 d.setBackgroundColor(Color.fromARGB(160, 120, 10, 10));
                 d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(1.6f), new AxisAngle4f()));

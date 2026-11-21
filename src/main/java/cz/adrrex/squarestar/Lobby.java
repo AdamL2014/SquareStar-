@@ -35,18 +35,30 @@ public final class Lobby implements Listener {
         boolean old = pl.mars.getPersistentDataContainer().getOrDefault(verKey, org.bukkit.persistence.PersistentDataType.INTEGER, 0) < LOBBY_VER;
         if (old) pl.mars.getPersistentDataContainer().set(verKey, org.bukkit.persistence.PersistentDataType.INTEGER, LOBBY_VER);
         var domeKey = new org.bukkit.NamespacedKey("squarestar", "dome_ver");
-        if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR && pl.mars.getPersistentDataContainer().getOrDefault(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 0) < 2) {
-            pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 2);
-            pl.getLogger().info("Zvysuji kopuli lobby...");
-            upgradeDome(() -> pl.getLogger().info("Kopule hotova!"));
+        int dv = pl.mars.getPersistentDataContainer().getOrDefault(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 0);
+        if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR && dv < 3) {
+            pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 3);
+            pl.getLogger().info("Upravuji kopuli lobby...");
+            if (dv < 2) upgradeDome(() -> pl.getLogger().info("Kopule hotova!")); else closeDoors(() -> pl.getLogger().info("Vchody zmenseny!"));
         }
-        if (old) pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 2);
+        if (old) pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 3);
         if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) { spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); return; }
         pl.getLogger().info("Stavim Mars lobby...");
         build(() -> { pl.getLogger().info("Mars lobby hotova!"); spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); });
     }
 
     static final int D = 18, DH = 28;
+    /** vchod do kopule: 1 blok široký, 3 vysoký (dřív 3x5) */
+    static boolean door(int x, int y, int z) { return y <= 2 && (x == 0 || z == 0); }
+    /** jednorázově: zasklít staré velké vchody (3x5), nechat jen malé */
+    private void closeDoors(Runnable done) {
+        U.BlockQueue.Builder b = pl.queue.builder(pl.mars);
+        for (int x = -D; x <= D; x++) for (int y = 0; y <= 4; y++) for (int z = -D; z <= D; z++) {
+            if (!inDomeShell(x, y, z, D, DH) || door(x, y, z) || !(Math.abs(x) <= 1 || Math.abs(z) <= 1)) continue;
+            b.set(x, Y + 1 + y, z, Material.LIGHT_BLUE_STAINED_GLASS);
+        }
+        b.submit(done);
+    }
     /** skořápka půlelipsoidu o vodorovném poloměru d a výšce h (tloušťka 1 blok) */
     static boolean inDomeShell(int x, int y, int z, int d, int h) {
         double r2 = x * x + z * z;
@@ -64,7 +76,7 @@ public final class Lobby implements Listener {
             if (m == Material.LIGHT_BLUE_STAINED_GLASS || m == Material.SEA_LANTERN) b.set(x, Y + 1 + y, z, Material.AIR);
         }
         for (int x = -D; x <= D; x++) for (int y = 0; y <= DH; y++) for (int z = -D; z <= D; z++) {
-            if (!inDomeShell(x, y, z, D, DH) || (y <= 4 && (Math.abs(x) <= 1 || Math.abs(z) <= 1))) continue;
+            if (!inDomeShell(x, y, z, D, DH) || (door(x, y, z))) continue;
             b.set(x, Y + 1 + y, z, y > DH - 3 ? Material.SEA_LANTERN : Material.LIGHT_BLUE_STAINED_GLASS);
         }
         b.submit(done);
@@ -98,7 +110,7 @@ public final class Lobby implements Listener {
         // skleněná kopule s 4 vchody (vyšší: poloměr 18, výška 28 – vejde se vánoční strom)
         for (int x = -D; x <= D; x++) for (int y = 0; y <= DH; y++) for (int z = -D; z <= D; z++) {
             if (!inDomeShell(x, y, z, D, DH)) continue;
-            if (y <= 4 && (Math.abs(x) <= 1 || Math.abs(z) <= 1)) continue;
+            if (door(x, y, z)) continue;
             b.set(x, Y + 1 + y, z, y > DH - 3 ? Material.SEA_LANTERN : Material.LIGHT_BLUE_STAINED_GLASS);
         }
         // kameny

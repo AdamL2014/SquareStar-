@@ -53,8 +53,8 @@ public final class Music implements CommandExecutor, Listener {
             vanilla("mellohi", Sound.MUSIC_DISC_MELLOHI, "Mellohi – C418", 96, Material.MUSIC_DISC_MELLOHI),
             vanilla("13", Sound.MUSIC_DISC_13, "13 – C418", 178, Material.MUSIC_DISC_13),
             vanilla("11", Sound.MUSIC_DISC_11, "11 – C418", 71, Material.MUSIC_DISC_11),
-            new Track("xmas1", "squarestar:music.xmas1", "❄ Vánoce na Marsu – SquareStar", 60, Material.NETHER_STAR),
-            new Track("xmas2", "squarestar:music.xmas2", "❄ Sněžná noc – SquareStar", 60, Material.SNOWBALL));
+            new Track("xmas1", "squarestar:music.xmas1", "❄ Vánoce na Marsu – SquareStar", 60, Material.MUSIC_DISC_CAT),
+            new Track("xmas2", "squarestar:music.xmas2", "❄ Sněžná noc – SquareStar", 60, Material.MUSIC_DISC_13));
     private static final List<String> AUTO = List.of("far", "relic", "otherside", "mall", "precipice", "creator");
     /** o Vánocích: vlastní vánoční písničky střídané s klidnými deskami */
     private static final List<String> AUTO_XMAS = List.of("xmas1", "far", "xmas2", "otherside");
@@ -139,6 +139,7 @@ public final class Music implements CommandExecutor, Listener {
             boolean playing = now != null && now.id.equals(t.id);
             ItemStack it = U.item(t.icon, 1, (playing ? "&a▶ " : "&f") + t.name,
                     pos >= 0 ? "&a✔ V playlistu &7(#" + (pos + 1) + ")" : "&8Není v playlistu", "", "&eLevý klik: &7přehrát hned", "&ePravý klik: &7" + (pos >= 0 ? "odebrat z playlistu" : "přidat do playlistu"));
+            if (t.id.startsWith("xmas")) it = Gui.skin(p, it, "disc_" + t.id);   // vlastní disk (Java s resource packem)
             var m = it.getItemMeta();
             m.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             if (playing || pos >= 0) m.setEnchantmentGlintOverride(true);
