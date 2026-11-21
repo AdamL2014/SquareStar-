@@ -147,7 +147,19 @@ public final class Christmas implements Listener, CommandExecutor {
         p.playSound(l, Sound.BLOCK_NOTE_BLOCK_BELL, 0.7f, pitch);
         p.spawnParticle(Particle.FIREWORK, l, 14, 0.3, 0.3, 0.3, 0.04);
         p.spawnParticle(Particle.END_ROD, l, 8, 0.3, 0.3, 0.3, 0.05);
+        // dárek poskočí (animace posunu 3D modelu nahoru a zpět)
+        for (var d : en.getNearbyEntities(0.8, 1.2, 0.8)) if (d instanceof ItemDisplay id && id.getScoreboardTags().contains(TAG)) hop(id);
         U.bar(p, ("&c🎁 &fDárek je zabalený! &7Otevři si &e/advent &7– adventní kalendář."));
+    }
+    private void hop(ItemDisplay id) {
+        Transformation t = id.getTransformation();
+        id.setInterpolationDelay(0); id.setInterpolationDuration(4);
+        id.setTransformation(new Transformation(new Vector3f(0, 0.7f, 0), t.getLeftRotation(), t.getScale(), t.getRightRotation()));
+        Bukkit.getScheduler().runTaskLater(pl, () -> {
+            if (!id.isValid()) return;
+            id.setInterpolationDelay(0); id.setInterpolationDuration(5);
+            id.setTransformation(new Transformation(new Vector3f(), t.getLeftRotation(), t.getScale(), t.getRightRotation()));
+        }, 5);
     }
     @EventHandler public void giftClick(org.bukkit.event.player.PlayerInteractEntityEvent e) {
         if (e.getRightClicked().getScoreboardTags().contains("ss_gift")) { e.setCancelled(true); giftFx(e.getPlayer(), e.getRightClicked()); }

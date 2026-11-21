@@ -34,9 +34,40 @@ public final class Lobby implements Listener {
         var verKey = new org.bukkit.NamespacedKey("squarestar", "lobby_ver");
         boolean old = pl.mars.getPersistentDataContainer().getOrDefault(verKey, org.bukkit.persistence.PersistentDataType.INTEGER, 0) < LOBBY_VER;
         if (old) pl.mars.getPersistentDataContainer().set(verKey, org.bukkit.persistence.PersistentDataType.INTEGER, LOBBY_VER);
+        var domeKey = new org.bukkit.NamespacedKey("squarestar", "dome_ver");
+        if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR && pl.mars.getPersistentDataContainer().getOrDefault(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 0) < 2) {
+            pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 2);
+            pl.getLogger().info("Zvysuji kopuli lobby...");
+            upgradeDome(() -> pl.getLogger().info("Kopule hotova!"));
+        }
+        if (old) pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 2);
         if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) { spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); return; }
         pl.getLogger().info("Stavim Mars lobby...");
         build(() -> { pl.getLogger().info("Mars lobby hotova!"); spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); });
+    }
+
+    static final int D = 18, DH = 28;
+    /** skořápka půlelipsoidu o vodorovném poloměru d a výšce h (tloušťka 1 blok) */
+    static boolean inDomeShell(int x, int y, int z, int d, int h) {
+        double r2 = x * x + z * z;
+        double out = r2 / (d * (double) d) + y * (double) y / (h * (double) h);
+        double in = r2 / ((d - 1.0) * (d - 1.0)) + y * (double) y / ((h - 1.0) * (h - 1.0));
+        return out <= 1 && in > 1;
+    }
+    /** jednorázově: stará nízká kopule (koule poloměr 18) -> vyšší kopule; smaže i díru po starém stromě */
+    private void upgradeDome(Runnable done) {
+        U.BlockQueue.Builder b = pl.queue.builder(pl.mars);
+        for (int x = -D; x <= D; x++) for (int y = 0; y <= D; y++) for (int z = -D; z <= D; z++) {
+            double dd = Math.sqrt(x * x + y * y + z * z);
+            if (dd > D || dd <= D - 1 || inDomeShell(x, y, z, D, DH)) continue;
+            Material m = pl.mars.getBlockAt(x, Y + 1 + y, z).getType();
+            if (m == Material.LIGHT_BLUE_STAINED_GLASS || m == Material.SEA_LANTERN) b.set(x, Y + 1 + y, z, Material.AIR);
+        }
+        for (int x = -D; x <= D; x++) for (int y = 0; y <= DH; y++) for (int z = -D; z <= D; z++) {
+            if (!inDomeShell(x, y, z, D, DH) || (y <= 4 && (Math.abs(x) <= 1 || Math.abs(z) <= 1))) continue;
+            b.set(x, Y + 1 + y, z, y > DH - 3 ? Material.SEA_LANTERN : Material.LIGHT_BLUE_STAINED_GLASS);
+        }
+        b.submit(done);
     }
 
     public void build(Runnable done) {
@@ -64,13 +95,11 @@ public final class Lobby implements Listener {
             double ang = a * Math.PI / 4;
             b.set((int) Math.round(Math.cos(ang) * 11), Y, (int) Math.round(Math.sin(ang) * 11), Material.SEA_LANTERN);
         }
-        // skleněná kopule s 4 vchody
-        int D = 18;
-        for (int x = -D; x <= D; x++) for (int y = 0; y <= D; y++) for (int z = -D; z <= D; z++) {
-            double d = Math.sqrt(x * x + y * y + z * z);
-            if (d > D || d <= D - 1) continue;
+        // skleněná kopule s 4 vchody (vyšší: poloměr 18, výška 28 – vejde se vánoční strom)
+        for (int x = -D; x <= D; x++) for (int y = 0; y <= DH; y++) for (int z = -D; z <= D; z++) {
+            if (!inDomeShell(x, y, z, D, DH)) continue;
             if (y <= 4 && (Math.abs(x) <= 1 || Math.abs(z) <= 1)) continue;
-            b.set(x, Y + 1 + y, z, y > D - 3 ? Material.SEA_LANTERN : Material.LIGHT_BLUE_STAINED_GLASS);
+            b.set(x, Y + 1 + y, z, y > DH - 3 ? Material.SEA_LANTERN : Material.LIGHT_BLUE_STAINED_GLASS);
         }
         // kameny
         for (int i = 0; i < 16; i++) {
@@ -266,6 +295,7 @@ public final class Lobby implements Listener {
         else if (U.tagOf(p.getInventory().getItem(7), "ss_lobby") != null) p.getInventory().setItem(7, null);
         place(p, 2, Gui.skin(p, U.tag(U.item(Material.PLAYER_HEAD, 1, "&d&l♥ Přátelé &7(pravý klik)", "&7Kdo je online a co hraje"), "ss_lobby", "friends"), "icon_menu_friends"));
         place(p, 4, Gui.skin(p, pl.cosmetics.menuItem(), "icon_menu_cosmetics"));
+        place(p, 5, U.tag(U.item(Material.JUKEBOX, 1, "&d&l♫ Hudba &7(pravý klik)", "&7Vyber skladbu a sestav playlist"), "ss_lobby", "music"));
         place(p, 6, Gui.skin(p, U.tag(U.item(Material.WRITABLE_BOOK, 1, "&e&l✦ Co je nové &7(pravý klik)", "&7Novinky na serveru"), "ss_lobby", "news"), "icon_menu_news"));
         place(p, 8, Gui.skin(p, U.tag(U.item(Material.ENDER_EYE, 1, "&b&lZpět na spawn", "&7Teleport na náměstí"), "ss_lobby", "spawn"), "icon_menu_spawn"));
         pl.cosmetics.apply(p);
@@ -310,6 +340,7 @@ public final class Lobby implements Listener {
         else if (t.equals("friends")) pl.friends.open(e.getPlayer());
         else if (t.equals("news")) pl.news.open(e.getPlayer());
         else if (t.equals("shop")) pl.coins.open(e.getPlayer());
+        else if (t.equals("music")) e.getPlayer().performCommand("hudba");
         else if (t.equals("advent")) pl.xmas.openCalendar(e.getPlayer());
     }
 
