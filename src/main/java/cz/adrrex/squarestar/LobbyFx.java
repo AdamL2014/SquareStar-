@@ -262,9 +262,7 @@ public final class LobbyFx implements Listener {
 
     // ---------------- NPC ----------------
     public static void npc(Mannequin m, String name, String desc, String look) {
-        m.customName(U.c(name));
-        m.setCustomNameVisible(true);
-        m.setDescription(U.c(desc));
+        label(m, name + "\n" + desc);
         m.setImmovable(true);
         m.setAI(false);
         m.setInvulnerable(true);
@@ -273,6 +271,23 @@ public final class LobbyFx implements Listener {
         m.setPersistent(false);
         Color col = switch (look) { case "npc_shop" -> Color.ORANGE; default -> Color.WHITE; };
         suit(m, col, null);
+    }
+
+    /** jmenovka nad NPC ve dvou jazycích (každý hráč vidí svou) */
+    public static void label(Mannequin m, String text) {
+        m.setCustomNameVisible(false);
+        m.setDescription(null);
+        Bukkit.getScheduler().runTask(SquareStar.I, () -> {
+            if (!m.isValid()) return;
+            TextDisplay d = m.getWorld().spawn(m.getLocation().add(0, 2.1, 0), TextDisplay.class, x -> {
+                x.setBillboard(Display.Billboard.CENTER);
+                x.setPersistent(false);
+                x.addScoreboardTag("ss_npc_label");
+                x.setTransformation(new Transformation(new Vector3f(0, 0.25f, 0), new AxisAngle4f(), new Vector3f(1, 1, 1), new AxisAngle4f()));
+            });
+            m.addPassenger(d);
+            Holo.dual(d, text, m);
+        });
     }
 
     /** Vlastní skin NPC z resource packu (assets/squarestar/textures/entity/npc_skin.png). */
@@ -418,7 +433,8 @@ public final class LobbyFx implements Listener {
                 for (var e : npcs.entrySet()) {
                     if (!e.getValue().isValid()) continue;
                     int n = pl.games.playing(e.getKey());
-                    e.getValue().setDescription(U.c((n > 0 ? "&a" + n + " hraje" : "&7nikdo nehraje") + " &8| &eKlikni"));
+                    for (var x : e.getValue().getPassengers()) if (x instanceof TextDisplay lbl)
+                        Holo.setText(lbl, "&6&l" + e.getKey().display + "\n" + (n > 0 ? "&a" + n + " hraje" : "&7nikdo nehraje") + " &8| &eKlikni");
                 }
             }
         }, 40, 2);
@@ -465,9 +481,7 @@ public final class LobbyFx implements Listener {
         Location l = new Location(pl.mars, 10.5, Lobby.Y + 1, 7.5);
         l.setDirection(new Vector(-10, 0, -7));
         vidrift = pl.mars.spawn(l, Mannequin.class, e -> {
-            e.customName(U.c("&b&lVid&d&lRift"));
-            e.setCustomNameVisible(true);
-            e.setDescription(U.c("&fPodívej se na film! &8| &eKlikni"));
+            label(e, "&b&lVid&d&lRift\n&fPodívej se na film! &8| &eKlikni");
             e.setImmovable(true);
             e.setAI(false);
             e.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
@@ -477,14 +491,14 @@ public final class LobbyFx implements Listener {
             e.addScoreboardTag("ss_npc_vidrift");
         });
         // neonová cedule nad postavou
-        pl.mars.spawn(l.clone().add(0, 3.3, 0), TextDisplay.class, d -> {
-            d.text(U.c("&b&l▶ &f&lPODÍVEJ SE NA FILM &d&l◀\n&7filmy &8• &7kanály &8• &7hry\n&b&nvidriftvideo.netlify.app"));
+        TextDisplay vh = pl.mars.spawn(l.clone().add(0, 3.3, 0), TextDisplay.class, d -> {
             d.setBillboard(Display.Billboard.CENTER);
             d.setBackgroundColor(Color.fromARGB(200, 7, 6, 13));
             d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(1.3f, 1.3f, 1.3f), new AxisAngle4f()));
             d.setBrightness(new Display.Brightness(15, 15));
             d.addScoreboardTag(TAG); d.setPersistent(false);
         });
+        Holo.dual(vh, "&b&l▶ &f&lPODÍVEJ SE NA FILM &d&l◀\n&7filmy &8• &7kanály &8• &7hry\n&b&nvidriftvideo.netlify.app");
         // „kino plátno" za postavou
         Location sc = l.clone().add(1.4, 2.4, 1.0);
         sc.setYaw(l.getYaw()); sc.setPitch(0);
@@ -503,9 +517,7 @@ public final class LobbyFx implements Listener {
         Location l = new Location(pl.mars, -9.5, Lobby.Y + 1, 7.5);
         l.setDirection(new Vector(10, 0, -7));
         pl.mars.spawn(l, Mannequin.class, e -> {
-            e.customName(U.c("&c&l⚡ Redstone týden"));
-            e.setCustomNameVisible(true);
-            e.setDescription(U.c("&7Téma: &e" + pl.redstone.theme() + " &8| &eKlikni"));
+            label(e, "&c&l⚡ Redstone týden\n&7Téma: &e" + pl.redstone.theme() + " &8| &eKlikni");
             e.setImmovable(true);
             e.setAI(false);
             skin(e);
@@ -514,13 +526,13 @@ public final class LobbyFx implements Listener {
             e.addScoreboardTag(TAG);
             e.addScoreboardTag("ss_npc_redstone");
         });
-        pl.mars.spawn(l.clone().add(0, 3.3, 0), TextDisplay.class, d -> {
-            d.text(U.c("&c&l⚡ REDSTONE TÝDEN ⚡\n&7Každý týden nové téma\n&eV neděli se hlasuje!"));
+        TextDisplay rh = pl.mars.spawn(l.clone().add(0, 3.3, 0), TextDisplay.class, d -> {
             d.setBillboard(Display.Billboard.CENTER);
             d.setBackgroundColor(Color.fromARGB(200, 30, 4, 4));
             d.setBrightness(new Display.Brightness(15, 15));
             d.addScoreboardTag(TAG); d.setPersistent(false);
         });
+        Holo.dual(rh, "&c&l⚡ REDSTONE TÝDEN ⚡\n&7Každý týden nové téma\n&eV neděli se hlasuje!");
         pl.mars.getBlockAt(l.getBlockX(), Lobby.Y, l.getBlockZ()).setType(Material.REDSTONE_BLOCK, false);
     }
     private void openRedstone(Player p) { if (RedstoneWeek.voting()) pl.redstone.visit(p, 0); else pl.redstone.join(p); }

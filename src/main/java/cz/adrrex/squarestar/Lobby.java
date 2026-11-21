@@ -226,12 +226,12 @@ public final class Lobby implements Listener {
     public void spawnHolo() {
         for (var e : pl.mars.getEntities()) if (e.getScoreboardTags().contains("ss_holo_lobby")) e.remove();
         Location l = new Location(pl.mars, 0.5, Y + 4.2, 6.5);
-        pl.mars.spawn(l, TextDisplay.class, t -> {
-            t.text(U.c("&c&l✦ SQUARESTAR ✦\n&6Minihry na Marsu\n&7Nízká gravitace všude!\n\n&eNPC za tebou &7nebo &eKompas &7= minihry\n&dBedny &7jsou přímo před tebou\n&bDvojskok: &7skoč 2x"));
+        TextDisplay holo = pl.mars.spawn(l, TextDisplay.class, t -> {
             t.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
             t.addScoreboardTag("ss_holo_lobby");
             t.setPersistent(false);
         });
+        Holo.dual(holo, "&c&l✦ SQUARESTAR ✦\n&6Minihry na Marsu\n&7Nízká gravitace všude!\n\n&eNPC za tebou &7nebo &eKompas &7= minihry\n&dBedny &7jsou přímo před tebou\n&bDvojskok: &7skoč 2x");
     }
 
     /** Uloží lobby inventář (klíče, odměny z beden) do dat hráče, než jde do hry. */

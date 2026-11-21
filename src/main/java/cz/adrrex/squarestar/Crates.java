@@ -83,12 +83,12 @@ public final class Crates implements Listener {
             t.loc().getBlock().setType(Material.BARRIER);
             ItemDisplay body = model(t, "crate_", 0), lid = model(t, "crate_lid_", 0);
             bodies.put(t.id(), body); lids.put(t.id(), lid);
-            pl.mars.spawn(t.loc().clone().add(0.5, 3.3, 0.5), TextDisplay.class, d -> {
-                d.text(U.c(t.name() + "\n&7Pravý klik s klíčem\n&8Levý klik = náhled"));
+            TextDisplay ch = pl.mars.spawn(t.loc().clone().add(0.5, 3.3, 0.5), TextDisplay.class, d -> {
                 d.setBillboard(Display.Billboard.CENTER);
                 d.addScoreboardTag("ss_holo_crate");
                 d.setPersistent(false);
             });
+            Holo.dual(ch, t.name() + "\n&7Pravý klik s klíčem\n&8Levý klik = náhled");
         }
     }
 

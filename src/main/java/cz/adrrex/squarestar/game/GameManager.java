@@ -231,6 +231,25 @@ public final class GameManager implements Listener {
         if (g.state != Game.State.RUNNING || !g.alive.contains(e.getPlayer()) || !g.canBreak(e.getPlayer(), e.getBlock())) e.setCancelled(true);
     }
 
+    /** díry v mapě (např. v asteroidu ve SkyWars) se po 5 minutách samy opraví */
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true) public void heal(BlockBreakEvent e) {
+        Game g = map.get(e.getPlayer());
+        if (g == null || g.isPlaced(e.getBlock()) || EnumSet.of(GameType.SPLEEF, GameType.TNTRUN, GameType.BUILDBATTLE, GameType.SPEEDRUN).contains(g.type)) return;
+        Block b = e.getBlock();
+        if (b.getType().name().endsWith("_BED")) return;      // zničená postel v BedWars zůstane zničená
+        org.bukkit.block.data.BlockData was = b.getBlockData().clone();
+        healLater(g, b, was, 6000);
+    }
+    private void healLater(Game g, Block b, org.bukkit.block.data.BlockData was, long delay) {
+        Bukkit.getScheduler().runTaskLater(pl, () -> {
+            if (!games.contains(g) || g.state != Game.State.RUNNING || !b.getType().isAir()) return;
+            // hráč stojí v místě -> zkusit za 5 s (ať se nezasekne v bloku)
+            if (!b.getWorld().getNearbyEntities(b.getBoundingBox().expand(0.3), x -> x instanceof Player).isEmpty()) { healLater(g, b, was, 100); return; }
+            b.setBlockData(was, false);
+            b.getWorld().spawnParticle(org.bukkit.Particle.HAPPY_VILLAGER, b.getLocation().add(0.5, 0.5, 0.5), 4, 0.3, 0.3, 0.3, 0);
+        }, delay);
+    }
+
     @EventHandler(priority = EventPriority.HIGH) public void place(BlockPlaceEvent e) {
         Game g = map.get(e.getPlayer());
         if (g == null) { if (pl.isArena(e.getBlock().getWorld()) && !e.getPlayer().hasPermission("squarestar.admin")) e.setCancelled(true); return; }

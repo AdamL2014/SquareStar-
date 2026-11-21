@@ -73,6 +73,7 @@ public final class Stats {
                 d.setPersistent(false);
             }));
         }
+        for (TextDisplay d : boards) Holo.dual(d, "");
         refresh();
     }
 
@@ -88,7 +89,7 @@ public final class Stats {
             for (int j = 0; j < t.size(); j++)
                 s.append(j < 3 ? medal[j] : "&7" + (j + 1) + ".").append(" &f").append(t.get(j).getKey()).append(" &8- &e").append(t.get(j).getValue()).append('\n');
             s.append("&8▬▬▬▬▬▬▬▬▬▬▬▬");
-            d.text(U.c(s.toString()));
+            Holo.setText(d, s.toString());
         }
     }
 

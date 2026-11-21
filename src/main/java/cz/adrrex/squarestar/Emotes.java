@@ -67,13 +67,13 @@ public final class Emotes implements CommandExecutor, TabCompleter {
                 o.sendMessage(U.c("&8» &f" + p.getName() + " &7" + (Lang.en(o) ? e[2] : e[1]) + " " + e[0]));
         // bublina nad hlavou
         TextDisplay bubble = p.getWorld().spawn(p.getLocation().add(0, 2.3, 0), TextDisplay.class, d -> {
-            d.text(U.c(e[0]));
             d.setBillboard(Display.Billboard.CENTER);
             d.setBackgroundColor(Color.fromARGB(150, 10, 10, 20));
             d.setTransformation(new Transformation(new Vector3f(0, 0.4f, 0), new AxisAngle4f(), new Vector3f(1.4f, 1.4f, 1.4f), new AxisAngle4f()));
             d.setPersistent(false);
         });
         p.addPassenger(bubble);
+        Holo.dual(bubble, e[0]);
         final int dur = switch (id) { case "sleep", "sit" -> 100; case "dance", "twerk", "swim", "fly" -> 70; case "spin" -> 50; case "dead" -> 60; default -> 45; };
         new BukkitRunnable() {
             int t = 0;
