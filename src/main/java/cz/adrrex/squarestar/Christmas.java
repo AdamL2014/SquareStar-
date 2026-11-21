@@ -54,7 +54,8 @@ public final class Christmas implements Listener, CommandExecutor {
         if (m.equalsIgnoreCase("on")) return true;
         if (m.equalsIgnoreCase("off")) return false;
         LocalDate d = today();
-        return !d.isBefore(firstAdvent(d.getYear())) || (d.getMonthValue() == 1 && d.getDayOfMonth() <= 6);
+        // vánoční výzdoba už od 20. listopadu (okénka kalendáře se otevírají až od 1. 12.)
+        return (d.getMonthValue() == 11 && d.getDayOfMonth() >= 20) || d.getMonthValue() == 12 || (d.getMonthValue() == 1 && d.getDayOfMonth() <= 6);
     }
 
     // ---------------- výzdoba + sníh ----------------
