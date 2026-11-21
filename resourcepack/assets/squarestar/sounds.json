@@ -1,0 +1,4 @@
+{
+  "music.xmas1": {"category": "record", "sounds": [{"name": "squarestar:music/xmas1", "stream": true}]},
+  "music.xmas2": {"category": "record", "sounds": [{"name": "squarestar:music/xmas2", "stream": true}]}
+}

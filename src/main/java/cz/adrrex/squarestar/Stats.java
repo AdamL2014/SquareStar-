@@ -32,6 +32,7 @@ public final class Stats {
 
     private String k(Player p, String f) { y.set(p.getUniqueId() + ".name", p.getName()); return p.getUniqueId() + "." + f; }
     public void add(Player p, String field, int n) { String key = k(p, field); y.set(key, y.getInt(key) + n); dirty = true; }
+    public void setCoins(Player p, int c) { y.set(k(p, "coins"), c); dirty = true; }
     public void setXp(Player p, int xp) { y.set(k(p, "xp"), xp); dirty = true; }
     public int get(Player p, String field) { return y.getInt(p.getUniqueId() + "." + field); }
 

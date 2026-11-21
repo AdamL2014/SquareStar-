@@ -13,6 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -35,7 +36,8 @@ public final class Cosmetics implements Listener {
     public enum Hat {
         ROCKET("Mini raketa", "hat_rocket"), UFO("UFO", "hat_ufo"), EARTH("Planeta Země", "earth"), HELMET("Kyslíková helma", "oxygen_helmet"), STAR("Hvězda", "star_shard"),
         CROWN("Koruna", "hat_crown"), HALO("Svatozář", "hat_halo"), ALIEN("Mimozemská tykadla", "hat_alien"), SATURN("Saturn", "hat_saturn"),
-        PROPELLER("Čepice s vrtulkou", "hat_propeller"), SATELLITE("Satelit", "hat_satellite"), MARS("Planeta Mars", "hat_mars"), WITCH("Čarodějný klobouk", "hat_witch");
+        PROPELLER("Čepice s vrtulkou", "hat_propeller"), SATELLITE("Satelit", "hat_satellite"), MARS("Planeta Mars", "hat_mars"), WITCH("Čarodějný klobouk", "hat_witch"),
+        SANTA("Čepice Santy", "hat_santa");
         final String name, model;
         Hat(String n, String m) { name = n; model = m; }
     }
@@ -46,6 +48,41 @@ public final class Cosmetics implements Listener {
         Balloon(String n, String m) { name = n; model = m; }
     }
     private final Map<UUID, org.bukkit.entity.ItemDisplay> balloons = new HashMap<>();
+
+    // ---------------- ceny a vlastnictví (od v4.4 je zdarma jen kyslíková helma) ----------------
+    /** cena v mincích; -1 = nedá se koupit (jen z adventního kalendáře) */
+    public static int price(String id) {
+        return switch (id) {
+            case "hat:HELMET" -> 0;
+            case "hat:SANTA" -> -1;
+            case "hat:CROWN", "hat:HALO" -> 300;
+            case "hat:EARTH", "hat:SATURN", "hat:MARS" -> 200;
+            case "trail:RAINBOW", "trail:TOTEM", "trail:COSMIC" -> 150;
+            default -> id.startsWith("hat:") ? 150 : id.startsWith("balloon:") ? 100 : 80;
+        };
+    }
+    private static final org.bukkit.NamespacedKey OWNED = new org.bukkit.NamespacedKey("squarestar", "cos_owned");
+    private Set<String> owned(Player p) { return new HashSet<>(Arrays.asList(p.getPersistentDataContainer().getOrDefault(OWNED, PersistentDataType.STRING, "").split(","))); }
+    public boolean owns(Player p, String id) { return price(id) == 0 || p.isOp() || pl.ranks.of(p) == Ranks.Rank.OWNER || owned(p).contains(id); }
+    public void grant(Player p, String id) {
+        Set<String> o = owned(p); o.remove("");
+        if (o.add(id)) p.getPersistentDataContainer().set(OWNED, PersistentDataType.STRING, String.join(",", o));
+    }
+    /** kdo měl kosmetiku nasazenou ještě ze doby, kdy byla zdarma, ji dostane natrvalo */
+    private void grandfather(Player p) {
+        if (p.getPersistentDataContainer().has(OWNED)) return;
+        Trail t = get(p, "cos_trail", Trail.class); Hat h = get(p, "cos_hat", Hat.class); Balloon b = get(p, "cos_balloon", Balloon.class);
+        grant(p, "free");
+        if (t != null) grant(p, "trail:" + t.name());
+        if (h != null) grant(p, "hat:" + h.name());
+        if (b != null) grant(p, "balloon:" + b.name());
+    }
+    private List<String> priceLore(Player p, String id, boolean equipped) {
+        if (equipped) return List.of("&aNasazeno", "&7Klikni = sundat");
+        if (owns(p, id)) return List.of("&a✔ Vlastníš", "&7Klikni pro nasazení");
+        if (price(id) < 0) return List.of("&d❄ Jen z adventního kalendáře", "&7(1. prosince)");
+        return List.of("&7Cena: &6" + price(id) + " " + Coins.ICON, pl.coins.get(p) >= price(id) ? "&eKlikni = koupit a nasadit" : "&cNemáš dost mincí (" + pl.coins.get(p) + ")");
+    }
     static final class Holder implements InventoryHolder { Inventory inv; @Override public @NotNull Inventory getInventory() { return inv; } }
 
     private final SquareStar pl;
@@ -86,6 +123,7 @@ public final class Cosmetics implements Listener {
     }
 
     public void open(Player p) {
+        grandfather(p);
         Holder h = new Holder();
         h.inv = Bukkit.createInventory(h, 54, cz.adrrex.squarestar.Gui.title(54, cz.adrrex.squarestar.Lang.t(p, "&f&l✦ Kosmetika")));
         Trail ct = get(p, "cos_trail", Trail.class);
@@ -97,7 +135,7 @@ public final class Cosmetics implements Listener {
         int i = 0;
         for (Trail t : Trail.values()) {
             if (i >= ts.length) break;
-            ItemStack it = U.item(t.icon, 1, (t == ct ? "&a✔ " : "&e") + t.name, t == ct ? "&aNasazeno" : "&7Klikni pro nasazení");
+            ItemStack it = U.item(t.icon, 1, (t == ct ? "&a✔ " : owns(p, "trail:" + t.name()) ? "&e" : "&7") + t.name, priceLore(p, "trail:" + t.name(), t == ct).toArray(new String[0]));
             if (t == ct) glint(it);
             h.inv.setItem(ts[i++], U.tag(it, "ss_cos", "trail:" + t.name()));
         }
@@ -106,18 +144,19 @@ public final class Cosmetics implements Listener {
         i = 0;
         for (Hat t : Hat.values()) {
             if (i >= hs.length) break;
-            ItemStack it = cz.adrrex.squarestar.Gui.skin(p, U.item(Material.LEATHER_HELMET, 1, (t == chat ? "&a✔ " : "&e") + t.name, t == chat ? "&aNasazeno" : "&7Klikni pro nasazení"), t.model);
+            ItemStack it = cz.adrrex.squarestar.Gui.skin(p, U.item(Material.LEATHER_HELMET, 1, (t == chat ? "&a✔ " : owns(p, "hat:" + t.name()) ? "&e" : "&7") + t.name, priceLore(p, "hat:" + t.name(), t == chat).toArray(new String[0])), t.model);
             if (t == chat) glint(it);
             h.inv.setItem(hs[i++], U.tag(it, "ss_cos", "hat:" + t.name()));
         }
         h.inv.setItem(36, U.item(Material.LEAD, 1, "&d&lBalónky", "&7Letí nad tebou v lobby", "&8→"));
         i = 37;
         for (Balloon t : Balloon.values()) {
-            ItemStack it = cz.adrrex.squarestar.Gui.skin(p, U.item(Material.LEAD, 1, (t == cb ? "&a✔ " : "&e") + t.name, t == cb ? "&aNasazeno" : "&7Klikni pro nasazení"), t.model);
+            ItemStack it = cz.adrrex.squarestar.Gui.skin(p, U.item(Material.LEAD, 1, (t == cb ? "&a✔ " : owns(p, "balloon:" + t.name()) ? "&e" : "&7") + t.name, priceLore(p, "balloon:" + t.name(), t == cb).toArray(new String[0])), t.model);
             if (t == cb) glint(it);
             h.inv.setItem(i++, U.tag(it, "ss_cos", "balloon:" + t.name()));
         }
         h.inv.setItem(49, U.tag(U.item(Material.BARRIER, 1, "&c&lSundat vše"), "ss_cos", "off"));
+        h.inv.setItem(45, U.tag(U.item(Material.GOLD_NUGGET, 1, "&6&lMince: &e" + pl.coins.get(p) + " " + Coins.ICON, "&7Klikni = obchod s klíči"), "ss_cos", "shop"));
         h.inv.setItem(53, cz.adrrex.squarestar.Gui.closeButton());
         p.openInventory(h.inv);
     }
@@ -167,6 +206,19 @@ public final class Cosmetics implements Listener {
         String t = U.tagOf(e.getCurrentItem(), "ss_cos");
         if (t == null) return;
         if (t.equals("close")) { p.closeInventory(); return; }
+        if (t.equals("shop")) { pl.coins.open(p); return; }
+        if (!t.equals("off")) {
+            String id = t.replace("trail:", "trail:").trim();
+            boolean equippedNow = (t.startsWith("trail:") && get(p, "cos_trail", Trail.class) != null && t.equals("trail:" + get(p, "cos_trail", Trail.class).name()))
+                    || (t.startsWith("hat:") && get(p, "cos_hat", Hat.class) != null && t.equals("hat:" + get(p, "cos_hat", Hat.class).name()))
+                    || (t.startsWith("balloon:") && get(p, "cos_balloon", Balloon.class) != null && t.equals("balloon:" + get(p, "cos_balloon", Balloon.class).name()));
+            if (!equippedNow && !owns(p, id)) {
+                if (price(id) < 0) { U.msg(p, "&dTuhle kosmetiku dostaneš jen z adventního kalendáře (&e/advent&d)."); return; }
+                if (!pl.coins.pay(p, price(id))) return;
+                grant(p, id);
+                U.msg(p, "&a&l✔ Koupeno! &7Teď je tvoje navždy.");
+            }
+        }
         if (t.equals("off")) { set(p, "cos_trail", null); set(p, "cos_hat", null); set(p, "cos_balloon", null); }
         else if (t.startsWith("balloon:")) { Balloon v = Balloon.valueOf(t.substring(8)); set(p, "cos_balloon", get(p, "cos_balloon", Balloon.class) == v ? null : v); }
         else if (t.startsWith("trail:")) { Trail v = Trail.valueOf(t.substring(6)); set(p, "cos_trail", get(p, "cos_trail", Trail.class) == v ? null : v); }

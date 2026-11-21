@@ -36,6 +36,8 @@ public final class SquareStar extends JavaPlugin {
     public Updater updater;
     public EventManager events;
     public Meteors meteors;
+    public Coins coins;
+    public Christmas xmas;
 
     @Override public void onEnable() {
         I = this;
@@ -74,6 +76,10 @@ public final class SquareStar extends JavaPlugin {
         motd = new Motd(this);
         pm.registerEvents(motd, this);
         stats = new Stats(this);
+        coins = new Coins(this); pm.registerEvents(coins, this);
+        xmas = new Christmas(this); pm.registerEvents(xmas, this);
+        bind("mince", coins, null);
+        bind("advent", xmas, null);
         friends = new Friends(this); pm.registerEvents(friends, this);
         news = new News(this); pm.registerEvents(news, this);
         fly = new Fly(this);

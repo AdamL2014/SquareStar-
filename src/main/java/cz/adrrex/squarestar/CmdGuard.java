@@ -22,7 +22,7 @@ public final class CmdGuard implements Listener {
     private static final Set<String> PLAYER = Set.of("ss", "squarestar", "hry", "games", "play", "hrat", "spawn", "lobby", "hub", "l", "emote", "e", "emoty",
             "pritel", "friend", "friends", "f", "pratele", "event", "fly", "letat", "novinky", "news", "changelog", "msg", "tell", "w", "m", "whisper", "zprava",
             "r", "reply", "odpoved", "ping", "pravidla", "rules", "discord", "dc", "afk", "online", "players", "hraci", "report", "nahlasit", "helpop", "pomoc",
-            "stats", "statistiky", "top", "kosmetika", "cosmetics", "jazyk", "lang", "language", "help", "napoveda", "list", "hudba", "music");
+            "stats", "statistiky", "top", "kosmetika", "cosmetics", "jazyk", "lang", "language", "help", "napoveda", "list", "hudba", "music", "mince", "coins", "obchod", "shop", "penize", "advent", "kalendar", "vanoce");
     private static final Set<String> SECRET = Set.of("plugins", "pl", "version", "ver", "about", "icanhasbukkit", "?", "paper", "spigot", "bukkit", "timings", "spark", "geyser", "floodgate", "viaversion", "viaver", "vvbukkit", "viabackwards", "grim", "grimac");
 
     private boolean owner(Player p) { return p.isOp() || pl.ranks.of(p) == Ranks.Rank.OWNER; }
@@ -51,6 +51,7 @@ public final class CmdGuard implements Listener {
                 "&e/kosmetika &7– stopy, čepice, balónky  &8| &e/emote &7– emoty",
                 "&e/stats &7– statistiky  &8| &e/novinky &7– co je nové",
                 "&e/event join &7– připojit se k eventu  &8| &e/fly &7– létání (VIP+)",
+                "&e/obchod &7– obchod za mince  &8| &e/advent &7– adventní kalendář",
                 "&e/hudba &7– hudba zap/vyp  &8| &e/ping &8| &e/online &8| &e/afk &8| &e/pravidla &8| &e/discord &8| &e/jazyk",
                 "&e/report <hráč> <důvod> &7– nahlásit  &8| &e/helpop &7– zeptat se týmu"};
         for (String s : l) p.sendMessage(U.c(Lang.t(p, s)));

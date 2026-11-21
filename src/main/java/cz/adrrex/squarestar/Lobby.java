@@ -261,6 +261,9 @@ public final class Lobby implements Listener {
         // úklid zdvojených lobby itemů (mimo jejich sloty)
         for (int i = 9; i < 36; i++) if (U.tagOf(p.getInventory().getItem(i), "ss_lobby") != null) p.getInventory().setItem(i, null);
         place(p, 0, Gui.skin(p, U.tag(U.item(Material.COMPASS, 1, "&6&l✦ Minihry &7(pravý klik)", "&7Vyber si minihru na Marsu"), "ss_lobby", "games"), "icon_menu_games"));
+        place(p, 1, Gui.skin(p, pl.coins.menuItem(), "icon_menu_shop"));
+        if (pl.xmas.active()) place(p, 7, Gui.skin(p, U.tag(U.item(Material.RED_SHULKER_BOX, 1, "&c&l❄ Adventní kalendář &7(pravý klik)", "&7Každý den dárek a mince!"), "ss_lobby", "advent"), "gift_red"));
+        else if (U.tagOf(p.getInventory().getItem(7), "ss_lobby") != null) p.getInventory().setItem(7, null);
         place(p, 2, Gui.skin(p, U.tag(U.item(Material.PLAYER_HEAD, 1, "&d&l♥ Přátelé &7(pravý klik)", "&7Kdo je online a co hraje"), "ss_lobby", "friends"), "icon_menu_friends"));
         place(p, 4, Gui.skin(p, pl.cosmetics.menuItem(), "icon_menu_cosmetics"));
         place(p, 6, Gui.skin(p, U.tag(U.item(Material.WRITABLE_BOOK, 1, "&e&l✦ Co je nové &7(pravý klik)", "&7Novinky na serveru"), "ss_lobby", "news"), "icon_menu_news"));
@@ -306,6 +309,8 @@ public final class Lobby implements Listener {
         else if (t.equals("cosmetics")) pl.cosmetics.open(e.getPlayer());
         else if (t.equals("friends")) pl.friends.open(e.getPlayer());
         else if (t.equals("news")) pl.news.open(e.getPlayer());
+        else if (t.equals("shop")) pl.coins.open(e.getPlayer());
+        else if (t.equals("advent")) pl.xmas.openCalendar(e.getPlayer());
     }
 
     private boolean admin(Player p) { return p.hasPermission("squarestar.admin") && p.getGameMode() == GameMode.CREATIVE; }

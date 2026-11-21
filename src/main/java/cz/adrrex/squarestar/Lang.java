@@ -95,6 +95,23 @@ public final class Lang {
 
     private static void a(String cs, String en) { D.add(new String[]{cs, en}); }
     static {
+        a("mincí", "coins"); a("Máš:", "You have:"); a("Nemáš dost mincí!", "Not enough coins!"); a("Potřebuješ", "You need"); a("máš", "you have"); a("Mince dostaneš za hry a výhry.", "You get coins for games and wins.");
+        a("Obchod", "Shop"); a("Klíče a kosmetika za mince", "Keys and cosmetics for coins"); a("Tvoje mince:", "Your coins:"); a("Mince dostaneš za:", "You get coins for:");
+        a("odehranou hru", "a played game"); a("výhru", "a win"); a("nový level", "a new level"); a("adventní kalendář", "advent calendar"); a("(v prosinci)", "(in December)");
+        a("Obyčejný klíč", "Common key"); a("Vzácný klíč", "Rare key"); a("Legendární klíč", "Legendary key"); a("Otevři s ním bednu na spawnu", "Open a crate at spawn with it");
+        a("Cena:", "Price:"); a("Klikni pro koupi", "Click to buy"); a("Nemáš dost mincí", "Not enough coins"); a("Stopy, čepice a balónky", "Trails, hats and balloons");
+        a("Kupuješ je přímo v menu kosmetiky", "You buy them right in the cosmetics menu"); a("Klikni pro otevření", "Click to open"); a("Adventní kalendář", "Advent calendar");
+        a("Každý den v prosinci dárek!", "A gift every day in December!"); a("Koupil sis", "You bought"); a("Otevři ho u beden na spawnu.", "Open it at the crates at spawn.");
+        a("Obchod:", "Shop:"); a("Každý den dárek a mince!", "A gift and coins every day!"); a("prosince", "December"); a("PROSINCE", "DECEMBER"); a("Odměna:", "Reward:");
+        a("Už otevřeno", "Already opened"); a("Klikni a otevři!", "Click and open!"); a("Otevře se", "Opens on"); a("Utrať je v", "Spend them in");
+        a("Tohle okénko už máš otevřené.", "You already opened this window."); a("Tohle okénko se otevře až", "This window opens on"); a("Žádné podvádění!", "No cheating!");
+        a("Bonus:", "Bonus:"); a("Čepice Santy", "Santa hat"); a("Obyčejný klíč (Mikuláš)", "Common key (St. Nicholas)");
+        a("Adventní kalendář je jen o Vánocích (od 1. adventní neděle).", "The advent calendar is only at Christmas (from the 1st Sunday of Advent).");
+        a("VESELÉ VÁNOCE", "MERRY CHRISTMAS"); a("na Marsu!", "on Mars!"); a("Vánoční režim:", "Christmas mode:"); a("aktivní:", "active:");
+        a("Vlastníš", "Owned"); a("Klikni = sundat", "Click = take off"); a("Jen z adventního kalendáře", "Only from the advent calendar"); a("(1. prosince)", "(December 1st)");
+        a("Klikni = koupit a nasadit", "Click = buy and equip"); a("Klikni = obchod s klíči", "Click = key shop"); a("Mince:", "Coins:"); a("Koupeno!", "Bought!"); a("Teď je tvoje navždy.", "It's yours forever now.");
+        a("Tuhle kosmetiku dostaneš jen z adventního kalendáře", "You can only get this cosmetic from the advent calendar"); a("Hraje na Bedrocku", "Plays on Bedrock"); a("Hraje na Javě", "Plays on Java");
+        a("Vánoce na Marsu", "Christmas on Mars"); a("Sněžná noc", "Snowy night"); a("obchod za mince", "coin shop"); a("výhra", "win"); a("odehraná hra", "game played");
         a("Pozemek hráče", "Plot of"); a("Tvůj pozemek", "Your plot"); a("Jsi pořadatel!", "You are the host!"); a("Ovládání eventu:", "Event controls:"); a("hvězda v ruce", "star in your hand");
         a("Ovládání eventu", "Event controls"); a("Start, konec, čas, teleporty", "Start, end, time, teleports"); a("Běží", "Running"); a("Event už běží", "The event is running");
         a("Spustí event a odpočet", "Starts the event and the countdown"); a("1 minuta", "1 minute"); a("Shift = -5 minut", "Shift = -5 minutes"); a("Shift = +5 minut", "Shift = +5 minutes");

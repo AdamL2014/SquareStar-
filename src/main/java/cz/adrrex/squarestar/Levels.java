@@ -28,6 +28,7 @@ public final class Levels {
             U.title(p, "&6&l✦ LEVEL " + after + " ✦", "&eNový level! Jen tak dál!");
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1.4f);
             U.all("&6✦ &e" + p.getName() + " &7dosáhl &6levelu " + after + "&7!");
+            if (pl.coins != null) pl.coins.add(p, 20, "nový level");
             // každých 5 levelů bonusový klíč
             if (after % 5 == 0) {
                 var k = pl.crates.key(after % 10 == 0 ? "legendary" : "rare", 1);

@@ -1,5 +1,5 @@
 name: SquareStar
-version: '4.3.0'
+version: '4.4.0'
 main: cz.adrrex.squarestar.SquareStar
 api-version: '1.21.11'
 author: AdrrexStudio
@@ -28,6 +28,12 @@ commands:
   hudba:
     description: Hudba v lobby zap/vyp
     aliases: [music]
+  mince:
+    description: Mince a obchod (/mince, /obchod)
+    aliases: [coins, obchod, shop, penize]
+  advent:
+    description: Adventni kalendar
+    aliases: [kalendar, vanoce]
   novinky:
     description: Co je noveho na serveru
     aliases: [news, changelog]

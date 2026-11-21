@@ -25,6 +25,13 @@ public final class Music implements CommandExecutor {
             {"minecraft:music_disc.mall", "Mall – C418", 197},
             {"minecraft:music_disc.precipice", "Precipice – Aaron Cherof", 299},
             {"minecraft:music_disc.creator", "Creator – Lena Raine", 176}};
+    /** o Vánocích: vlastní vánoční písničky (vygenerované AI MusicGen) střídané s klidnými deskami */
+    private static final Object[][] XMAS = {
+            {"squarestar:music.xmas1", "❄ Vánoce na Marsu – SquareStar", 60},
+            {"minecraft:music_disc.far", "Far – C418", 174},
+            {"squarestar:music.xmas2", "❄ Sněžná noc – SquareStar", 60},
+            {"minecraft:music_disc.otherside", "Otherside – Lena Raine", 195}};
+    private Object[][] list() { return pl.xmas != null && pl.xmas.active() ? XMAS : LIST; }
     private final SquareStar pl;
     private final Map<UUID, long[]> state = new HashMap<>();   // [index skladby, konec v ms]
 
@@ -48,7 +55,8 @@ public final class Music implements CommandExecutor {
             if (!inLobby(p) || !wants(p)) continue;
             long[] s = state.get(p.getUniqueId());
             if (s != null && now < s[1]) continue;
-            int i = s == null ? (int) (Math.random() * LIST.length) : (int) ((s[0] + 1) % LIST.length);
+            Object[][] LIST = list();
+            int i = s == null ? 0 : (int) ((s[0] + 1) % LIST.length);
             p.stopSound(SoundCategory.RECORDS);
             p.playSound(p, (String) LIST[i][0], SoundCategory.RECORDS, 0.6f, 1f);
             state.put(p.getUniqueId(), new long[]{i, now + ((int) LIST[i][2] + 4) * 1000L});

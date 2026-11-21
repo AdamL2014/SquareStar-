@@ -308,7 +308,7 @@ public abstract class Game {
             if (!t.getName().startsWith("ss_")) continue;
             var c = sb.getTeam(t.getName());
             if (c == null) c = sb.registerNewTeam(t.getName());
-            c.prefix(t.prefix());
+            c.prefix(t.prefix()); c.suffix(t.suffix());
             try { if (t.hasColor() && t.color() instanceof net.kyori.adventure.text.format.NamedTextColor nc) c.color(nc); } catch (IllegalStateException ignored) {}
             for (var opt : org.bukkit.scoreboard.Team.Option.values()) c.setOption(opt, t.getOption(opt));
             for (String e : t.getEntries()) if (!c.hasEntry(e)) c.addEntry(e);
@@ -411,6 +411,7 @@ public abstract class Game {
             U.sound(p, win ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_WITHER_DEATH, 1f);
         }
         if (pl.stats != null) for (Player p : players) { pl.stats.add(p, "games", 1); if (winners.contains(p)) pl.stats.add(p, "wins", 1); }
+        if (pl.coins != null) for (Player p : players) pl.coins.add(p, winners.contains(p) ? 25 : 5, winners.contains(p) ? "výhra" : "odehraná hra");
         for (Player p : players) pl.levels.add(p, winners.contains(p) ? 100 : 25, winners.contains(p) ? "výhra" : "odehraná hra");
         String keyType = pl.getConfig().getString("win-reward.key", "common");
         int amount = pl.getConfig().getInt("win-reward.amount", 1);

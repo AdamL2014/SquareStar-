@@ -151,19 +151,23 @@ public final class Ranks implements Listener {
         } catch (Throwable t) { return p.getUniqueId().getMostSignificantBits() == 0; }
     }
 
+    /** odkud hráč hraje: Java (PC) nebo Bedrock (mobil, konzole, Windows) */
+    public static String platform(Player p) { return bedrock(p) ? " &8[&b☗ Bedrock&8]" : " &8[&a☕ Java&8]"; }
+
     public void apply(Player p) {
         applyPerms(p);
         if (bedrock(p)) declined.add(p.getUniqueId());
         Rank r = of(p);
         boolean g = glyphsEverywhere();
-        p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName() + " " + pl.levels.tag(p).trim())));
+        p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName() + " " + pl.levels.tag(p).trim() + platform(p))));
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
-        String tn = String.format("ss_s%02d", r.sort);
+        String tn = String.format("ss_s%02d%s", r.sort, bedrock(p) ? "b" : "j");
         Team t = sb.getTeam(tn);
         if (t == null) t = sb.registerNewTeam(tn);
         // vždy přepsat (starý tým z dřívější verze by držel textový prefix)
         t.prefix(g ? glyphBadge(r) : textBadge(r));
         t.color(r == Rank.HRAC ? NamedTextColor.GRAY : NamedTextColor.WHITE);
+        t.suffix(U.c(platform(p)));
         if (!t.hasEntry(p.getName())) t.addEntry(p.getName());
     }
 
@@ -188,7 +192,8 @@ public final class Ranks implements Listener {
             // pack je povinný (require-resource-pack) -> obrázek ranku ukazuj vždy; jen kdo pack odmítl, vidí text
             boolean glyph = !(viewer instanceof Player v) || !declined.contains(v.getUniqueId());
             Component head = Component.object(net.kyori.adventure.text.object.ObjectContents.playerHead().id(source.getUniqueId()).name(name).hat(true).build());
-            return (glyph ? glyphBadge(r) : textBadge(r)).append(head).append(Component.text(" ")).append(U.c(lvl + nameColor(r) + name + "&8: &f")).append(message);
+            Component plat = U.c(bedrock(source) ? "&b☗" : "&a☕").hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c(bedrock(source) ? "&bHraje na Bedrocku" : "&aHraje na Javě")));
+            return (glyph ? glyphBadge(r) : textBadge(r)).append(plat).append(Component.text(" ")).append(head).append(Component.text(" ")).append(U.c(lvl + nameColor(r) + name + "&8: &f")).append(message);
         });
     }
 }

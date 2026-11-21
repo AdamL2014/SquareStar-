@@ -46,9 +46,10 @@ public final class Motd implements Listener {
             List<String> tips = pl.getConfig().getStringList("motd.tips");
             if (tips.isEmpty()) tips = List.of(
                     "  <aqua>✦ 18 miniher</aqua> <dark_gray>•</dark_gray> <gold>nízká gravitace</gold> <dark_gray>•</dark_gray> <light_purple>bedny</light_purple>",
-                    "  <yellow>NOVÉ:</yellow> <white>3D lobby, Země a raketa</white> <dark_gray>•</dark_gray> <green>připoj se!</green>",
+                    "  <yellow>NOVÉ:</yellow> <white>mince, obchod, eventy a přátelé</white> <dark_gray>•</dark_gray> <green>připoj se!</green>",
                     "  <gold>Bed Wars</gold> <dark_gray>•</dark_gray> <aqua>SkyWars</aqua> <dark_gray>•</dark_gray> <red>Murder</red> <dark_gray>•</dark_gray> <green>Build Battle</green>");
-            bottom = tips.get(tip++ % tips.size());
+            if (pl.xmas != null && pl.xmas.active() && tip % 2 == 0) { tip++; bottom = "  <red><bold>❄ VESELÉ VÁNOCE ❄</bold></red> <white>adventní kalendář</white> <dark_gray>•</dark_gray> <green>dárky každý den!</green>"; }
+            else bottom = tips.get(tip++ % tips.size());
         }
         e.motd(MM.deserialize(top + "\n" + bottom));
     }
