@@ -40,7 +40,7 @@ public final class Intro implements Listener {
         // 2) oblet kopule po kruhu (po cestě proletí UFO)
         double[][] op = new double[7][], ol = new double[7][];
         for (int i = 0; i < 7; i++) { double a2 = Math.toRadians(200 + i * 22); op[i] = new double[]{Math.cos(a2) * 64, y + 34 + i * 1.5, Math.sin(a2) * 64}; ol[i] = new double[]{0, y + 10, 0}; }
-        l.add(new Shot(op, ol, 140, "Rudá planeta. Nízká gravitace. Žádná pravidla.", "The red planet. Low gravity. No rules.", "", ""));
+        l.add(new Shot(op, ol, 140, "Rudá planeta. Nízká gravitace.", "The red planet. Low gravity.", "", ""));
         // 3) nízký přelet kaňonem
         l.add(new Shot(new double[][]{{-90, y + 9, -62}, {-58, y + 6, -50}, {-30, y + 9, -38}, {-8, y + 5, -34}},
                 new double[][]{{-60, y + 6, -52}, {-32, y + 7, -40}, {-8, y + 6, -26}, {0, y + 6, -18}}, 110,
