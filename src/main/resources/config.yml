@@ -123,3 +123,8 @@ auto-update:
   enabled: true
   check-minutes: 10
   countdown-seconds: 60
+
+# Pety nad hlavou (kosmetika -> 3D čepice -> Pet:)
+pets:
+  # když se pet kouká dozadu místo dopředu, dej 180 (a restart)
+  yaw-offset: 0

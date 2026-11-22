@@ -75,7 +75,7 @@ public final class Beat extends Game {
         });
     }
 
-    private static final class Live { Note n; BlockDisplay d, arrow; int spawn; boolean done; double wx, ww; }
+    private static final class Live { Note n; BlockDisplay d; List<BlockDisplay> extra = new ArrayList<>(); int spawn; boolean done; double wx, ww; }
     private static final class St {
         int score, combo, best, energy = 100, hits, misses, idx; double sx; String last = "";
         final List<Live> live = new ArrayList<>();
@@ -227,9 +227,10 @@ public final class Beat extends Game {
             Player p = e.getKey(); St s = e.getValue();
             if (!p.isOnline()) continue;
             for (Live l : new ArrayList<>(s.live)) {
-                if (!l.d.isValid()) { if (l.arrow != null) l.arrow.remove(); s.live.remove(l); continue; }
+                if (!l.d.isValid()) { for (var x_ : l.extra) x_.remove(); s.live.remove(l); continue; }
                 double dz = dz(l);
                 if (l.n == null) {          // zeď
+                    if (t % 2 == 0 && dz < 14 && dz > 0) for (int q = 0; q < 5; q++) w.spawnParticle(Particle.ELECTRIC_SPARK, l.wx + (rnd.nextDouble() - .5) * l.ww, oy + 1 + rnd.nextDouble() * 4, zNow(l) + 0.3, 0, 0, 0, 0.5, 0.2);
                     if (!l.done && dz < 0.5) {
                         l.done = true;
                         if (alive.contains(p) && Math.abs(p.getLocation().getX() - l.wx) < l.ww / 2 + 0.3) {
@@ -242,7 +243,7 @@ public final class Beat extends Game {
                     continue;
                 }
                 if (!l.done && dz < MIN_DZ) { l.done = true; if (l.n.kind != 2) miss(p, s, "&cMimo!"); }
-                if (dz < -3) { l.d.remove(); if (l.arrow != null) l.arrow.remove(); s.live.remove(l); }
+                if (dz < -3) { l.d.remove(); for (var x_ : l.extra) x_.remove(); s.live.remove(l); }
             }
             if (alive.contains(p)) {
                 Location pl_ = p.getLocation();
@@ -266,43 +267,96 @@ public final class Beat extends Game {
         }
     }
 
-    private void spawnNote(Player p, St s, Note n) {
-        Location l = new Location(w, s.sx + COLX[n.col], oy + ROWY[n.row], oz + 0.5 - D);
-        Material mat = n.kind == 0 ? Material.RED_CONCRETE : n.kind == 1 ? Material.BLUE_CONCRETE : Material.TNT;
-        float h = 0.31f;
+    /** díl kostky, který letí tunelem (interpolace); off = posun od středu, size = velikost */
+    private BlockDisplay part(Player p, Location l, Material m, Vector3f off, Vector3f size) {
         BlockDisplay d = spawn(l, BlockDisplay.class, x -> {
             x.setVisibleByDefault(false);
-            x.setBlock(mat.createBlockData());
+            x.setBlock(m.createBlockData());
             x.setBrightness(new Display.Brightness(15, 15));
             x.setViewRange(2f);
             x.setInterpolationDuration(FLIGHT); x.setInterpolationDelay(0);
-            x.setTransformation(new Transformation(new Vector3f(-h, -h, -h), new Quaternionf(), new Vector3f(h * 2, h * 2, h * 2), new Quaternionf()));
+            x.setTransformation(new Transformation(off, new Quaternionf(), size, new Quaternionf()));
         });
         p.showEntity(pl, d);
-        BlockDisplay ar = null;
-        if (n.kind != 2) {   // bílá šipka/tečka na přední straně jako v Beat Saberu
-            ar = spawn(l.clone().add(0, 0, h - 0.02), BlockDisplay.class, x -> {
-                x.setVisibleByDefault(false);
-                x.setBlock(Material.WHITE_CONCRETE.createBlockData());
-                x.setBrightness(new Display.Brightness(15, 15));
-                x.setViewRange(2f);
-                x.setInterpolationDuration(FLIGHT); x.setInterpolationDelay(0);
-                x.setTransformation(new Transformation(new Vector3f(-0.2f, -0.05f, 0f), new Quaternionf(), new Vector3f(0.4f, 0.1f, 0.04f), new Quaternionf()));
-            });
-            p.showEntity(pl, ar);
-        }
-        final BlockDisplay ar_ = ar;
         Bukkit.getScheduler().runTaskLater(pl, () -> {
-            if (d.isValid()) {
-                d.setInterpolationDelay(0);
-                d.setTransformation(new Transformation(new Vector3f(-h, -h, -h + (float) D), new Quaternionf(), new Vector3f(h * 2, h * 2, h * 2), new Quaternionf()));
-            }
-            if (ar_ != null && ar_.isValid()) {
-                ar_.setInterpolationDelay(0);
-                ar_.setTransformation(new Transformation(new Vector3f(-0.2f, -0.05f, (float) D), new Quaternionf(), new Vector3f(0.4f, 0.1f, 0.04f), new Quaternionf()));
-            }
+            if (!d.isValid()) return;
+            d.setInterpolationDelay(0);
+            d.setTransformation(new Transformation(new Vector3f(off.x, off.y, off.z + (float) D), new Quaternionf(), size, new Quaternionf()));
         }, 1L);
-        Live lv = new Live(); lv.n = n; lv.d = d; lv.arrow = ar; lv.spawn = t; s.live.add(lv);
+        return d;
+    }
+
+    private void spawnNote(Player p, St s, Note n) {
+        Location l = new Location(w, s.sx + COLX[n.col], oy + ROWY[n.row], oz + 0.5 - D);
+        float h = 0.31f;
+        Live lv = new Live(); lv.n = n; lv.spawn = t;
+        if (n.kind == 2) {
+            lv.d = part(p, l, Material.TNT, new Vector3f(-h, -h, -h), new Vector3f(h * 2, h * 2, h * 2));
+        } else {
+            Material glow = n.kind == 0 ? Material.RED_STAINED_GLASS : Material.BLUE_STAINED_GLASS;
+            lv.d = part(p, l, glow, new Vector3f(-h, -h, -h), new Vector3f(h * 2, h * 2, h * 2));                       // zářící obrys
+            lv.extra.add(part(p, l, Material.BLACK_CONCRETE, new Vector3f(-h + 0.05f, -h + 0.05f, -h + 0.05f), new Vector3f(h * 2 - 0.1f, h * 2 - 0.1f, h * 2 - 0.1f))); // tmavé jádro
+            lv.extra.add(part(p, l, Material.WHITE_CONCRETE, new Vector3f(-0.17f, -0.04f, -h - 0.015f), new Vector3f(0.34f, 0.08f, 0.03f)));                      // bílá šipka
+            lv.extra.add(part(p, l, Material.WHITE_CONCRETE, new Vector3f(-0.04f, -0.17f, -h - 0.015f), new Vector3f(0.08f, 0.34f, 0.03f)));
+        }
+        s.live.add(lv);
+    }
+
+    // ---------------- efekty jako v Beat Saberu ----------------
+    private static final Particle.DustOptions REDD = new Particle.DustOptions(Color.fromRGB(255, 40, 40), 1.4f), BLUED = new Particle.DustOptions(Color.fromRGB(60, 120, 255), 1.4f);
+
+    /** paprsky jisker rozletující se do všech stran + rozříznutá kostka */
+    private void cutFx(Location c, int kind, Vector look) {
+        for (int i = 0; i < 40; i++) {
+            Vector v = new Vector(rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()).normalize();
+            w.spawnParticle(i % 3 == 0 ? Particle.ELECTRIC_SPARK : Particle.END_ROD, c, 0, v.getX(), v.getY(), v.getZ(), 0.28 + rnd.nextDouble() * 0.3);
+        }
+        w.spawnParticle(Particle.DUST, c, 18, .18, .18, .18, 0, kind == 0 ? REDD : BLUED);
+        w.spawnParticle(Particle.FLASH, c, 1, 0, 0, 0, 0, Color.WHITE);
+        Material m = kind == 0 ? Material.RED_CONCRETE : Material.BLUE_CONCRETE;
+        boolean horiz = rnd.nextBoolean();
+        for (int sgn = -1; sgn <= 1; sgn += 2) {
+            final int sg = sgn;
+            float h = 0.31f;
+            Vector3f size = horiz ? new Vector3f(h * 2, h, h * 2) : new Vector3f(h, h * 2, h * 2);
+            Vector3f off = horiz ? new Vector3f(-h, sg > 0 ? 0 : -h, -h) : new Vector3f(sg > 0 ? 0 : -h, -h, -h);
+            BlockDisplay d = w.spawn(c, BlockDisplay.class, x -> {
+                x.setPersistent(false); x.setBlock(m.createBlockData()); x.setBrightness(new Display.Brightness(15, 15));
+                x.setInterpolationDuration(14); x.setInterpolationDelay(0);
+                x.setTransformation(new Transformation(off, new Quaternionf(), size, new Quaternionf()));
+            });
+            Bukkit.getScheduler().runTaskLater(pl, () -> {
+                if (!d.isValid()) return;
+                Vector3f mv = horiz ? new Vector3f((float) (rnd.nextGaussian() * .3), sg * 0.9f, -1.2f) : new Vector3f(sg * 0.9f, (float) (rnd.nextGaussian() * .3), -1.2f);
+                d.setInterpolationDelay(0);
+                d.setTransformation(new Transformation(new Vector3f(off).add(mv), new Quaternionf().rotateZ(sg * 1.2f).rotateX(0.6f), new Vector3f(size).mul(0.35f), new Quaternionf()));
+            }, 1L);
+            Bukkit.getScheduler().runTaskLater(pl, d::remove, 15L);
+        }
+    }
+
+    /** světelná stopa meče při každém seknutí */
+    private void saberTrail(Player p, int kind) {
+        Location eye = p.getEyeLocation(); Vector look = eye.getDirection().normalize();
+        Vector up = new Vector(0, 1, 0), side = look.clone().crossProduct(up).normalize(); Vector up2 = side.clone().crossProduct(look).normalize();
+        double ang = rnd.nextDouble() * Math.PI; Vector dir = side.clone().multiply(Math.cos(ang)).add(up2.clone().multiply(Math.sin(ang)));
+        Location mid = eye.clone().add(look.clone().multiply(1.9));
+        for (double k = -1.3; k <= 1.3; k += 0.1) {
+            Location q = mid.clone().add(dir.clone().multiply(k));
+            w.spawnParticle(Particle.DUST, q, 1, 0, 0, 0, 0, kind == 0 ? REDD : BLUED);
+            if (((int) (k * 10)) % 3 == 0) w.spawnParticle(Particle.END_ROD, q, 0, look.getX(), look.getY(), look.getZ(), 0.02);
+        }
+    }
+
+    /** plovoucí skóre u zásahu */
+    private void popup(Location c, String txt) {
+        org.bukkit.entity.TextDisplay td = w.spawn(c.clone().add(0, 0.4, 0), org.bukkit.entity.TextDisplay.class, x -> {
+            x.setPersistent(false); x.text(U.c(txt)); x.setBillboard(Display.Billboard.CENTER); x.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+            x.setShadowed(true); x.setInterpolationDuration(14); x.setInterpolationDelay(0);
+            x.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(1.3f, 1.3f, 1.3f), new Quaternionf()));
+        });
+        Bukkit.getScheduler().runTaskLater(pl, () -> { if (td.isValid()) { td.setInterpolationDelay(0); td.setTransformation(new Transformation(new Vector3f(0, 0.9f, 0), new Quaternionf(), new Vector3f(0.6f, 0.6f, 0.6f), new Quaternionf())); } }, 1L);
+        Bukkit.getScheduler().runTaskLater(pl, td::remove, 15L);
     }
 
     /** zeď: uhni do strany (0 = levá polovina, 1 = pravá, 2 = střed) */
@@ -329,9 +383,9 @@ public final class Beat extends Game {
 
     /** čáry rychlosti letící tunelem k hráči */
     private void speedLines(Player p, St s) {
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 6; i++) {
             Location l = new Location(w, s.sx + (rnd.nextDouble() - .5) * 7, oy + 1 + rnd.nextDouble() * 5, oz + 0.5 - D + rnd.nextDouble() * 6);
-            p.spawnParticle(Particle.END_ROD, l, 0, 0, 0, 1, 0.9);
+            p.spawnParticle(i % 2 == 0 ? Particle.END_ROD : Particle.ELECTRIC_SPARK, l, 0, 0, 0, 1, 1.1);
         }
     }
 
@@ -345,7 +399,7 @@ public final class Beat extends Game {
     private void checkEnergy(Player p, St s) {
         if (s.energy > 0 || !alive.contains(p)) return;
         s.energy = 0;
-        for (Live l : s.live) { l.d.remove(); if (l.arrow != null) l.arrow.remove(); }
+        for (Live l : s.live) { l.d.remove(); for (var x_ : l.extra) x_.remove(); }
         s.live.clear();
         p.setWalkSpeed(0.2f); p.stopSound(key(), SoundCategory.RECORDS);
         U.title(p, "&c&lDošla energie", "&7Skóre: &e" + s.score);
@@ -363,7 +417,10 @@ public final class Beat extends Game {
         swing(p, s, kind);
     }
 
+    private Vector look_(Player p) { return p.getEyeLocation().getDirection(); }
+
     private void swing(Player p, St s, int kind) {
+        saberTrail(p, kind);
         Location eye = p.getEyeLocation(); Vector look = eye.getDirection();
         Live best = null; double bdot = -2;
         for (Live l : s.live) {
@@ -380,7 +437,7 @@ public final class Beat extends Game {
         double bdz = dz(best);
         Location pos = new Location(w, s.sx + COLX[best.n.col], oy + ROWY[best.n.row], zNow(best));
         Note n = best.n;
-        best.done = true; best.d.remove(); if (best.arrow != null) best.arrow.remove(); s.live.remove(best);
+        best.done = true; best.d.remove(); for (var x_ : best.extra) x_.remove(); s.live.remove(best);
         if (n.kind == 2) {
             w.spawnParticle(Particle.EXPLOSION, pos, 1);
             p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, SoundCategory.MASTER, 0.7f, 1.4f);
@@ -399,9 +456,8 @@ public final class Beat extends Game {
         s.combo++; s.best = Math.max(s.best, s.combo); s.hits++;
         int mult = 1 + Math.min(s.combo, 30) / 10;
         s.score += base * mult; s.energy = Math.min(100, s.energy + 1); s.last = rate;
-        Material c = n.kind == 0 ? Material.RED_CONCRETE : Material.BLUE_CONCRETE;
-        w.spawnParticle(Particle.BLOCK, pos, 24, .22, .22, .22, 0.08, c.createBlockData());
-        w.spawnParticle(Particle.END_ROD, pos, 6, .1, .1, .1, 0.12);
+        cutFx(pos, n.kind, look_(p));
+        popup(pos, (n.kind == 0 ? "&c&l" : "&9&l") + (base * mult));
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, SoundCategory.MASTER, 0.8f, 1.4f);
         p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.MASTER, 0.5f, n.kind == 0 ? 1.2f : 1.6f);
         p.sendActionBar(U.c(status(p)));
