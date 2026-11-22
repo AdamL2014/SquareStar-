@@ -98,7 +98,7 @@ public final class Christmas implements Listener, CommandExecutor {
         }
         b.submit(() -> {
             // hvězda na špičce + dárky pod stromem (3D modely)
-            item(TREE.clone().add(0, 12.7, 0), "star_shard", 1.6f, true);
+            item(TREE.clone().add(0, 11.7, 0), "star_shard", 1.6f, true);
             String[] gifts = {"gift_red", "gift_green", "gift_blue", "gift_gold", "gift_red", "gift_gold"};
             for (int i = 0; i < gifts.length; i++) {
                 double a = i * Math.PI * 2 / gifts.length + 0.3;

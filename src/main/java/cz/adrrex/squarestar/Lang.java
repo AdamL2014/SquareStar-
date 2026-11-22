@@ -372,6 +372,8 @@ public final class Lang {
         a("Hraje:", "Playing:"); a("= vypnout", "= turn off"); a("Hudba v lobby", "Lobby music"); a("vypnuta", "off"); a("zapnuta!", "on!"); a("hudba zap/vyp", "music on/off");
         a("&eDoskákej na &asmaragdovou plošinu&e! Zlaté bloky jsou &6checkpointy&e. &bVznášedlo&e: nastup a vyskoč u zelené plošiny!","&eJump to the &aemerald platform&e! Gold blocks are &6checkpoints&e. &bHover carpet&e: board it and jump off at the green platform!");
         a("Dnešní trať:", "Today's track:"); a("pokaždé jiná, tak se dívej na zatáčky!", "different every time, so watch the corners!");
+        a("⚠ Zní jen s klientem MC 26.2+", "⚠ Plays only with an MC 26.2+ client"); a("⚠ Zní jen s klientem MC 26.4+", "⚠ Plays only with an MC 26.4+ client");
+        a("🔉 Ztišit", "🔉 Quieter"); a("🔊 Zesílit", "🔊 Louder"); a("Hlasitost:", "Volume:"); a("Klikni:", "Click:"); a("−10 %", "−10 %"); a("+10 %", "+10 %"); a("Hlasitost hudby:", "Music volume:");
         a("Herna", "Arcade"); a("Arkádové automaty", "Arcade machines"); a("Sbírej lístky ★ a vyměň je za mince", "Collect tickets ★ and trade them for coins");
         a("Pokladna", "Ticket counter"); a("Pokladna herny", "Arcade counter"); a("Vyměň lístky za mince", "Trade tickets for coins"); a("Východ", "Exit"); a("Zpět do lobby", "Back to lobby");
         a("Sbírej jablka a nenarazy!", "Eat apples, don't crash!"); a("Uhýbej padajícím skalám!", "Dodge the falling rocks!"); a("Chytej hvězdy, vyhýbej se bombám!", "Catch stars, avoid bombs!");

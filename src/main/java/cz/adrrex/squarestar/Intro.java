@@ -40,24 +40,27 @@ public final class Intro implements Listener {
         // 2) oblet kopule po kruhu (po cestě proletí UFO)
         double[][] op = new double[7][], ol = new double[7][];
         for (int i = 0; i < 7; i++) { double a2 = Math.toRadians(200 + i * 22); op[i] = new double[]{Math.cos(a2) * 64, y + 34 + i * 1.5, Math.sin(a2) * 64}; ol[i] = new double[]{0, y + 10, 0}; }
-        l.add(new Shot(op, ol, 140, "Rudá planeta. Nízká gravitace.", "The red planet. Low gravity.", "", ""));
+        l.add(new Shot(op, ol, 140, "Rudá planeta. Nízká gravitace.", "The red planet. Low gravity.", "&c&lMARS", "&7Nízká gravitace"));
         // 3) nízký přelet kaňonem
         l.add(new Shot(new double[][]{{-90, y + 9, -62}, {-58, y + 6, -50}, {-30, y + 9, -38}, {-8, y + 5, -34}},
                 new double[][]{{-60, y + 6, -52}, {-32, y + 7, -40}, {-8, y + 6, -26}, {0, y + 6, -18}}, 110,
-                "Tady se nezávodí o čas. Závodí se o slávu.", "Here you don't race the clock. You race for glory.", "", ""));
+                "Tady se nezávodí o čas. Závodí se o slávu.", "Here you don't race the clock. You race for glory.", "&e&lZÁVODY", "&7Rovery &8• &7Parkour &8• &7PvP"));
         // 4) průjezd vchodem do kopule
         l.add(new Shot(new double[][]{{0.5, y + 2.4, -66}, {0.5, y + 2.4, -34}, {0.5, y + 2.6, -13}, {0.5, y + 4, -2}},
                 new double[][]{{0.5, y + 3, 10}, {0.5, y + 3, 10}, {0.5, y + 3.5, 14}, {2, y + 6, 14}}, 120,
-                "Vítej v kopuli SquareStar.", "Welcome to the SquareStar dome.", "", ""));
+                "Vítej v kopuli SquareStar.", "Welcome to the SquareStar dome.", "&b&lKOPULE", "&718 miniher a herna"));
         // 5) jeřábový záběr okolo stromu a středu
         l.add(new Shot(new double[][]{{0.5, y + 4, -3}, {-12, y + 9, 6}, {-3, y + 14, 17}, {15, y + 11, 13}, {13, y + 4, 0}},
                 new double[][]{{6, y + 5, 5}, {6, y + 6, 5}, {8, y + 6, 5}, {4, y + 6, 4}, {0.5, y + 3, 0}}, 120,
-                "Vyber si hru a ukaž, co v tobě je!", "Pick a game and show what you've got!", "", ""));
+                "Vyber si hru a ukaž, co v tobě je!", "Pick a game and show what you've got!", "&a&lZAČNI HRÁT", "&7Vyber si hru"));
         return l;
     }
 
     /** je hráč právě v úvodní animaci? (hudba lobby mezitím mlčí) */
-    public boolean active(Player p) { return running.containsKey(p.getUniqueId()); }
+    private final Map<UUID, Long> musicUntil = new HashMap<>();
+    private final Map<UUID, net.kyori.adventure.bossbar.BossBar> bars = new HashMap<>();
+    /** je hráč v úvodní animaci, nebo ještě dohrává její hudba? (hudba lobby mezitím mlčí, aby se nepřekrývaly) */
+    public boolean active(Player p) { return running.containsKey(p.getUniqueId()) || musicUntil.getOrDefault(p.getUniqueId(), 0L) > System.currentTimeMillis(); }
 
     @EventHandler(priority = EventPriority.MONITOR) public void join(PlayerJoinEvent e) {
         Player p = e.getPlayer();
@@ -76,7 +79,11 @@ public final class Intro implements Listener {
         boolean en = Lang.en(p);
         p.stopSound(SoundCategory.RECORDS);
         p.playSound(p.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 0.6f);
-        p.playSound(p, Sound.MUSIC_DISC_OTHERSIDE, SoundCategory.RECORDS, 0.8f, 1f);   // „filmová“ hudba na pozadí
+        p.playSound(p, Sound.MUSIC_DISC_OTHERSIDE, SoundCategory.RECORDS, 0.8f, 1f);   // „filmová“ hudba na pozadí – doznívá i po skončení intra
+        musicUntil.put(p.getUniqueId(), System.currentTimeMillis() + 195_000L);
+        var bar = net.kyori.adventure.bossbar.BossBar.bossBar(U.c("&6&l✦ &e&lSQUARE&c&lSTAR &6&l✦"), 0f, net.kyori.adventure.bossbar.BossBar.Color.RED, net.kyori.adventure.bossbar.BossBar.Overlay.PROGRESS);
+        bars.put(p.getUniqueId(), bar); p.showBossBar(bar);
+        final int total = shots.stream().mapToInt(x -> x.ticks).sum();
         BukkitRunnable r = new BukkitRunnable() {
             int t = 0, shot = 0, st = 0;
             @Override public void run() {
@@ -85,7 +92,7 @@ public final class Intro implements Listener {
                 Shot s = shots.get(shot);
                 if (st >= s.ticks) { shot++; st = 0; return; }
                 if (st == 0) {
-                    if (!s.title.isEmpty()) U.title(p, s.title, s.sub);
+                    if (!s.title.isEmpty()) p.showTitle(net.kyori.adventure.title.Title.title(U.c(Lang.t(p, s.title)), U.c(Lang.t(p, s.sub)), net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(400), java.time.Duration.ofMillis(2600), java.time.Duration.ofMillis(600))));
                     if (shot == 1 && pl.ufo != null) pl.ufo.fly();          // UFO přeletí nad kopulí
                     if (shot == 2) p.playSound(p, Sound.ENTITY_PHANTOM_FLAP, SoundCategory.AMBIENT, 0.6f, 0.5f);
                 }
@@ -105,6 +112,7 @@ public final class Intro implements Listener {
                 if (chars > 0 && st < s.ticks - 10) U.bar(p, "&f&o" + line.substring(0, chars) + (chars < line.length() ? "&7▌" : ""));
                 if (t % 20 == 0) p.playSound(p.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_CHIME, 0.5f, 0.7f + (shot * 0.1f));
                 if (t == 4) U.bar(p, en ? "&7Skip: &eShift" : "&7Přeskočit: &eShift");
+                var bb = bars.get(p.getUniqueId()); if (bb != null) bb.progress(Math.min(1f, t / (float) total));
                 t++; st++;
             }
         };
@@ -125,12 +133,26 @@ public final class Intro implements Listener {
     private void finish(Player p, GameMode before) {
         stop(p);
         p.setGameMode(before);
-        p.stopSound(SoundCategory.RECORDS);
+        var bb = bars.remove(p.getUniqueId()); if (bb != null) p.hideBossBar(bb);
         p.removePotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS);
         p.teleport(pl.mars.getSpawnLocation().add(0.5, 0, 0.5));
         pl.lobby.giveItems(p);
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1.2f);
+        fireworks(p);
         afterIntro(p);
+    }
+    private void fireworks(Player p) {
+        Location c = p.getLocation().add(0, 4, 0);
+        for (int i = 0; i < 3; i++) {
+            final int k = i;
+            Bukkit.getScheduler().runTaskLater(pl, () -> {
+                if (!p.isOnline()) return;
+                org.bukkit.entity.Firework f = p.getWorld().spawn(c.clone().add(Math.cos(k * 2.1) * 5, 0, Math.sin(k * 2.1) * 5), org.bukkit.entity.Firework.class);
+                var m = f.getFireworkMeta();
+                m.addEffect(org.bukkit.FireworkEffect.builder().with(org.bukkit.FireworkEffect.Type.BALL_LARGE).withColor(Color.ORANGE, Color.RED).withFade(Color.YELLOW).flicker(true).build());
+                m.setPower(0); f.setFireworkMeta(m); f.detonate();
+            }, 10L * (i + 1));
+        }
     }
     private void stop(Player p) { BukkitRunnable r = running.remove(p.getUniqueId()); if (r != null) try { r.cancel(); } catch (IllegalStateException ignored) {} }
 
@@ -169,6 +191,7 @@ public final class Intro implements Listener {
     }
 
     @EventHandler public void quit(PlayerQuitEvent e) {
+        bars.remove(e.getPlayer().getUniqueId()); musicUntil.remove(e.getPlayer().getUniqueId());
         if (running.containsKey(e.getPlayer().getUniqueId())) {
             stop(e.getPlayer());
             e.getPlayer().setGameMode(GameMode.ADVENTURE);

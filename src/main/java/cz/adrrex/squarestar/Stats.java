@@ -55,50 +55,75 @@ public final class Stats {
     }
 
     private static final String[][] BOARDS = {
-            // po stranách náměstí (ne na cestách ani přímo za nimi)
-            {"wins", "&6&l♛ NEJVÍC VÝHER", "0", "15"},
-            {"level", "&b&l★ NEJVYŠŠÍ LEVEL", "-9", "12"},
-            {"kills", "&c&l⚔ NEJVÍC ZABITÍ", "8.5", "12"},
-            {"games", "&a&l✪ NEJVÍC HER", "13.5", "5"}};
+            {"wins", "&6&l♛ NEJVÍC VÝHER"}, {"level", "&b&l★ NEJVYŠŠÍ LEVEL"}, {"kills", "&c&l⚔ NEJVÍC ZABITÍ"}, {"games", "&a&l✪ NEJVÍC HER"}};
+    // jedna pevná tabule (neotáčí se za hráčem) uprostřed jižní části kopule, čelem ke spawnu
+    private static final double CX = 0.5, CZ = 16.5;
+    private int cur;
+    private BlockDisplayHolder panel;
+    private static final class BlockDisplayHolder { org.bukkit.entity.BlockDisplay d; }
+
+    private TextDisplay text(Location l, float scale, TextDisplay.TextAlignment al, int lineWidth) {
+        return pl.mars.spawn(l, TextDisplay.class, d -> {
+            d.setBillboard(Display.Billboard.FIXED); d.setRotation(180f, 0f);
+            d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+            d.setDefaultBackground(false);
+            d.setShadowed(true);
+            d.setAlignment(al);
+            d.setLineWidth(lineWidth);
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.setViewRange(1.5f);
+            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.AxisAngle4f(), new org.joml.Vector3f(scale, scale, scale), new org.joml.AxisAngle4f()));
+            d.addScoreboardTag(TAG);
+            d.setPersistent(false);
+        });
+    }
 
     public void spawnBoards() {
         for (Entity e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(TAG)) e.remove();
         boards.clear();
-        for (String[] b : BOARDS) {
-            Location l = new Location(pl.mars, Double.parseDouble(b[2]) + 0.5, Lobby.Y + 3.2, Double.parseDouble(b[3]) + 0.5);
-            boards.add(pl.mars.spawn(l, TextDisplay.class, d -> {
-                d.setBillboard(Display.Billboard.VERTICAL);
-                d.setBackgroundColor(Color.fromARGB(170, 40, 10, 5));
-                d.setShadowed(true);
-                d.setLineWidth(220);
-                d.addScoreboardTag(TAG);
-                d.setPersistent(false);
-            }));
-        }
+        double cy = Lobby.Y + 5.5, face = 180;   // yaw 180 = čelem k severu (ke spawnu)
+        // panel (zasklená tabule)
+        panel = new BlockDisplayHolder();
+        panel.d = pl.mars.spawn(new Location(pl.mars, CX, cy, CZ + 0.08, (float) face, 0), org.bukkit.entity.BlockDisplay.class, d -> {
+            d.setRotation(180f, 0f);
+            d.setBlock(org.bukkit.Material.BLUE_STAINED_GLASS.createBlockData());
+            d.setPersistent(false); d.addScoreboardTag(TAG);
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(-4.1f, -2.5f, -0.05f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(8.2f, 5.0f, 0.1f), new org.joml.AxisAngle4f()));
+        });
+        float sc = 1.2f;
+        // pozn.: čelem k severu je pravá strana diváka = -X
+        TextDisplay title = text(new Location(pl.mars, CX, cy + 1.95, CZ - 0.05, (float) face, 0), 1.5f, TextDisplay.TextAlignment.CENTER, 300);
+        TextDisplay names = text(new Location(pl.mars, CX + 1.2, cy - 0.35, CZ - 0.05, (float) face, 0), sc, TextDisplay.TextAlignment.LEFT, 400);
+        TextDisplay vals = text(new Location(pl.mars, CX - 3.0, cy - 0.35, CZ - 0.05, (float) face, 0), sc, TextDisplay.TextAlignment.RIGHT, 200);
+        boards.add(title); boards.add(names); boards.add(vals);
         for (TextDisplay d : boards) Holo.dual(d, "");
         refresh();
+        if (task == null) task = Bukkit.getScheduler().runTaskTimer(pl, () -> { cur = (cur + 1) % BOARDS.length; refresh(); }, 300, 300);
     }
+    private org.bukkit.scheduler.BukkitTask task;
 
     public void refresh() {
-        if (boards.isEmpty()) return;
-        String[] medal = {"&6&l1.", "&f&l2.", "&c&l3."};
-        for (int i = 0; i < BOARDS.length && i < boards.size(); i++) {
-            TextDisplay d = boards.get(i);
-            if (!d.isValid()) { spawnBoards(); return; }
-            var t = top(BOARDS[i][0], 10);
-            net.kyori.adventure.text.Component cs = Component.empty(), en = Component.empty();
-            String head = BOARDS[i][1] + "\n&8▬▬▬▬▬▬▬▬▬▬▬▬\n";
-            cs = cs.append(U.c(head)); en = en.append(U.c(Lang.toEn(head)));
-            if (t.isEmpty()) { cs = cs.append(U.c("&7Zatím nikdo – buď první!\n")); en = en.append(U.c(Lang.toEn("&7Zatím nikdo – buď první!\n"))); }
-            for (int j = 0; j < t.size(); j++) {
-                String name = t.get(j).getKey();
-                Component row = U.c(j < 3 ? medal[j] : "&7" + (j + 1) + ".").append(Component.text(" "))
-                        .append(pl.skins.head(name, null)).append(U.c(" &f" + name + " &8- &e" + t.get(j).getValue() + "\n"));
-                cs = cs.append(row); en = en.append(row);
-            }
-            Component foot = U.c("&8▬▬▬▬▬▬▬▬▬▬▬▬");
-            Holo.setComponents(d, cs.append(foot), en.append(foot));
+        if (boards.size() < 3) return;
+        for (TextDisplay d : boards) if (!d.isValid()) { spawnBoards(); return; }
+        String[] cat = BOARDS[cur];
+        var t = top(cat[0], 10);
+        String dots = "&8" + "●".repeat(BOARDS.length).substring(0, 0);
+        StringBuilder ind = new StringBuilder();
+        for (int i = 0; i < BOARDS.length; i++) ind.append(i == cur ? "&f● " : "&8● ");
+        String head = cat[1] + "\n&7ŽEBŘÍČEK &8| " + ind.toString().trim();
+        Holo.setText(boards.get(0), head);
+        Component names = Component.empty(), vals = Component.empty();
+        String[] medal = {"&6&l#1", "&f&l#2", "&c&l#3"};
+        if (t.isEmpty()) { names = U.c("&7Zatím nikdo\n&7buď první!"); vals = U.c(" "); }
+        for (int j = 0; j < t.size(); j++) {
+            String name = t.get(j).getKey();
+            Component row = U.c(j < 3 ? medal[j] : "&7#" + (j + 1)).append(Component.text(" ")).append(pl.skins.head(name, null)).append(U.c(" &f" + name));
+            names = names.append(row); vals = vals.append(U.c("&e" + t.get(j).getValue()));
+            if (j < t.size() - 1) { names = names.append(Component.newline()); vals = vals.append(Component.newline()); }
         }
+        Holo.setComponents(boards.get(1), names, names);
+        Holo.setComponents(boards.get(2), vals, vals);
     }
 
     /** /ss top – osobní statistiky v chatu */

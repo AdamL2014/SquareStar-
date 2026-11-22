@@ -29,6 +29,7 @@ public final class Music implements CommandExecutor, Listener {
     private static final NamespacedKey OFF = new NamespacedKey("squarestar", "music_off");
     private static final NamespacedKey PL = new NamespacedKey("squarestar", "music_pl");      // "id,id,id"
     private static final NamespacedKey MODE = new NamespacedKey("squarestar", "music_mode");  // auto | playlist | repeat
+    private static final NamespacedKey VOL = new NamespacedKey("squarestar", "music_vol");    // 10–100 (%)
     private static final NamespacedKey SHUF = new NamespacedKey("squarestar", "music_shuf");
 
     /** skladba: id, zvuk (klíč), název, délka v sekundách, ikonka v menu */
@@ -53,12 +54,17 @@ public final class Music implements CommandExecutor, Listener {
             vanilla("mellohi", Sound.MUSIC_DISC_MELLOHI, "Mellohi – C418", 96, Material.MUSIC_DISC_MELLOHI),
             vanilla("13", Sound.MUSIC_DISC_13, "13 – C418", 178, Material.MUSIC_DISC_13),
             vanilla("11", Sound.MUSIC_DISC_11, "11 – C418", 71, Material.MUSIC_DISC_11),
+            vanilla("tears", Sound.MUSIC_DISC_TEARS, "Tears – Amos Roddy", 175, Material.MUSIC_DISC_TEARS),
+            vanilla("lavachicken", Sound.MUSIC_DISC_LAVA_CHICKEN, "Lava Chicken – Hyper Potions", 135, Material.MUSIC_DISC_LAVA_CHICKEN),
+            // novější disky: zvuk existuje jen v klientech 26.2+ (Bounce) a 26.4+ (Flurry), starším klientům je ticho
+            new Track("bounce", "minecraft:music_disc.bounce", "Bounce – fingerspit", 234, Material.MUSIC_DISC_CREATOR_MUSIC_BOX),
+            new Track("flurry", "minecraft:music_disc.flurry", "Flurry – Hyper Potions", 154, Material.MUSIC_DISC_STRAD),
             new Track("xmas1", "squarestar:music.xmas1", "❄ Vánoce na Marsu – SquareStar", 60, Material.MUSIC_DISC_CAT),
             new Track("xmas2", "squarestar:music.xmas2", "❄ Sněžná noc – SquareStar", 60, Material.MUSIC_DISC_13));
     private static final List<String> AUTO = List.of("far", "relic", "otherside", "mall", "precipice", "creator");
     /** o Vánocích: vlastní vánoční písničky střídané s klidnými deskami */
     private static final List<String> AUTO_XMAS = List.of("xmas1", "far", "xmas2", "otherside");
-    private static final int[] SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
+    private static final int[] SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40};
 
     private static Track track(String id) { for (Track t : CAT) if (t.id.equals(id)) return t; return null; }
 
@@ -71,6 +77,7 @@ public final class Music implements CommandExecutor, Listener {
     }
 
     // ---------------- uložené nastavení hráče ----------------
+    private int vol(Player p) { return Math.max(10, Math.min(100, p.getPersistentDataContainer().getOrDefault(VOL, PersistentDataType.INTEGER, 60))); }
     private boolean wants(Player p) { return p.getPersistentDataContainer().getOrDefault(OFF, PersistentDataType.BYTE, (byte) 0) == 0; }
     private boolean inLobby(Player p) { return p.getWorld() == pl.mars && pl.games.of(p) == null; }
     private List<String> playlist(Player p) {
@@ -101,7 +108,7 @@ public final class Music implements CommandExecutor, Listener {
 
     private void play(Player p, Track t) {
         p.stopSound(SoundCategory.RECORDS);
-        p.playSound(p, t.sound, SoundCategory.RECORDS, 0.6f, 1f);
+        p.playSound(p, t.sound, SoundCategory.RECORDS, vol(p) / 100f, 1f);
         state.put(p.getUniqueId(), new Object[]{t, System.currentTimeMillis() + (t.sec + 4) * 1000L});
         U.bar(p, "&d♫ &7Hraje: &f" + t.name + " &8(/hudba = menu)");
     }
@@ -137,8 +144,12 @@ public final class Music implements CommandExecutor, Listener {
             Track t = CAT.get(i);
             int pos = pls.indexOf(t.id);
             boolean playing = now != null && now.id.equals(t.id);
-            ItemStack it = U.item(t.icon, 1, (playing ? "&a▶ " : "&f") + t.name,
-                    pos >= 0 ? "&a✔ V playlistu &7(#" + (pos + 1) + ")" : "&8Není v playlistu", "", "&eLevý klik: &7přehrát hned", "&ePravý klik: &7" + (pos >= 0 ? "odebrat z playlistu" : "přidat do playlistu"));
+            String warn = t.id.equals("bounce") ? "&6⚠ Zní jen s klientem MC 26.2+" : t.id.equals("flurry") ? "&6⚠ Zní jen s klientem MC 26.4+" : null;
+            List<String> lore = new ArrayList<>();
+            lore.add(pos >= 0 ? "&a✔ V playlistu &7(#" + (pos + 1) + ")" : "&8Není v playlistu");
+            if (warn != null) lore.add(warn);
+            lore.add(""); lore.add("&eLevý klik: &7přehrát hned"); lore.add("&ePravý klik: &7" + (pos >= 0 ? "odebrat z playlistu" : "přidat do playlistu"));
+            ItemStack it = U.item(t.icon, 1, (playing ? "&a▶ " : "&f") + t.name, lore.toArray(new String[0]));
             if (t.id.startsWith("xmas")) it = Gui.skin(p, it, "disc_" + t.id);   // vlastní disk (Java s resource packem)
             var m = it.getItemMeta();
             m.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
@@ -152,6 +163,10 @@ public final class Music implements CommandExecutor, Listener {
         h.inv.setItem(47, U.tag(U.item(Material.COMPARATOR, 1, "&b&lRežim: " + (md.equals("auto") ? "Automaticky" : md.equals("playlist") ? "Můj playlist" : "Opakovat skladbu"),
                 md.equals("auto") ? "&aAutomaticky" : "&7Automaticky", md.equals("playlist") ? "&aMůj playlist &7(" + pls.size() + " skladeb)" : "&7Můj playlist &8(" + pls.size() + " skladeb)",
                 md.equals("repeat") ? "&aOpakovat skladbu" : "&7Opakovat skladbu", "", "&eKlikni pro přepnutí"), "ss_mus", "mode"));
+        int vl = vol(p);
+        String bar = "&a" + "▌".repeat(vl / 10) + "&8" + "▌".repeat(10 - vl / 10);
+        h.inv.setItem(46, U.tag(U.item(Material.NOTE_BLOCK, 1, "&b&l🔉 Ztišit", "&7Hlasitost: &f" + vl + " %", bar, "", "&eKlikni: &7−10 %"), "ss_mus", "voldown"));
+        h.inv.setItem(48, U.tag(U.item(Material.BELL, 1, "&b&l🔊 Zesílit", "&7Hlasitost: &f" + vl + " %", bar, "", "&eKlikni: &7+10 %"), "ss_mus", "volup"));
         h.inv.setItem(49, U.tag(U.item(Material.ARROW, 1, "&e&l⏭ Další skladba", "&7Přeskočí na další"), "ss_mus", "skip"));
         h.inv.setItem(51, U.tag(U.item(Material.REPEATER, 1, shuffle(p) ? "&a&lMíchání: ZAPNUTÉ" : "&7&lMíchání: vypnuté", "&eKlikni pro přepnutí"), "ss_mus", "shuf"));
         h.inv.setItem(52, U.tag(U.item(Material.LAVA_BUCKET, 1, "&c&lSmazat playlist", "&7Vyprázdní tvůj playlist"), "ss_mus", "clear"));
@@ -170,6 +185,13 @@ public final class Music implements CommandExecutor, Listener {
                 String m = mode(p), n = m.equals("auto") ? "playlist" : m.equals("playlist") ? "repeat" : "auto";
                 if (n.equals("playlist") && playlist(p).isEmpty()) U.msg(p, "&7Playlist je prázdný – pravým klikem na skladby si ho sestav. &8(zatím hraje automaticky)");
                 p.getPersistentDataContainer().set(MODE, PersistentDataType.STRING, n);
+            }
+            case "voldown", "volup" -> {
+                int nv = Math.max(10, Math.min(100, vol(p) + (t.equals("volup") ? 10 : -10)));
+                p.getPersistentDataContainer().set(VOL, PersistentDataType.INTEGER, nv);
+                Object[] s = state.get(p.getUniqueId());
+                if (s != null && wants(p) && inLobby(p)) { p.stopSound(SoundCategory.RECORDS); play(p, (Track) s[0]); }   // zní hned novou hlasitostí
+                U.bar(p, "&b🔊 Hlasitost hudby: &f" + nv + " %");
             }
             case "shuf" -> p.getPersistentDataContainer().set(SHUF, PersistentDataType.BYTE, (byte) (shuffle(p) ? 0 : 1));
             case "clear" -> { savePlaylist(p, new ArrayList<>()); U.msg(p, "&7Playlist vymazán."); }
