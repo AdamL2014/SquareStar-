@@ -485,7 +485,7 @@ public final class LobbyFx implements Listener {
         Location l = new Location(pl.mars, -12.5, Lobby.Y + 1, 4.5);   // druhá strana než vánoční strom (8,5); vedle Redstone NPC (-9.5, 7.5)
         l.setDirection(new Vector(12.5, 0, -4.5));
         vidrift = pl.mars.spawn(l, Mannequin.class, e -> {
-            label(e, "&eKlikni");
+            label(e, "&b&lVid&d&lRift\n&fPodívej se na film! &8| &eKlikni");
             e.setImmovable(true);
             e.setAI(false);
             e.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
@@ -494,15 +494,6 @@ public final class LobbyFx implements Listener {
             e.addScoreboardTag(TAG);
             e.addScoreboardTag("ss_npc_vidrift");
         });
-        // neonová cedule nad postavou
-        TextDisplay vh = pl.mars.spawn(l.clone().add(0, 4.4, 0), TextDisplay.class, d -> {
-            d.setBillboard(Display.Billboard.CENTER);
-            d.setBackgroundColor(Color.fromARGB(200, 7, 6, 13));
-            d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(1.0f, 1.0f, 1.0f), new AxisAngle4f()));
-            d.setBrightness(new Display.Brightness(15, 15));
-            d.addScoreboardTag(TAG); d.setPersistent(false);
-        });
-        Holo.dual(vh, "&b&lVid&d&lRift\n&f▶ Podívej se na film ◀\n&7filmy &8• &7kanály &8• &7hry");
         pl.mars.getBlockAt(l.getBlockX(), Lobby.Y, l.getBlockZ()).setType(Material.PURPLE_GLAZED_TERRACOTTA, false);
     }
     // ---------------- Redstone týden NPC (vlevo vpředu, zrcadlově k VidRiftu) ----------------
