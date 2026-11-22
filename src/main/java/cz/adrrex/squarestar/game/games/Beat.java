@@ -41,7 +41,7 @@ import java.util.*;
  */
 public final class Beat extends Game {
     private static final int FLIGHT = 100, PRE = 110, MINGAP = 10;
-    private static final double D = 30.0, IDEAL = 4.5, MIN_DZ = 1.2, MAX_DZ = 7.5, CONE = 0.94;
+    private static final double D = 28.0, IDEAL = 4.5, MIN_DZ = 1.2, MAX_DZ = 7.5, CONE = 0.94;
     private static final double[] COLX = {-2.25, -0.75, 0.75, 2.25};
     private static final double[] ROWY = {1.5, 2.5, 3.5};
     private static final int HIT_TICKS = (int) Math.round(FLIGHT * (D - IDEAL) / D);   // za kolik ticků od spawnu je kostka v ideální zóně
@@ -68,14 +68,14 @@ public final class Beat extends Game {
                 BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
                 String[] h = r.readLine().split(",");
                 List<Note> l = new ArrayList<>(); String ln;
-                int prev = -1000;
-                while ((ln = r.readLine()) != null) { String[] c = ln.split(","); if (c.length == 4) { int hit = Integer.parseInt(c[0]); if (hit - prev < MINGAP) continue; prev = hit; l.add(new Note(hit, Integer.parseInt(c[1]), Integer.parseInt(c[2]), Integer.parseInt(c[3]))); } }
+                int prev = -1000; double half = 600.0 / Double.parseDouble(h[0]), f0 = Double.parseDouble(h[1]) * 20;
+                while ((ln = r.readLine()) != null) { String[] c = ln.split(","); if (c.length == 4) { int hit = (int) Math.round(Math.round((Integer.parseInt(c[0]) - f0) / half) * half + f0); if (hit - prev < MINGAP) continue; prev = hit; l.add(new Note(hit, Integer.parseInt(c[1]), Integer.parseInt(c[2]), Integer.parseInt(c[3]))); } }
                 return new Chart(Double.parseDouble(h[0]), Double.parseDouble(h[1]), Double.parseDouble(h[2]), l.size(), l);
             } catch (Exception e) { return null; }
         });
     }
 
-    private static final class Live { Note n; BlockDisplay d; List<BlockDisplay> extra = new ArrayList<>(); int spawn; boolean done; double wx, ww; }
+    private static final class Live { Note n; BlockDisplay d; List<BlockDisplay> extra = new ArrayList<>(); int spawn; boolean done; double wx, ww, cx, cy; List<BlockDisplay> all() { List<BlockDisplay> a = new ArrayList<>(); a.add(d); a.addAll(extra); return a; } }
     private static final class St {
         int score, combo, best, energy = 100, hits, misses, idx; double sx; String last = "";
         final List<Live> live = new ArrayList<>();
@@ -89,7 +89,7 @@ public final class Beat extends Game {
     private final Map<Player, St> st = new LinkedHashMap<>();
     private final Map<Player, String> votes = new HashMap<>();
     private final Map<Integer, List<int[]>> lights = new HashMap<>();   // pilíře pro světelnou show
-    private String song = "cat"; private Chart ch; private int t, ci, endTick, beatTicks, firstBeat, wi; private final List<int[]> walls = new ArrayList<>();   // {tick příletu, strana}
+    private String song = "cat"; private Chart ch; private double beatLen = 9; private int beatIdx; private int t, ci, endTick, beatTicks, firstBeat, wi; private final List<int[]> walls = new ArrayList<>();   // {tick příletu, strana}
     private BukkitTask task;
 
     public Beat(GameManager gm, int slot) {
@@ -186,10 +186,10 @@ public final class Beat extends Game {
 
     // ---------------- průběh ----------------
     @Override protected void start() {
-        chooseSong(); t = 0; ci = 0; wi = 0; st.clear(); walls.clear();
-        beatTicks = Math.max(6, (int) Math.round(1200.0 / ch.bpm)); firstBeat = PRE + (int) Math.round(ch.first * 20);
+        chooseSong(); t = 0; ci = 0; wi = 0; beatIdx = 0; st.clear(); walls.clear();
+        beatLen = 1200.0 / ch.bpm; beatTicks = Math.max(6, (int) Math.round(beatLen)); firstBeat = PRE + (int) Math.round(ch.first * 20);
         endTick = PRE + (int) Math.round(ch.len * 20) + 50;
-        for (int b = 12, k = 0; firstBeat + b * beatTicks < endTick - 60; b += 14, k++) walls.add(new int[]{firstBeat + b * beatTicks, k % 3});
+        for (int b = 12, k = 0; (int) Math.round(firstBeat + b * beatLen) < endTick - 60; b += 14, k++) walls.add(new int[]{(int) Math.round(firstBeat + b * beatLen), k % 3});
         int i = 0;
         for (Player p : new ArrayList<>(players)) {
             St s = new St(); s.idx = i++; s.sx = sx(s.idx); st.put(p, s);
@@ -205,14 +205,14 @@ public final class Beat extends Game {
     }
 
     private String key() { return "minecraft:music_disc." + song; }
-    private double zNow(Live l) { double fr = Math.max(0, Math.min(1, (t - l.spawn - 1) / (double) FLIGHT)); return oz + 0.5 - D + D * fr; }
+    private double zNow(Live l) { double fr = Math.max(0, Math.min(1.3, (t - l.spawn - 1) / (double) FLIGHT)); return oz + 0.5 - D + D * fr; }
     private double dz(Live l) { return oz + 0.5 - zNow(l); }
 
     private void loop() {
         if (state != State.RUNNING) return;
         if (t == PRE) for (Player p : st.keySet()) p.playSound(p.getLocation(), key(), SoundCategory.RECORDS, 1.0f, 1f);
         // světelná show na beat
-        if (t >= firstBeat && (t - firstBeat) % beatTicks == 0) pulse((t - firstBeat) / beatTicks);
+        if (t >= firstBeat && t >= firstBeat + Math.round(beatIdx * beatLen)) pulse(beatIdx++);
         // nové kostky
         while (ci < ch.list.size() && PRE + ch.list.get(ci).hit - HIT_TICKS <= t) {
             Note n = ch.list.get(ci++);
@@ -228,6 +228,7 @@ public final class Beat extends Game {
             if (!p.isOnline()) continue;
             for (Live l : new ArrayList<>(s.live)) {
                 if (!l.d.isValid()) { for (var x_ : l.extra) x_.remove(); s.live.remove(l); continue; }
+                move(l);
                 double dz = dz(l);
                 if (l.n == null) {          // zeď
                     if (t % 2 == 0 && dz < 14 && dz > 0) for (int q = 0; q < 5; q++) w.spawnParticle(Particle.ELECTRIC_SPARK, l.wx + (rnd.nextDouble() - .5) * l.ww, oy + 1 + rnd.nextDouble() * 4, zNow(l) + 0.3, 0, 0, 0, 0.5, 0.2);
@@ -267,29 +268,29 @@ public final class Beat extends Game {
         }
     }
 
-    /** díl kostky, který letí tunelem (interpolace); off = posun od středu, size = velikost */
+    /** díl kostky; pohybuje se posouváním entity každý tick (ne interpolací – ta se v klientu zasekává) */
     private BlockDisplay part(Player p, Location l, Material m, Vector3f off, Vector3f size) {
         BlockDisplay d = spawn(l, BlockDisplay.class, x -> {
             x.setVisibleByDefault(false);
             x.setBlock(m.createBlockData());
             x.setBrightness(new Display.Brightness(15, 15));
-            x.setViewRange(2f);
-            x.setInterpolationDuration(FLIGHT); x.setInterpolationDelay(0);
+            x.setViewRange(3f);
+            x.setTeleportDuration(2);
             x.setTransformation(new Transformation(off, new Quaternionf(), size, new Quaternionf()));
         });
         p.showEntity(pl, d);
-        Bukkit.getScheduler().runTaskLater(pl, () -> {
-            if (!d.isValid()) return;
-            d.setInterpolationDelay(0);
-            d.setTransformation(new Transformation(new Vector3f(off.x, off.y, off.z + (float) D), new Quaternionf(), size, new Quaternionf()));
-        }, 1L);
         return d;
+    }
+
+    private void move(Live l) {
+        double z = zNow(l);
+        for (BlockDisplay x : l.all()) if (x.isValid()) x.teleport(new Location(w, l.cx, l.cy, z));
     }
 
     private void spawnNote(Player p, St s, Note n) {
         Location l = new Location(w, s.sx + COLX[n.col], oy + ROWY[n.row], oz + 0.5 - D);
         float h = 0.31f;
-        Live lv = new Live(); lv.n = n; lv.spawn = t;
+        Live lv = new Live(); lv.n = n; lv.spawn = t; lv.cx = l.getX(); lv.cy = l.getY();
         if (n.kind == 2) {
             lv.d = part(p, l, Material.TNT, new Vector3f(-h, -h, -h), new Vector3f(h * 2, h * 2, h * 2));
         } else {
@@ -363,21 +364,9 @@ public final class Beat extends Game {
     private void spawnWall(Player p, St s, int side) {
         double ww = side == 2 ? 2.6 : 3.2, wx = s.sx + (side == 0 ? -1.4 : side == 1 ? 1.4 : 0);
         Location l = new Location(w, wx, oy + 1, oz + 0.5 - D);
-        BlockDisplay d = spawn(l, BlockDisplay.class, x -> {
-            x.setVisibleByDefault(false);
-            x.setBlock(Material.RED_STAINED_GLASS.createBlockData());
-            x.setBrightness(new Display.Brightness(15, 15));
-            x.setViewRange(2f);
-            x.setInterpolationDuration(FLIGHT); x.setInterpolationDelay(0);
-            x.setTransformation(new Transformation(new Vector3f((float) -ww / 2, 0, -0.2f), new Quaternionf(), new Vector3f((float) ww, 4f, 0.4f), new Quaternionf()));
-        });
-        p.showEntity(pl, d);
-        Bukkit.getScheduler().runTaskLater(pl, () -> {
-            if (!d.isValid()) return;
-            d.setInterpolationDelay(0);
-            d.setTransformation(new Transformation(new Vector3f((float) -ww / 2, 0, -0.2f + (float) D), new Quaternionf(), new Vector3f((float) ww, 4f, 0.4f), new Quaternionf()));
-        }, 1L);
-        Live lv = new Live(); lv.d = d; lv.spawn = t; lv.wx = wx; lv.ww = ww; s.live.add(lv);
+        Live lv = new Live(); lv.spawn = t; lv.wx = wx; lv.ww = ww; lv.cx = wx; lv.cy = oy + 1;
+        lv.d = part(p, l, Material.RED_STAINED_GLASS, new Vector3f((float) -ww / 2, 0, -0.2f), new Vector3f((float) ww, 4f, 0.4f));
+        s.live.add(lv);
         p.sendActionBar(U.c("&c&l⚠ ZEĎ! &7uhni do strany"));
     }
 
