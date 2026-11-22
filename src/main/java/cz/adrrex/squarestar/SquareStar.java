@@ -21,6 +21,8 @@ public final class SquareStar extends JavaPlugin {
     public SpaceItems items;
     public Crates crates;
     public Intro intro;
+    public Ufo ufo;
+    public Arcade arcade;
     public Levels levels;
     public RedstoneWeek redstone;
     public Motd motd;
@@ -96,7 +98,8 @@ public final class SquareStar extends JavaPlugin {
         for (String n : Basic.STAFF_CMDS) bind(n, basic, basic);
         Music music = new Music(this); pm.registerEvents(music, this); pm.registerEvents(new Fun(), this);
         bind("hudba", music, null);
-        Ufo ufo = new Ufo(this); bind("ufo", ufo, null);
+        ufo = new Ufo(this); bind("ufo", ufo, null);
+        arcade = new Arcade(this); pm.registerEvents(arcade, this); bind("herna", arcade, null);
         meteors = new Meteors(this);
         Holo.start(this);
         bind("novinky", (s, c, l, a) -> { if (s instanceof Player p) news.open(p); return true; }, null);

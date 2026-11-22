@@ -44,6 +44,7 @@ public final class GameManager implements Listener {
 
     public GameManager(SquareStar pl) { this.pl = pl; }
 
+    public int playingPvp() { int n = 0; for (GameType t : GameType.PVP_MODES) n += playing(t); return n; }
     public int playing(GameType t) { return games.stream().filter(x -> x.type == t).mapToInt(x -> x.players.size()).sum(); }
     public int activeGames() { return games.size(); }
 
@@ -53,9 +54,17 @@ public final class GameManager implements Listener {
         MenuHolder h = new MenuHolder();
         h.inv = Bukkit.createInventory(h, 45, cz.adrrex.squarestar.Gui.title(45, cz.adrrex.squarestar.Lang.t(p, "&f&l✦ Minihry na Marsu")));
         int[] pos = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
-        GameType[] t = GameType.values();
-        for (int i = 0; i < t.length; i++) {
-            GameType g = t[i];
+        java.util.List<GameType> t = new java.util.ArrayList<>();
+        for (GameType x : GameType.values()) if (!x.isPvp() || x == GameType.PVP) t.add(x);   // PvP režimy = jedna položka s podmenu
+        for (int i = 0; i < t.size(); i++) {
+            GameType g = t.get(i);
+            if (g == GameType.PVP) {
+                ItemStack pv = U.item(Material.DIAMOND_SWORD, 1, "&c&l⚔ PvP", "&7Vyber si, jaké PvP chceš:", "&f1v1&7, &fvšichni proti všem&7, &f5v5&7, &f10v10&7, &fsumo", "",
+                        "&7Celkem hraje: &e" + playingPvp(), "", "&e▶ Klikni pro výběr režimu");
+                if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var im = pv.getItemMeta(); im.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_pvp")); pv.setItemMeta(im); }
+                h.inv.setItem(pos[i], U.tag(pv, "ss_menu", "PVPMENU"));
+                continue;
+            }
             int waiting = games.stream().filter(x -> x.type == g && x.joinable()).mapToInt(x -> x.players.size()).sum();
             int playing = games.stream().filter(x -> x.type == g).mapToInt(x -> x.players.size()).sum();
             ItemStack it = U.item(g.icon, 1, "&6&l" + g.display, "&7" + g.desc, "",
@@ -72,6 +81,30 @@ public final class GameManager implements Listener {
         if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var rm = rsIcon.getItemMeta(); rm.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_redstone")); rsIcon.setItemMeta(rm); }
         h.inv.setItem(40, U.tag(rsIcon, "ss_menu", "REDSTONE"));
         p.openInventory(h.inv);
+    }
+
+    static final class PvpHolder implements InventoryHolder { Inventory inv; @Override public @NotNull Inventory getInventory() { return inv; } }
+
+    /** výběr PvP režimu (otevírá se z NPC „PvP“ i z menu minihry) */
+    public void openPvp(Player p) {
+        PvpHolder h = new PvpHolder();
+        h.inv = Bukkit.createInventory(h, 27, cz.adrrex.squarestar.Gui.title(27, cz.adrrex.squarestar.Lang.t(p, "&f&l⚔ Vyber si PvP")));
+        int[] pos = {11, 12, 13, 14, 15};
+        for (int i = 0; i < GameType.PVP_MODES.size(); i++) {
+            GameType g = GameType.PVP_MODES.get(i);
+            int waiting = games.stream().filter(x -> x.type == g && x.joinable()).mapToInt(x -> x.players.size()).sum();
+            int playing = playing(g);
+            ItemStack it = U.item(g.icon, 1, "&6&l" + g.display, "&7" + g.desc, "", "&7Hráči: &f" + g.min + "–" + g.max, "&7Čeká: &a" + waiting + " &8| &7Hraje: &e" + playing, "", "&e▶ Klikni pro připojení");
+            if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var im = it.getItemMeta(); im.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_" + g.name().toLowerCase(java.util.Locale.ROOT))); if (playing > 0) im.setEnchantmentGlintOverride(true); it.setItemMeta(im); }
+            h.inv.setItem(pos[i], U.tag(it, "ss_pvp", g.name()));
+        }
+        p.openInventory(h.inv);
+    }
+    @EventHandler public void pvpMenuClick(InventoryClickEvent e) {
+        if (!(e.getInventory().getHolder() instanceof PvpHolder)) return;
+        e.setCancelled(true);
+        String t = U.tagOf(e.getCurrentItem(), "ss_pvp");
+        if (t != null && e.getWhoClicked() instanceof Player p) { p.closeInventory(); join(p, GameType.valueOf(t)); }
     }
 
     public void join(Player p, GameType type) {
@@ -176,7 +209,8 @@ public final class GameManager implements Listener {
         String t = U.tagOf(e.getCurrentItem(), "ss_menu");
         if (t != null && e.getWhoClicked() instanceof Player p) {
             p.closeInventory();
-            if (t.equals("REDSTONE")) { if (cz.adrrex.squarestar.RedstoneWeek.voting()) pl.redstone.visit(p, 0); else pl.redstone.join(p); }
+            if (t.equals("PVPMENU")) openPvp(p);
+            else if (t.equals("REDSTONE")) { if (cz.adrrex.squarestar.RedstoneWeek.voting()) pl.redstone.visit(p, 0); else pl.redstone.join(p); }
             else join(p, GameType.valueOf(t));
         }
     }

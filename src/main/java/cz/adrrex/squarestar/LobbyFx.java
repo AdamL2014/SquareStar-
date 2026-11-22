@@ -298,7 +298,7 @@ public final class LobbyFx implements Listener {
         return true;
     }
 
-    private static void suit(Mannequin m, Color col, Material hand) {
+    static void suit(Mannequin m, Color col, Material hand) {
         skin(m); // skin astronauta + brnění navrch
         var eq = m.getEquipment();
         eq.setHelmet(dye(Material.LEATHER_HELMET, Color.WHITE));
@@ -320,7 +320,9 @@ public final class LobbyFx implements Listener {
             Color.fromRGB(0x6A040F), Color.fromRGB(0x2A9D8F), Color.fromRGB(0xFFD60A), Color.fromRGB(0x3A86FF), Color.fromRGB(0x8AC926), Color.fromRGB(0xFF006E)};
 
     private void spawnNpcs() {
-        GameType[] t = GameType.values();
+        java.util.List<GameType> tl = new java.util.ArrayList<>();
+        for (GameType x : GameType.values()) if (!x.isPvp() || x == GameType.PVP) tl.add(x);   // PvP = jedno NPC s výběrem režimu
+        GameType[] t = tl.toArray(new GameType[0]);
         int n = t.length;
         for (int i = 0; i < n; i++) {
             // dvě řady v půlkruhu za spawnem, uvnitř kopule (kopule má poloměr 18)
@@ -333,11 +335,12 @@ public final class LobbyFx implements Listener {
             Location l = new Location(pl.mars, x + 0.5, Lobby.Y + 1, z + 0.5);
             l.setDirection(new Vector(-x, 0, -z));
             GameType g = t[i];
+            boolean pvp = g == GameType.PVP;
             Mannequin m = pl.mars.spawn(l, Mannequin.class, e -> {
-                npc(e, "&6&l" + g.display, "&eKlikni pro hru", "game");
-                suit(e, COLORS[g.ordinal() % COLORS.length], g.icon);
+                npc(e, pvp ? "&c&l⚔ PvP" : "&6&l" + g.display, pvp ? "&eVyber si režim" : "&eKlikni pro hru", "game");
+                suit(e, pvp ? Color.fromRGB(0xE63946) : COLORS[g.ordinal() % COLORS.length], pvp ? Material.DIAMOND_SWORD : g.icon);
                 e.addScoreboardTag(TAG);
-                e.addScoreboardTag("ss_npc_game:" + g.name());
+                e.addScoreboardTag(pvp ? "ss_npc_pvp" : "ss_npc_game:" + g.name());
             });
             npcs.put(g, m);
             pl.mars.getBlockAt(l.getBlockX(), Lobby.Y, l.getBlockZ()).setType(Material.GOLD_BLOCK, false);
@@ -432,9 +435,10 @@ public final class LobbyFx implements Listener {
                 }
                 for (var e : npcs.entrySet()) {
                     if (!e.getValue().isValid()) continue;
-                    int n = pl.games.playing(e.getKey());
+                    boolean pvpN = e.getKey() == GameType.PVP;
+                    int n = pvpN ? pl.games.playingPvp() : pl.games.playing(e.getKey());
                     for (var x : e.getValue().getPassengers()) if (x instanceof TextDisplay lbl)
-                        Holo.setText(lbl, "&6&l" + e.getKey().display + "\n" + (n > 0 ? "&a" + n + " hraje" : "&7nikdo nehraje") + " &8| &eKlikni");
+                        Holo.setText(lbl, (pvpN ? "&c&l⚔ PvP" : "&6&l" + e.getKey().display) + "\n" + (n > 0 ? "&a" + n + " hraje" : "&7nikdo nehraje") + " &8| &eKlikni");
                 }
             }
         }, 40, 2);
@@ -559,6 +563,7 @@ public final class LobbyFx implements Listener {
         if (e.getHand() != EquipmentSlot.HAND) return;
         if (e.getRightClicked().getScoreboardTags().contains("ss_npc_vidrift")) { e.setCancelled(true); openVidrift(e.getPlayer()); return; }
         if (e.getRightClicked().getScoreboardTags().contains("ss_npc_redstone")) { e.setCancelled(true); openRedstone(e.getPlayer()); return; }
+        if (e.getRightClicked().getScoreboardTags().contains("ss_npc_pvp")) { e.setCancelled(true); pl.games.openPvp(e.getPlayer()); return; }
         GameType g = npcGame(e.getRightClicked());
         if (g == null) return;
         e.setCancelled(true);
@@ -568,6 +573,7 @@ public final class LobbyFx implements Listener {
     @EventHandler public void hitNpc(EntityDamageByEntityEvent e) {
         if (e.getEntity().getScoreboardTags().contains("ss_npc_vidrift")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) openVidrift(p); return; }
         if (e.getEntity().getScoreboardTags().contains("ss_npc_redstone")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) openRedstone(p); return; }
+        if (e.getEntity().getScoreboardTags().contains("ss_npc_pvp")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) pl.games.openPvp(p); return; }
         GameType g = npcGame(e.getEntity());
         if (g == null) return;
         e.setCancelled(true);

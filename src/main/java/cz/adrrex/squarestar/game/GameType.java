@@ -23,6 +23,10 @@ public enum GameType {
     ROVER("Závod roverů", Material.MINECART, 1, 9, "Mario Kart na Marsu: itemy, drift a turbo. 3 kola!"),
     DROPPER("Pád šachtou", Material.FEATHER, 1, 12, "Padej šachtou, nenaraz do ničeho a dopadni do vody. 8 levelů!");
 
+    /** PvP režimy (v lobby jedno NPC / jedna položka menu s výběrem) */
+    public boolean isPvp() { return this == PVP || this == PVP1V1 || this == PVP5V5 || this == PVP10V10 || this == SUMO; }
+    public static final java.util.List<GameType> PVP_MODES = java.util.List.of(PVP1V1, PVP, PVP5V5, PVP10V10, SUMO);
+
     public final String display; public final Material icon; public final int min, max; public final String desc;
     GameType(String d, Material i, int min, int max, String desc) { display = d; icon = i; this.min = min; this.max = max; this.desc = desc; }
 

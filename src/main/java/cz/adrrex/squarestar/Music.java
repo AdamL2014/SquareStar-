@@ -115,7 +115,7 @@ public final class Music implements CommandExecutor, Listener {
             return true;
         });
         for (Player p : pl.mars.getPlayers()) {
-            if (!inLobby(p) || !wants(p)) continue;
+            if (!inLobby(p) || !wants(p) || (pl.intro != null && pl.intro.active(p))) continue;
             Object[] s = state.get(p.getUniqueId());
             if (s != null && now < (long) s[1]) continue;
             play(p, next(p, s == null ? null : (Track) s[0]));

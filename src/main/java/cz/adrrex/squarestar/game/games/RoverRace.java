@@ -60,16 +60,43 @@ public final class RoverRace extends Game {
     @Override public boolean canExitVehicle(Player p) { return !alive.contains(p) || finished.contains(p); }
 
     // ---------------- trať ----------------
+    /** náhodná trať: uzavřená smyčka z několika sinusových vln (vždy jiná), ověřená na ostré zatáčky, zvětšená na hrací plochu */
     private void makePath() {
         path.clear();
-        boolean olympus = map == 1;
         int n = 720;
-        for (int i = 0; i < n; i++) {
-            double t = i * Math.PI * 2 / n;
-            double r = map == 2 ? 40 + 14 * Math.sin(4 * t) + 4 * Math.cos(7 * t) : olympus ? 46 + 12 * Math.sin(2 * t) + 6 * Math.cos(5 * t) : 44 + 10 * Math.sin(3 * t);
-            path.add(new double[]{Math.cos(t) * r * (map == 2 ? 1.35 : 1.25), Math.sin(t) * r * (map == 2 ? 0.95 : 1)});
+        List<double[]> best = null;
+        for (int attempt = 0; attempt < 40 && best == null; attempt++) {
+            double ph0 = rnd.nextDouble() * Math.PI * 2;
+            int nh = 2 + rnd.nextInt(3);
+            double[] amp = new double[9], ph = new double[9];
+            for (int h = 0; h < nh; h++) { int k = 2 + rnd.nextInt(6); amp[k] += (0.1 + rnd.nextDouble() * 0.2) / (k * 0.45); ph[k] = rnd.nextDouble() * Math.PI * 2; }
+            List<double[]> pts = new ArrayList<>();
+            double wide = 1.15 + rnd.nextDouble() * 0.3;
+            for (int i = 0; i < n; i++) {
+                double t = ph0 + i * Math.PI * 2 / n, r = 1;
+                for (int k = 2; k < 9; k++) if (amp[k] > 0) r += amp[k] * Math.sin(k * t + ph[k]);
+                pts.add(new double[]{Math.cos(t) * r * wide, Math.sin(t) * r});
+            }
+            double mx = 0, mz = 0;
+            for (double[] p : pts) { mx = Math.max(mx, Math.abs(p[0])); mz = Math.max(mz, Math.abs(p[1])); }
+            double sc = Math.min(66 / mx, 50 / mz);
+            for (double[] p : pts) { p[0] *= sc; p[1] *= sc; }
+            // nejmenší poloměr zatáčky (3 body po 12 krocích) – musí být aspoň 9 bloků
+            boolean ok = true;
+            for (int i = 0; i < n && ok; i += 4) {
+                double[] a = pts.get(i), c = pts.get((i + 12) % n), d = pts.get((i + 24) % n);
+                double ab = Math.hypot(c[0] - a[0], c[1] - a[1]), bc = Math.hypot(d[0] - c[0], d[1] - c[1]), ca = Math.hypot(d[0] - a[0], d[1] - a[1]);
+                double area2 = Math.abs((c[0] - a[0]) * (d[1] - a[1]) - (c[1] - a[1]) * (d[0] - a[0]));
+                if (area2 > 1e-6 && ab * bc * ca / (2 * area2) < 9) ok = false;
+            }
+            if (ok && (nh > 1 || attempt > 20)) best = pts;
         }
+        if (best == null) { for (int i = 0; i < n; i++) { double t = i * Math.PI * 2 / n; best = best == null ? new ArrayList<>() : best; best.add(new double[]{Math.cos(t) * 55, Math.sin(t) * 44}); } }
+        path.addAll(best);
+        trackNo = 1000 + rnd.nextInt(9000);
+        mapName = allMaps().get(Math.min(map, allMaps().size() - 1)) + " · trať #" + trackNo;
     }
+    private int trackNo;
     private static long key(int x, int z) { return ((long) x << 32) ^ (z & 0xffffffffL); }
 
     @Override protected void buildMap(U.BlockQueue.Builder b) {
@@ -105,11 +132,12 @@ public final class RoverRace extends Game {
         }
         // boost pady (šipky) a místa pro „?" boxy
         pads.clear(); boxes.clear();
-        for (int k = 1; k < 6; k++) {
-            int idx = k * path.size() / 6;
+        int feats = 6 + rnd.nextInt(4);
+        for (int k = 0; k < feats; k++) {
+            int idx = (40 + (int) ((k + 0.2 + rnd.nextDouble() * 0.6) * (path.size() - 80) / feats)) % path.size();
             double[] p = path.get(idx), q = path.get((idx + 3) % path.size());
             double nx = -(q[1] - p[1]), nz = q[0] - p[0], len = Math.hypot(nx, nz); nx /= len; nz /= len;
-            if (k % 2 == 1) { // řada boxů napříč tratí
+            if (rnd.nextInt(5) < 3) { // řada boxů napříč tratí
                 for (int j = -1; j <= 1; j++) boxes.add(new double[]{p[0] + nx * j * 2.6 + 0.5, p[1] + nz * j * 2.6 + 0.5, 0});
             } else {          // boost pad
                 for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
@@ -138,6 +166,7 @@ public final class RoverRace extends Game {
     // ---------------- start ----------------
     @Override protected void start() {
         if (path.isEmpty()) makePath();
+        broadcast("&7Dnešní trať: &e#" + trackNo + " &8| &7pokaždé jiná, tak se dívej na zatáčky!");
         double[] s = path.get(0), s2 = path.get(path.size() - 8);
         Vector back = new Vector(s2[0] - s[0], 0, s2[1] - s[1]).normalize(); // dozadu od čáry
         Vector side = new Vector(-back.getZ(), 0, back.getX());

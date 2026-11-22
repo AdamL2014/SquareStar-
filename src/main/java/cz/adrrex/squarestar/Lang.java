@@ -370,6 +370,17 @@ public final class Lang {
         a("mává", "waves");
         a("zuří", "rages");
         a("Hraje:", "Playing:"); a("= vypnout", "= turn off"); a("Hudba v lobby", "Lobby music"); a("vypnuta", "off"); a("zapnuta!", "on!"); a("hudba zap/vyp", "music on/off");
+        a("&eDoskákej na &asmaragdovou plošinu&e! Zlaté bloky jsou &6checkpointy&e. &bVznášedlo&e: nastup a vyskoč u zelené plošiny!","&eJump to the &aemerald platform&e! Gold blocks are &6checkpoints&e. &bHover carpet&e: board it and jump off at the green platform!");
+        a("Dnešní trať:", "Today's track:"); a("pokaždé jiná, tak se dívej na zatáčky!", "different every time, so watch the corners!");
+        a("Herna", "Arcade"); a("Arkádové automaty", "Arcade machines"); a("Sbírej lístky ★ a vyměň je za mince", "Collect tickets ★ and trade them for coins");
+        a("Pokladna", "Ticket counter"); a("Pokladna herny", "Arcade counter"); a("Vyměň lístky za mince", "Trade tickets for coins"); a("Východ", "Exit"); a("Zpět do lobby", "Back to lobby");
+        a("Sbírej jablka a nenarazy!", "Eat apples, don't crash!"); a("Uhýbej padajícím skalám!", "Dodge the falling rocks!"); a("Chytej hvězdy, vyhýbej se bombám!", "Catch stars, avoid bombs!");
+        a("Automat je obsazený.", "This machine is taken."); a("Ovládání:", "Controls:"); a("odejdi / Shift", "walk away / Shift"); a("Konec:", "Quit:");
+        a("Tvoje lístky:", "Your tickets:"); a("Lístky dostaneš za hry na automatech.", "You earn tickets by playing the machines."); a("Klikni pro výměnu", "Click to trade"); a("Výhodnější kurz!", "Better rate!");
+        a("Všechny lístky", "All tickets"); a("Po desítkách:", "In tens:"); a("Nemáš dost lístků!", "Not enough tickets!"); a("Máš", "You have"); a("výměna lístků", "ticket trade");
+        a("lístků", "tickets"); a("celkem", "total"); a("Vyměň je u pokladny.", "Trade them at the counter.");
+        a("Vyber si PvP", "Choose your PvP"); a("Vyber si, jaké PvP chceš:", "Pick the PvP you want:"); a("Klikni pro výběr režimu", "Click to pick a mode"); a("Vyber si režim", "Pick a mode");
+        a("všichni proti všem", "free for all"); a("Celkem hraje:", "Playing in total:");
         a("UFO nad", "UFO over"); a("kopulí", "the dome"); a("Vyšší kopule,", "Taller dome,"); a("malé vchody", "small entrances"); a("playlist", "playlist"); a("Disky vánočních", "Discs for the"); a("písniček", "Christmas songs"); a("Dárky skáčou", "Gifts hop");
         a("Nad kopulí prolétá UFO!", "A UFO is flying over the dome!"); a("Podívej se na oblohu.", "Look at the sky.");
         a("Vyber skladbu a sestav playlist", "Pick a track and build a playlist");
