@@ -40,7 +40,7 @@ import java.util.*;
  * Noty jsou vygenerované z analýzy zvuku každého disku (beat/*.csv), takže sedí na hudbu.
  */
 public final class Beat extends Game {
-    private static final int FLIGHT = 100, PRE = 110, MINGAP = 10;
+    private static final int FLIGHT = 100, PRE = 110, MINGAP = 18;
     private static final double D = 28.0, IDEAL = 4.5, MIN_DZ = 1.2, MAX_DZ = 7.5, CONE = 0.94;
     private static final double[] COLX = {-2.25, -0.75, 0.75, 2.25};
     private static final double[] ROWY = {1.5, 2.5, 3.5};
@@ -69,7 +69,7 @@ public final class Beat extends Game {
                 String[] h = r.readLine().split(",");
                 List<Note> l = new ArrayList<>(); String ln;
                 int prev = -1000; double half = 600.0 / Double.parseDouble(h[0]), f0 = Double.parseDouble(h[1]) * 20;
-                while ((ln = r.readLine()) != null) { String[] c = ln.split(","); if (c.length == 4) { int hit = (int) Math.round(Math.round((Integer.parseInt(c[0]) - f0) / half) * half + f0); if (hit - prev < MINGAP) continue; prev = hit; l.add(new Note(hit, Integer.parseInt(c[1]), Integer.parseInt(c[2]), Integer.parseInt(c[3]))); } }
+                while ((ln = r.readLine()) != null) { String[] c = ln.split(","); if (c.length == 4) { int hit = (int) Math.round(Math.round((Integer.parseInt(c[0]) - f0) / half) * half + f0); if (hit - prev < MINGAP) continue; prev = hit; { int kd = Integer.parseInt(c[3]); l.add(new Note(hit, Integer.parseInt(c[1]), Integer.parseInt(c[2]), kd == 2 ? 2 : 0)); } } }
                 return new Chart(Double.parseDouble(h[0]), Double.parseDouble(h[1]), Double.parseDouble(h[2]), l.size(), l);
             } catch (Exception e) { return null; }
         });
@@ -167,17 +167,17 @@ public final class Beat extends Game {
         b.fill(cx - 4, oy + 9, oz - 1, cx + 4, oy + 9, oz + 2, Material.BARRIER);
         List<int[]> li = new ArrayList<>();
         // světelné pruhy po okrajích dráhy
-        for (int z = z0; z <= z1; z++) for (int sd : new int[]{-3, 3}) { b.set(cx + sd, oy, z, Material.SEA_LANTERN); li.add(new int[]{cx + sd, oy, z}); }
+        for (int z = z0; z <= z1; z++) for (int sd : new int[]{-3, 3}) { b.set(cx + sd, oy, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, oy, z}); }
         // tunel z obdélníkových rámů (jako v Beat Saberu) mizí do dálky
         for (int z = oz - 6; z >= z0; z -= 6) {
-            for (int y = 1; y <= 10; y++) for (int sd : new int[]{-6, 6}) { b.set(cx + sd, oy + y, z, Material.SEA_LANTERN); li.add(new int[]{cx + sd, oy + y, z}); }
-            for (int x = -6; x <= 6; x++) { b.set(cx + x, oy + 11, z, Material.SEA_LANTERN); li.add(new int[]{cx + x, oy + 11, z}); }
+            for (int y = 1; y <= 10; y++) for (int sd : new int[]{-6, 6}) { b.set(cx + sd, oy + y, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, oy + y, z}); }
+            for (int x = -6; x <= 6; x++) { b.set(cx + x, oy + 11, z, Material.RED_CONCRETE); li.add(new int[]{cx + x, oy + 11, z}); }
             // tmavé výplně mezi rámy, ať je tunel „hluboký"
             for (int y = 1; y <= 10; y += 3) for (int sd : new int[]{-7, 7}) b.fill(cx + sd, oy + y, z - 5, cx + sd, oy + y + 1, z - 1, Material.BLACK_CONCRETE);
         }
         // vysoké neonové sloupy po stranách
         for (int z = oz - 12; z >= z0; z -= 12) for (int sd : new int[]{-10, 10}) {
-            for (int y = 1; y <= 14; y++) { b.set(cx + sd, oy + y, z, Material.SEA_LANTERN); li.add(new int[]{cx + sd, oy + y, z}); }
+            for (int y = 1; y <= 14; y++) { b.set(cx + sd, oy + y, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, oy + y, z}); }
         }
         lights.put(0, li);
     }
@@ -194,11 +194,11 @@ public final class Beat extends Game {
             p.teleport(new Location(w, s.sx, oy + 1, oz + 0.5, 180, 0));
             p.setWalkSpeed(0.2f);
             p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, PotionEffect.INFINITE_DURATION, 250, false, false, false));
-            ItemStack sw = U.item(Material.DIAMOND_SWORD, 1, "&b&lSvětelný meč", "&cLevé tlačítko &7= červené kostky", "&9Pravé tlačítko &7= modré kostky", "&7Pohybuj se &fA/D &7a uhýbej zdem", "&4TNT netrefuj!");
+            ItemStack sw = cz.adrrex.squarestar.Cosmetics.model(Material.DIAMOND_SWORD, "saber_red", "&c&lSvětelný meč", "&7Klikni (levé i pravé) na červenou kostku", "&7Pohybuj se &fA/D &7a uhýbej zdem", "&4TNT netrefuj!");
             var m = sw.getItemMeta(); m.setUnbreakable(true); m.addItemFlags(org.bukkit.inventory.ItemFlag.values()); sw.setItemMeta(m);
             p.getInventory().setItem(0, sw); p.getInventory().setHeldItemSlot(0);
         }
-        broadcast("&d&lNEON BEAT! &7Hraje &d" + songName(song) + " &8(" + Math.round(ch.bpm) + " BPM, " + ch.notes + " kostek)&7. &cčervená &7= &fLEVÉ&7, &9modrá &7= &fPRAVÉ &7tlačítko, &fA/D &7uhýbej zdem. &4TNT netrefuj!");
+        broadcast("&d&lNEON BEAT! &7Hraje &d" + songName(song) + " &8(" + Math.round(ch.bpm) + " BPM, " + ch.notes + " kostek)&7. &cČervené kostky seknout (levé nebo pravé tlačítko), &fA/D &7uhýbej zdem. &4TNT netrefuj!");
         task = Bukkit.getScheduler().runTaskTimer(pl, this::loop, 1, 1);
     }
 
@@ -220,7 +220,7 @@ public final class Beat extends Game {
             int[] w_ = walls.get(wi++);
             for (var e : st.entrySet()) if (alive.contains(e.getKey())) spawnWall(e.getKey(), e.getValue(), w_[1]);
         }
-        if (t % 3 == 0) for (var e : st.entrySet()) if (alive.contains(e.getKey())) speedLines(e.getKey(), e.getValue());
+
         for (var e : new ArrayList<>(st.entrySet())) {
             Player p = e.getKey(); St s = e.getValue();
             if (!p.isOnline()) continue;
@@ -229,7 +229,7 @@ public final class Beat extends Game {
                 move(l);
                 double dz = dz(l);
                 if (l.n == null) {          // zeď
-                    if (t % 2 == 0 && dz < 14 && dz > 0) for (int q = 0; q < 5; q++) w.spawnParticle(Particle.ELECTRIC_SPARK, l.wx + (rnd.nextDouble() - .5) * l.ww, oy + 1 + rnd.nextDouble() * 4, zNow(l) + 0.3, 0, 0, 0, 0.5, 0.2);
+                    if (t % 2 == 0 && dz < 14 && dz > 0) for (int q = 0; q < 2; q++) w.spawnParticle(Particle.ELECTRIC_SPARK, l.wx + (rnd.nextDouble() - .5) * l.ww, oy + 1 + rnd.nextDouble() * 4, zNow(l) + 0.3, 0, 0, 0, 0.5, 0.2);
                     if (!l.done && dz < 0.5) {
                         l.done = true;
                         if (alive.contains(p) && Math.abs(p.getLocation().getX() - l.wx) < l.ww / 2 + 0.3) {
@@ -256,8 +256,8 @@ public final class Beat extends Game {
 
     private void pulse(int beat) {
         boolean sw = (beat / 8) % 2 == 1;           // po 8 dobách se strany prohodí (jako v originále)
-        BlockData red = Bukkit.createBlockData(Material.RED_CONCRETE), blue = Bukkit.createBlockData(Material.BLUE_CONCRETE), flash = Bukkit.createBlockData(Material.WHITE_CONCRETE), dark = Bukkit.createBlockData(Material.BLACK_CONCRETE);
-        BlockData left = sw ? blue : red, right = sw ? red : blue;
+        BlockData red = Bukkit.createBlockData(Material.RED_CONCRETE), dim = Bukkit.createBlockData(Material.RED_TERRACOTTA), flash = Bukkit.createBlockData(Material.PINK_CONCRETE);
+        BlockData left = sw ? dim : red, right = sw ? red : dim;
         for (var e : st.entrySet()) {
             Player p = e.getKey(); if (!p.isOnline()) continue;
             List<int[]> li = lights.get(e.getValue().idx); if (li == null) continue;
@@ -307,13 +307,12 @@ public final class Beat extends Game {
 
     /** paprsky jisker rozletující se do všech stran + rozříznutá kostka */
     private void cutFx(Location c, int kind, Vector look) {
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 10; i++) {      // jen pár jisker, ať nezakrývají výhled
             Vector v = new Vector(rnd.nextGaussian(), rnd.nextGaussian(), rnd.nextGaussian()).normalize();
-            w.spawnParticle(i % 3 == 0 ? Particle.ELECTRIC_SPARK : Particle.END_ROD, c, 0, v.getX(), v.getY(), v.getZ(), 0.28 + rnd.nextDouble() * 0.3);
+            w.spawnParticle(Particle.ELECTRIC_SPARK, c, 0, v.getX(), v.getY(), v.getZ(), 0.25 + rnd.nextDouble() * 0.2);
         }
-        w.spawnParticle(Particle.DUST, c, 18, .18, .18, .18, 0, kind == 0 ? REDD : BLUED);
-        w.spawnParticle(Particle.FLASH, c, 1, 0, 0, 0, 0, Color.WHITE);
-        Material m = kind == 0 ? Material.RED_CONCRETE : Material.BLUE_CONCRETE;
+        w.spawnParticle(Particle.DUST, c, 5, .15, .15, .15, 0, REDD);
+        Material m = Material.RED_CONCRETE;
         boolean horiz = rnd.nextBoolean();
         for (int sgn = -1; sgn <= 1; sgn += 2) {
             final int sg = sgn;
@@ -322,41 +321,38 @@ public final class Beat extends Game {
             Vector3f off = horiz ? new Vector3f(-h, sg > 0 ? 0 : -h, -h) : new Vector3f(sg > 0 ? 0 : -h, -h, -h);
             BlockDisplay d = w.spawn(c, BlockDisplay.class, x -> {
                 x.setPersistent(false); x.setBlock(m.createBlockData()); x.setBrightness(new Display.Brightness(15, 15));
-                x.setInterpolationDuration(14); x.setInterpolationDelay(0);
+                x.setInterpolationDuration(8); x.setInterpolationDelay(0);
                 x.setTransformation(new Transformation(off, new Quaternionf(), size, new Quaternionf()));
             });
             Bukkit.getScheduler().runTaskLater(pl, () -> {
                 if (!d.isValid()) return;
-                Vector3f mv = horiz ? new Vector3f((float) (rnd.nextGaussian() * .3), sg * 0.9f, -1.2f) : new Vector3f(sg * 0.9f, (float) (rnd.nextGaussian() * .3), -1.2f);
+                Vector3f mv = horiz ? new Vector3f(0, sg * 0.9f, -1.5f) : new Vector3f(sg * 0.9f, 0, -1.5f);
                 d.setInterpolationDelay(0);
-                d.setTransformation(new Transformation(new Vector3f(off).add(mv), new Quaternionf().rotateZ(sg * 1.2f).rotateX(0.6f), new Vector3f(size).mul(0.35f), new Quaternionf()));
+                d.setTransformation(new Transformation(new Vector3f(off).add(mv), new Quaternionf().rotateZ(sg * 1.0f), new Vector3f(size).mul(0.25f), new Quaternionf()));
             }, 1L);
-            Bukkit.getScheduler().runTaskLater(pl, d::remove, 15L);
+            Bukkit.getScheduler().runTaskLater(pl, d::remove, 9L);
         }
     }
 
-    /** světelná stopa meče při každém seknutí */
+    /** červená světelná stopa meče – dole u pravé ruky, mimo střed výhledu */
     private void saberTrail(Player p, int kind) {
         Location eye = p.getEyeLocation(); Vector look = eye.getDirection().normalize();
-        Vector up = new Vector(0, 1, 0), side = look.clone().crossProduct(up).normalize(); Vector up2 = side.clone().crossProduct(look).normalize();
-        double ang = rnd.nextDouble() * Math.PI; Vector dir = side.clone().multiply(Math.cos(ang)).add(up2.clone().multiply(Math.sin(ang)));
-        Location mid = eye.clone().add(look.clone().multiply(1.9));
-        for (double k = -1.3; k <= 1.3; k += 0.1) {
-            Location q = mid.clone().add(dir.clone().multiply(k));
-            w.spawnParticle(Particle.DUST, q, 1, 0, 0, 0, 0, kind == 0 ? REDD : BLUED);
-            if (((int) (k * 10)) % 3 == 0) w.spawnParticle(Particle.END_ROD, q, 0, look.getX(), look.getY(), look.getZ(), 0.02);
-        }
+        Vector side = look.clone().crossProduct(new Vector(0, 1, 0)).normalize(); Vector up2 = side.clone().crossProduct(look).normalize();
+        Location mid = eye.clone().add(look.clone().multiply(1.6)).add(side.clone().multiply(-0.55)).add(up2.clone().multiply(-0.55));
+        double ang = Math.PI * (0.15 + 0.2 * rnd.nextDouble());
+        Vector dir = side.clone().multiply(-Math.cos(ang)).add(up2.clone().multiply(Math.sin(ang)));
+        for (double k = -0.6; k <= 0.6; k += 0.12) p.spawnParticle(Particle.DUST, mid.clone().add(dir.clone().multiply(k)), 1, 0, 0, 0, 0, REDD);
     }
 
     /** plovoucí skóre u zásahu */
     private void popup(Location c, String txt) {
         org.bukkit.entity.TextDisplay td = w.spawn(c.clone().add(0, 0.4, 0), org.bukkit.entity.TextDisplay.class, x -> {
             x.setPersistent(false); x.text(U.c(txt)); x.setBillboard(Display.Billboard.CENTER); x.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
-            x.setShadowed(true); x.setInterpolationDuration(14); x.setInterpolationDelay(0);
-            x.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(1.3f, 1.3f, 1.3f), new Quaternionf()));
+            x.setShadowed(true); x.setInterpolationDuration(10); x.setInterpolationDelay(0);
+            x.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(0.8f, 0.8f, 0.8f), new Quaternionf()));
         });
-        Bukkit.getScheduler().runTaskLater(pl, () -> { if (td.isValid()) { td.setInterpolationDelay(0); td.setTransformation(new Transformation(new Vector3f(0, 0.9f, 0), new Quaternionf(), new Vector3f(0.6f, 0.6f, 0.6f), new Quaternionf())); } }, 1L);
-        Bukkit.getScheduler().runTaskLater(pl, td::remove, 15L);
+        Bukkit.getScheduler().runTaskLater(pl, () -> { if (td.isValid()) { td.setInterpolationDelay(0); td.setTransformation(new Transformation(new Vector3f(0, 0.6f, 0), new Quaternionf(), new Vector3f(0.4f, 0.4f, 0.4f), new Quaternionf())); } }, 1L);
+        Bukkit.getScheduler().runTaskLater(pl, td::remove, 10L);
     }
 
     /** zeď: uhni do strany (0 = levá polovina, 1 = pravá, 2 = střed) */
@@ -371,9 +367,9 @@ public final class Beat extends Game {
 
     /** čáry rychlosti letící tunelem k hráči */
     private void speedLines(Player p, St s) {
-        for (int i = 0; i < 6; i++) {
-            Location l = new Location(w, s.sx + (rnd.nextDouble() - .5) * 7, oy + 1 + rnd.nextDouble() * 5, oz + 0.5 - D + rnd.nextDouble() * 6);
-            p.spawnParticle(i % 2 == 0 ? Particle.END_ROD : Particle.ELECTRIC_SPARK, l, 0, 0, 0, 1, 1.1);
+        for (int i = 0; i < 2; i++) {
+            Location l = new Location(w, s.sx + (rnd.nextDouble() - .5) * 9, oy + 1 + rnd.nextDouble() * 5, oz + 0.5 - D + rnd.nextDouble() * 6);
+            p.spawnParticle(Particle.DUST, l, 0, 0, 0, 0, 0, REDD);
         }
     }
 
@@ -399,7 +395,7 @@ public final class Beat extends Game {
         if (s == null || !alive.contains(p)) return;
         int kind; Action a = e.getAction();
         if (a == Action.LEFT_CLICK_AIR || a == Action.LEFT_CLICK_BLOCK) kind = 0;
-        else if ((a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) && e.getHand() == EquipmentSlot.HAND) kind = 1;
+        else if ((a == Action.RIGHT_CLICK_AIR || a == Action.RIGHT_CLICK_BLOCK) && e.getHand() == EquipmentSlot.HAND) kind = 0;
         else return;
         e.setCancelled(true);
         swing(p, s, kind);
