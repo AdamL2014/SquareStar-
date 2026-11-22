@@ -86,25 +86,50 @@ public final class Stats {
         panel = new BlockDisplayHolder();
         panel.d = pl.mars.spawn(new Location(pl.mars, CX, cy, CZ + 0.08, (float) face, 0), org.bukkit.entity.BlockDisplay.class, d -> {
             d.setRotation(180f, 0f);
-            d.setBlock(org.bukkit.Material.BLUE_STAINED_GLASS.createBlockData());
+            d.setBlock(org.bukkit.Material.BLACK_CONCRETE.createBlockData());
             d.setPersistent(false); d.addScoreboardTag(TAG);
             d.setBrightness(new Display.Brightness(15, 15));
-            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(-4.1f, -2.5f, -0.05f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(8.2f, 5.0f, 0.1f), new org.joml.AxisAngle4f()));
+            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(-4.1f, -2.9f, -0.05f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(8.2f, 5.4f, 0.1f), new org.joml.AxisAngle4f()));
         });
         float sc = 1.2f;
         // pozn.: čelem k severu je pravá strana diváka = -X
         TextDisplay title = text(new Location(pl.mars, CX, cy + 1.95, CZ - 0.05, (float) face, 0), 1.5f, TextDisplay.TextAlignment.CENTER, 300);
         TextDisplay names = text(new Location(pl.mars, CX + 1.2, cy - 0.35, CZ - 0.05, (float) face, 0), sc, TextDisplay.TextAlignment.LEFT, 400);
         TextDisplay vals = text(new Location(pl.mars, CX - 3.0, cy - 0.35, CZ - 0.05, (float) face, 0), sc, TextDisplay.TextAlignment.RIGHT, 200);
-        boards.add(title); boards.add(names); boards.add(vals);
+        TextDisplay timer = text(new Location(pl.mars, CX - 2.8, cy - 2.68, CZ - 0.05, (float) face, 0), 0.9f, TextDisplay.TextAlignment.CENTER, 200);
+        boards.add(title); boards.add(names); boards.add(vals); boards.add(timer);
         for (TextDisplay d : boards) Holo.dual(d, "");
         refresh();
-        if (task == null) task = Bukkit.getScheduler().runTaskTimer(pl, () -> { cur = (cur + 1) % BOARDS.length; refresh(); }, 300, 300);
+        // tenká lišta dole: plní se a když se vyplní, tabule přepne na další kategorii
+        var track = pl.mars.spawn(new Location(pl.mars, CX, cy - 2.3, CZ - 0.06, 0f, 0f), org.bukkit.entity.BlockDisplay.class, d -> {
+            d.setBlock(org.bukkit.Material.GRAY_CONCRETE.createBlockData()); d.setPersistent(false); d.addScoreboardTag(TAG);
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(-3.8f, 0f, 0f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(7.6f, 0.07f, 0.03f), new org.joml.AxisAngle4f()));
+        });
+        fill = pl.mars.spawn(new Location(pl.mars, CX, cy - 2.3, CZ - 0.09, 0f, 0f), org.bukkit.entity.BlockDisplay.class, d -> {
+            d.setBlock(org.bukkit.Material.WHITE_CONCRETE.createBlockData()); d.setPersistent(false); d.addScoreboardTag(TAG);
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(3.8f, 0f, 0f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(0.001f, 0.07f, 0.03f), new org.joml.AxisAngle4f()));
+        });
+        cyc = 0; Holo.setText(timer, "&7⏱ &f" + CYCLE / 20 + " s");
+        if (task == null) task = Bukkit.getScheduler().runTaskTimer(pl, () -> {
+            cyc += 4;
+            if (boards.size() >= 4 && boards.get(3).isValid() && cyc % 20 == 0) Holo.setText(boards.get(3), "&7⏱ &f" + Math.max(1, (CYCLE - cyc) / 20) + " s");
+            if (cyc >= CYCLE) { cyc = 0; cur = (cur + 1) % BOARDS.length; refresh(); }
+            if (fill != null && fill.isValid()) {
+                float w = Math.max(0.001f, 7.6f * cyc / CYCLE);
+                fill.setInterpolationDelay(0); fill.setInterpolationDuration(4);
+                fill.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(3.8f - w, 0f, 0f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(w, 0.07f, 0.03f), new org.joml.AxisAngle4f()));
+            }
+        }, 4, 4);
     }
     private org.bukkit.scheduler.BukkitTask task;
+    private org.bukkit.entity.BlockDisplay fill;
+    private int cyc;
+    private static final int CYCLE = 300;   // 15 s
 
     public void refresh() {
-        if (boards.size() < 3) return;
+        if (boards.size() < 4) return;
         for (TextDisplay d : boards) if (!d.isValid()) { spawnBoards(); return; }
         String[] cat = BOARDS[cur];
         var t = top(cat[0], 10);

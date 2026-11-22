@@ -494,6 +494,17 @@ public final class LobbyFx implements Listener {
             e.addScoreboardTag(TAG);
             e.addScoreboardTag("ss_npc_vidrift");
         });
+        // cedule VidRift ZA postavou (dál od středu, aby nic nepřekrývala)
+        Vector back = l.getDirection().clone().multiply(-1).setY(0).normalize();
+        Location sg = l.clone().add(back.getX() * 1.6, 3.0, back.getZ() * 1.6);
+        TextDisplay vh = pl.mars.spawn(sg, TextDisplay.class, d -> {
+            d.setBillboard(Display.Billboard.VERTICAL);
+            d.setBackgroundColor(Color.fromARGB(220, 7, 6, 13));
+            d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(1.6f, 1.6f, 1.6f), new AxisAngle4f()));
+            d.setBrightness(new Display.Brightness(15, 15));
+            d.addScoreboardTag(TAG); d.setPersistent(false);
+        });
+        Holo.dual(vh, "&b&lVid&d&lRift\n&f▶ Podívej se na film ◀\n&7filmy &8• &7kanály &8• &7hry");
         pl.mars.getBlockAt(l.getBlockX(), Lobby.Y, l.getBlockZ()).setType(Material.PURPLE_GLAZED_TERRACOTTA, false);
     }
     // ---------------- Redstone týden NPC (vlevo vpředu, zrcadlově k VidRiftu) ----------------

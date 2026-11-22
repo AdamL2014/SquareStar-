@@ -39,8 +39,10 @@ public final class Ufo implements CommandExecutor {
     private BlockDisplay part(Location at, Material m, float sx, float sy, float sz, float rotY) {
         return pl.mars.spawn(at, BlockDisplay.class, d -> {
             d.setBlock(m.createBlockData());
-            // střed bloku do počátku
-            d.setTransformation(new Transformation(new Vector3f(-sx / 2, -sy / 2, -sz / 2), new AxisAngle4f(rotY, 0, 1, 0), new Vector3f(sx, sy, sz), new AxisAngle4f()));
+            // střed bloku přesně do počátku i po otočení (posun se počítá až po rotaci – dřív vrstvy ujížděly a tvar byl křivý)
+            double cs = Math.cos(rotY), sn = Math.sin(rotY), a = sx / 2.0, b = sz / 2.0;
+            Vector3f tr = new Vector3f((float) -(a * cs + b * sn), -sy / 2, (float) -(-a * sn + b * cs));
+            d.setTransformation(new Transformation(tr, new AxisAngle4f(rotY, 0, 1, 0), new Vector3f(sx, sy, sz), new AxisAngle4f()));
             d.setBrightness(new Display.Brightness(15, 15));
             d.setTeleportDuration(2);
             d.addScoreboardTag(TAG); d.setPersistent(false); d.setViewRange(8f);

@@ -56,15 +56,12 @@ public final class Music implements CommandExecutor, Listener {
             vanilla("11", Sound.MUSIC_DISC_11, "11 – C418", 71, Material.MUSIC_DISC_11),
             vanilla("tears", Sound.MUSIC_DISC_TEARS, "Tears – Amos Roddy", 175, Material.MUSIC_DISC_TEARS),
             vanilla("lavachicken", Sound.MUSIC_DISC_LAVA_CHICKEN, "Lava Chicken – Hyper Potions", 135, Material.MUSIC_DISC_LAVA_CHICKEN),
-            // novější disky: zvuk existuje jen v klientech 26.2+ (Bounce) a 26.4+ (Flurry), starším klientům je ticho
-            new Track("bounce", "minecraft:music_disc.bounce", "Bounce – fingerspit", 234, Material.MUSIC_DISC_CREATOR_MUSIC_BOX),
-            new Track("flurry", "minecraft:music_disc.flurry", "Flurry – Hyper Potions", 154, Material.MUSIC_DISC_STRAD),
             new Track("xmas1", "squarestar:music.xmas1", "❄ Vánoce na Marsu – SquareStar", 60, Material.MUSIC_DISC_CAT),
             new Track("xmas2", "squarestar:music.xmas2", "❄ Sněžná noc – SquareStar", 60, Material.MUSIC_DISC_13));
     private static final List<String> AUTO = List.of("far", "relic", "otherside", "mall", "precipice", "creator");
     /** o Vánocích: vlastní vánoční písničky střídané s klidnými deskami */
     private static final List<String> AUTO_XMAS = List.of("xmas1", "far", "xmas2", "otherside");
-    private static final int[] SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40};
+    private static final int[] SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38};
 
     private static Track track(String id) { for (Track t : CAT) if (t.id.equals(id)) return t; return null; }
 

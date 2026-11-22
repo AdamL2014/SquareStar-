@@ -42,9 +42,35 @@ public final class Lobby implements Listener {
             if (dv < 2) upgradeDome(() -> pl.getLogger().info("Kopule hotova!")); else openDoors(() -> pl.getLogger().info("Vchody vraceny na puvodni velikost."));
         }
         if (old) pl.mars.getPersistentDataContainer().set(domeKey, org.bukkit.persistence.PersistentDataType.INTEGER, 6);
+        if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) groundPass();
         if (!old && pl.mars.getBlockAt(0, Y, 0).getType() != Material.AIR) { spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); return; }
         pl.getLogger().info("Stavim Mars lobby...");
         build(() -> { pl.getLogger().info("Mars lobby hotova!"); spawnHolo(); pl.crates.placeBlocks(); pl.fx.spawnAll(); });
+    }
+
+    /** jednorázová oprava: lampy a věci, které visely ve vzduchu bez bloku pod sebou, dostanou základ; zmizí podstavce starých žebříčků */
+    private void groundPass() {
+        var key = new org.bukkit.NamespacedKey("squarestar", "ground_ver");
+        var pdc = pl.mars.getPersistentDataContainer();
+        if (pdc.getOrDefault(key, org.bukkit.persistence.PersistentDataType.INTEGER, 0) >= 1) return;
+        pdc.set(key, org.bukkit.persistence.PersistentDataType.INTEGER, 1);
+        World w = pl.mars; int fixed = 0;
+        // podstavce starých žebříčků pryč (zůstane jen plochá podlaha)
+        for (int[] p : new int[][]{{-14, 5}, {-9, 12}, {8, 12}, {13, 5}}) {
+            w.getBlockAt(p[0], Y + 1, p[1]).setType(Material.AIR, false);
+            w.getBlockAt(p[0], Y + 2, p[1]).setType(Material.AIR, false);
+        }
+        for (int x = -56; x <= 56; x++) for (int z = -56; z <= 56; z++) {
+            if (x * x + z * z <= 19 * 19 || x * x + z * z > 56 * 56) continue;            // kopuli nechat
+            for (int y = Y + 12; y >= Y + 1; y--) {
+                Material m = w.getBlockAt(x, y, z).getType();
+                boolean lamp = m == Material.SEA_LANTERN || m == Material.END_ROD || m == Material.POLISHED_BLACKSTONE_WALL || m == Material.IRON_BARS;
+                if (!lamp || !w.getBlockAt(x, y - 1, z).getType().isAir()) continue;
+                for (int yy = y - 1; yy >= Y - 14 && w.getBlockAt(x, yy, z).getType().isAir(); yy--) { w.getBlockAt(x, yy, z).setType(yy >= Y + 1 ? Material.POLISHED_BLACKSTONE_WALL : Material.POLISHED_BLACKSTONE, false); fixed++; }
+                break;
+            }
+        }
+        pl.getLogger().info("Lobby: doplneno " + fixed + " bloku pod visici lampy/stozary.");
     }
 
     static final int D = 18, DH = 28;
@@ -157,6 +183,7 @@ public final class Lobby implements Listener {
             }
             for (int t = 20; t <= 44; t += 6) for (int side : new int[]{-2, 2}) {
                 int x = dir[0] * t + dir[1] * side, z = dir[1] * t + dir[0] * side;
+                b.fill(x, Y - 8, z, x, Y, z, Material.POLISHED_BLACKSTONE);   // pevný základ, ať lampa nevisí ve vzduchu
                 b.fill(x, Y + 1, z, x, Y + 3, z, Material.POLISHED_BLACKSTONE_WALL);
                 b.set(x, Y + 4, z, Material.SEA_LANTERN);
             }
@@ -251,13 +278,6 @@ public final class Lobby implements Listener {
                 x += Math.cos(a); z += Math.sin(a);
                 b.set((int) x, Y, (int) z, k % 5 == 0 ? Material.SHROOMLIGHT : Material.MAGMA_BLOCK);
             }
-        }
-        // podstavce pod žebříčky (po stranách náměstí)
-        for (int[] p : new int[][]{{-14, 5}, {-9, 12}, {8, 12}, {13, 5}}) {
-            b.fill(p[0] - 1, Y, p[1] - 1, p[0] + 1, Y, p[1] + 1, Material.POLISHED_BLACKSTONE);
-            b.set(p[0], Y, p[1], Material.SEA_LANTERN);
-            b.set(p[0], Y + 1, p[1], Material.POLISHED_BLACKSTONE_WALL);
-            b.set(p[0], Y + 2, p[1], Material.END_ROD);
         }
     }
 
