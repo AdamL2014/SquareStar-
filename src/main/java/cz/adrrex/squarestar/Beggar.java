@@ -22,6 +22,8 @@ public final class Beggar implements Listener {
     private final SquareStar pl;
     private Mannequin npc;
     private ItemDisplay pigeon;
+    private ArmorStand seat;
+    private static final double SIT_DY = -0.05;   // posadí hráče „zadkem“ na podlahu
     private final Map<UUID, Long> asked = new HashMap<>();
     private final Random rnd = new Random();
     private int tick;
@@ -41,25 +43,47 @@ public final class Beggar implements Listener {
 
     private void spawn() {
         for (var e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(TAG)) e.remove();
-        Location l = new Location(pl.mars, X, Lobby.Y + 1, Z);
+        double fy = Lobby.Y + 1;                                           // povrch podlahy
+        Location l = new Location(pl.mars, X, fy + SIT_DY, Z);
         l.setDirection(new org.bukkit.util.Vector(-X, 0, -Z));
+        seat = pl.mars.spawn(l, ArmorStand.class, a -> {
+            a.setPersistent(false); a.addScoreboardTag(TAG); a.setInvisible(true); a.setMarker(true); a.setGravity(false); a.setSilent(true);
+        });
         npc = pl.mars.spawn(l, Mannequin.class, m -> {
             LobbyFx.npc(m, "&6&lVesmírný bezdomovec", "&eKlikni = dej mu 5 mincí", "beggar");
             m.addScoreboardTag(TAG);
             var eq = m.getEquipment();
             eq.setHelmet(null); eq.setChestplate(null); eq.setLeggings(null); eq.setBoots(null);
-            eq.setItemInMainHand(new ItemStack(Material.BOWL));
             m.setProfile(io.papermc.paper.datacomponent.item.ResolvableProfile.resolvableProfile()
                     .skinPatch(sp -> sp.body(net.kyori.adventure.key.Key.key("squarestar", "entity/bezdomovec"))).build());
         });
-        // holub na rameni (pravé rameno NPC)
+        seat.addPassenger(npc);                                            // sedí (jízdní póza)
+        npc.setRotation(l.getYaw(), 0);
+        if (System.getProperty("ssdebug") != null) Bukkit.getScheduler().runTaskLater(pl, () -> pl.getLogger().info("BEGGAR seat y=" + seat.getLocation().getY() + " npc y=" + npc.getLocation().getY()), 20);
         double yaw = Math.toRadians(l.getYaw());
-        double rx = -Math.cos(yaw) * 0.0, rz = 0;
-        Location pl_ = l.clone().add(-Math.cos(yaw) * 0.32, 1.5, -Math.sin(yaw) * 0.32);
-        pigeon = pl.mars.spawn(pl_, ItemDisplay.class, d -> {
+        // kalíšek s drobnými před ním
+        Location cup = new Location(pl.mars, X, fy, Z).add(-Math.sin(yaw) * 0.85, 0.02, Math.cos(yaw) * 0.85);
+        pl.mars.spawn(cup, ItemDisplay.class, d -> {
             d.setPersistent(false); d.addScoreboardTag(TAG);
-            ItemStack it = Cosmetics.model(Material.PAPER, "pet_pigeon", "Holub");
-            d.setItemStack(it);
+            d.setItemStack(new ItemStack(Material.BOWL));
+            d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+            d.setTransformation(new Transformation(new Vector3f(0, 0.16f, 0), new Quaternionf().rotateX((float) Math.toRadians(-90)), new Vector3f(0.45f, 0.45f, 0.45f), new Quaternionf()));
+        });
+        for (int i = 0; i < 4; i++) {
+            final int k = i;
+            pl.mars.spawn(cup.clone().add((k % 2 - .5) * 0.1, 0.1 + k * 0.012, (k / 2 - .5) * 0.1), ItemDisplay.class, d -> {
+                d.setPersistent(false); d.addScoreboardTag(TAG);
+                d.setItemStack(new ItemStack(Material.GOLD_NUGGET));
+                d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+                d.setBrightness(new Display.Brightness(15, 15));
+                d.setTransformation(new Transformation(new Vector3f(), new Quaternionf().rotateX((float) Math.toRadians(-90)).rotateZ(k * 1.3f), new Vector3f(0.18f, 0.18f, 0.18f), new Quaternionf()));
+            });
+        }
+        // holub na rameni (pravé rameno)
+        Location pgl = new Location(pl.mars, X, fy + 0.8, Z).add(Math.cos(yaw) * 0.32 * -1, 0, Math.sin(yaw) * 0.32 * -1);
+        pigeon = pl.mars.spawn(pgl, ItemDisplay.class, d -> {
+            d.setPersistent(false); d.addScoreboardTag(TAG);
+            d.setItemStack(Cosmetics.model(Material.PAPER, "pet_pigeon", "Holub"));
             d.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
             d.setBrightness(new Display.Brightness(14, 14));
             d.setInterpolationDuration(10); d.setInterpolationDelay(0);

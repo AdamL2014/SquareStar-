@@ -152,36 +152,34 @@ public final class Beat extends Game {
 
     // ---------------- stavba: otevřený neonový tunel (nic nad hráčem) ----------------
     @Override protected void buildMap(U.BlockQueue.Builder b) {
-        Material floor = Material.BLACK_CONCRETE;
-        Material[] ring = {Material.MAGENTA_CONCRETE, Material.CYAN_CONCRETE, Material.PURPLE_CONCRETE};
-        int n = Math.max(1, players.size());
+        int cx = (int) Math.floor(sx(0));
         lights.clear();
-        for (int i = 0; i < n; i++) {
-            int cx = (int) Math.floor(sx(i));
-            int z0 = oz - 28, z1 = oz + 4;
-            b.fill(cx - 3, oy, z0, cx + 3, oy, z1, floor);
-            b.fill(cx - 3, oy, z0, cx - 3, oy, z1, Material.RED_CONCRETE);
-            b.fill(cx + 3, oy, z0, cx + 3, oy, z1, Material.BLUE_CONCRETE);
-            b.fill(cx, oy, z0, cx, oy, z1, Material.SEA_LANTERN);
-            b.fill(cx - 2, oy, oz - 3, cx + 2, oy, oz - 3, Material.WHITE_CONCRETE);                 // zóna zásahu
-            // neviditelné bariéry (strop je jen neviditelný, nic nevisí nad hlavou)
-            b.fill(cx - 4, oy + 1, z0 - 1, cx - 4, oy + 9, z1 + 1, Material.BARRIER);
-            b.fill(cx + 4, oy + 1, z0 - 1, cx + 4, oy + 9, z1 + 1, Material.BARRIER);
-            b.fill(cx - 4, oy + 9, z0 - 1, cx + 4, oy + 9, z1 + 1, Material.BARRIER);
-            b.fill(cx - 4, oy + 1, z1 + 1, cx + 4, oy + 9, z1 + 1, Material.BARRIER);
-            b.fill(cx - 4, oy + 1, oz - 1, cx + 4, oy + 9, oz - 1, Material.BARRIER);                 // hráč se hýbe jen do stran
-            b.fill(cx - 4, oy + 1, oz + 2, cx + 4, oy + 9, oz + 2, Material.BARRIER);
-            b.fill(cx - 4, oy + 1, z0 - 1, cx + 4, oy + 9, z0 - 1, Material.BARRIER);
-            // neonové sloupy po stranách (světelná show na rytmus)
-            List<int[]> li = new ArrayList<>(); int k = 0;
-            for (int z = oz - 24; z <= oz + 2; z += 4, k++) {
-                for (int s : new int[]{-3, 3}) {
-                    b.fill(cx + s, oy + 1, z, cx + s, oy + 7, z, ring[k % ring.length]);
-                    for (int y = 1; y <= 7; y += 2) li.add(new int[]{cx + s, oy + y, z});
-                }
-            }
-            lights.put(i, li);
+        int z0 = oz - 84, z1 = oz + 4;
+        // temná dráha + široká tmavá podlaha po stranách
+        b.fill(cx - 12, oy, z0, cx + 12, oy, z1, Material.BLACK_CONCRETE);
+        b.fill(cx - 3, oy, z0, cx + 3, oy, z1, Material.GRAY_CONCRETE);
+        b.fill(cx - 2, oy, oz - 3, cx + 2, oy, oz - 3, Material.LIGHT_GRAY_CONCRETE);                 // zóna zásahu
+        // neviditelné bariéry kolem hráče: hýbe se jen do stran
+        b.fill(cx - 4, oy + 1, oz - 1, cx - 4, oy + 9, oz + 2, Material.BARRIER);
+        b.fill(cx + 4, oy + 1, oz - 1, cx + 4, oy + 9, oz + 2, Material.BARRIER);
+        b.fill(cx - 4, oy + 1, oz - 1, cx + 4, oy + 9, oz - 1, Material.BARRIER);
+        b.fill(cx - 4, oy + 1, oz + 2, cx + 4, oy + 9, oz + 2, Material.BARRIER);
+        b.fill(cx - 4, oy + 9, oz - 1, cx + 4, oy + 9, oz + 2, Material.BARRIER);
+        List<int[]> li = new ArrayList<>();
+        // světelné pruhy po okrajích dráhy
+        for (int z = z0; z <= z1; z++) for (int sd : new int[]{-3, 3}) { b.set(cx + sd, oy, z, Material.SEA_LANTERN); li.add(new int[]{cx + sd, oy, z}); }
+        // tunel z obdélníkových rámů (jako v Beat Saberu) mizí do dálky
+        for (int z = oz - 6; z >= z0; z -= 6) {
+            for (int y = 1; y <= 10; y++) for (int sd : new int[]{-6, 6}) { b.set(cx + sd, oy + y, z, Material.SEA_LANTERN); li.add(new int[]{cx + sd, oy + y, z}); }
+            for (int x = -6; x <= 6; x++) { b.set(cx + x, oy + 11, z, Material.SEA_LANTERN); li.add(new int[]{cx + x, oy + 11, z}); }
+            // tmavé výplně mezi rámy, ať je tunel „hluboký"
+            for (int y = 1; y <= 10; y += 3) for (int sd : new int[]{-7, 7}) b.fill(cx + sd, oy + y, z - 5, cx + sd, oy + y + 1, z - 1, Material.BLACK_CONCRETE);
         }
+        // vysoké neonové sloupy po stranách
+        for (int z = oz - 12; z >= z0; z -= 12) for (int sd : new int[]{-10, 10}) {
+            for (int y = 1; y <= 14; y++) { b.set(cx + sd, oy + y, z, Material.SEA_LANTERN); li.add(new int[]{cx + sd, oy + y, z}); }
+        }
+        lights.put(0, li);
     }
 
     // ---------------- průběh ----------------
@@ -263,8 +261,9 @@ public final class Beat extends Game {
         for (var e : st.entrySet()) {
             Player p = e.getKey(); if (!p.isOnline()) continue;
             List<int[]> li = lights.get(e.getValue().idx); if (li == null) continue;
-            int k = 0; double cx = e.getValue().sx;
-            for (int[] c : li) { boolean l_ = c[0] < cx; p.sendBlockChange(new Location(w, c[0], c[1], c[2]), (k++ % 3 == beat % 3) ? flash : (l_ ? left : right)); }
+            double cx = e.getValue().sx; Map<Location, BlockData> ch_ = new HashMap<>();
+            for (int[] c : li) { boolean l_ = c[0] < cx; ch_.put(new Location(w, c[0], c[1], c[2]), (Math.floorMod((oz - c[2]) / 6 + beat, 5) == 0) ? flash : (c[1] > oy + 10 ? ((beat % 2 == 0) ? left : right) : (l_ ? left : right))); }
+            p.sendMultiBlockChange(ch_);
         }
     }
 
