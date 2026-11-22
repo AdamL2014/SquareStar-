@@ -162,8 +162,9 @@ public final class Arcade implements Listener, CommandExecutor {
         npc(new Location(w, AX + 12.5, y + 2, 0.5), new Vector(-1, 0, 0), "&6&l★ Pokladna", "&7Vyměň lístky za mince", "ss_arc_shop", Material.GOLD_INGOT, Color.fromRGB(0xFFD60A));
         npc(new Location(w, AX - 12.5, y + 2, 0.5), new Vector(1, 0, 0), "&b&l⏏ Východ", "&7Zpět do lobby", "ss_arc_exit", Material.COMPASS, Color.fromRGB(0x3A86FF));
         // NPC v lobby
-        npc(new Location(w, 12.5, y + 1, 10.5), new Vector(-12.5, 0, -10.5), "&d&l🕹 Herna", "&7Arkádové automaty &8| &eKlikni", "ss_arc_enter", Material.NETHER_STAR, Color.fromRGB(0xFF006E));
-        w.getBlockAt(12, y, 10).setType(Material.GOLD_BLOCK, false);
+        npc(new Location(w, 11.5, y + 1, 1.5), new Vector(-11.5, 0, -1.5), "&d&l🕹 Herna", "&7Arkádové automaty &8| &eKlikni", "ss_arc_enter", Material.NETHER_STAR, Color.fromRGB(0xFF006E));
+        if (w.getBlockAt(12, y, 10).getType() == Material.GOLD_BLOCK) w.getBlockAt(12, y, 10).setType(w.getBlockAt(13, y, 10).getType(), false);   // starý podstavec NPC
+        w.getBlockAt(11, y, 1).setType(Material.GOLD_BLOCK, false);
     }
 
     private void npc(Location l, Vector dir, String name, String desc, String tag, Material hand, Color col) {
@@ -253,8 +254,9 @@ public final class Arcade implements Listener, CommandExecutor {
         if (m.player == p && m.state == 1) return;
         for (Machine o : machines) if (o.player == p && o != m) o.end(false);
         m.player = p;
+        { Location c = m.stand(); c.setY(p.getLocation().getY()); c.setYaw(180f); c.setPitch(15f); p.teleport(c); }
         oldSpeed.putIfAbsent(p.getUniqueId(), p.getWalkSpeed());
-        p.setWalkSpeed(0f);
+        p.setWalkSpeed(0.02f);
         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
         U.bar(p, "&7Ovládání: &eW A S D &8| &7Konec: &eodejdi / Shift");
         pl.getLogger().info("ARC start " + m.id + " by " + p.getName()); m.begin();
@@ -272,12 +274,28 @@ public final class Arcade implements Listener, CommandExecutor {
         for (Machine m : machines) {
             Player p = m.player;
             if (p == null) continue;
-            if (!p.isOnline() || p.getWorld() != pl.mars || !inHall(p) || p.isSneaking() || p.getLocation().distanceSquared(m.stand()) > 9) { m.end(true); continue; }
+            if (!p.isOnline() || p.getWorld() != pl.mars || !inHall(p) || p.isSneaking() || p.getLocation().distanceSquared(m.stand()) > 12) { m.end(true); continue; }
             m.t++;
-            if (m.state == 1) { m.step(p.getCurrentInput()); }
+            if (m.state == 1) { m.step(keys(p, m)); }
             else if (m.state == 2 && m.t > 70) { m.player = null; release(p); m.idle(); continue; }
             if (m.t % 2 == 0 && m.dirty) m.render();
         }
+    }
+
+    /** stisknuté směry: z Input API (klient 1.21.2+) NEBO z drobného posunu hráče (funguje i přes ViaVersion starších klientů a na Bedrocku) */
+    record Keys(boolean f, boolean b, boolean l, boolean r) {}
+    private Keys keys(Player p, Machine m) {
+        Input in = p.getCurrentInput();
+        boolean f = in.isForward(), b = in.isBackward(), l = in.isLeft(), r = in.isRight();
+        Location c = m.stand(), pos = p.getLocation();
+        double dx = pos.getX() - c.getX(), dz = pos.getZ() - c.getZ();
+        if (Math.abs(dx) > 0.006 || Math.abs(dz) > 0.006) {
+            // automat je u severní zdi, hráč kouká na sever: dopředu = -Z, doprava = +X
+            if (Math.abs(dz) >= Math.abs(dx)) { if (dz < 0) f = true; else b = true; } else { if (dx > 0) r = true; else l = true; }
+            Location back = c.clone(); back.setY(pos.getY()); back.setYaw(pos.getYaw()); back.setPitch(pos.getPitch());
+            p.teleport(back);
+        }
+        return new Keys(f, b, l, r);
     }
 
     // ------------------------------------------------------------------ automat
@@ -320,7 +338,7 @@ public final class Arcade implements Listener, CommandExecutor {
             }
         }
 
-        void step(Input in) {
+        void step(Keys in) {
             switch (id) {
                 case "snake" -> stepSnake(in);
                 case "dodge" -> stepDodge(in, false);
@@ -328,11 +346,11 @@ public final class Arcade implements Listener, CommandExecutor {
             }
         }
 
-        void stepSnake(Input in) {
-            if (in.isForward() && dirY == 0) { nx = 0; ny = -1; }
-            else if (in.isBackward() && dirY == 0) { nx = 0; ny = 1; }
-            else if (in.isLeft() && dirX == 0) { nx = -1; ny = 0; }
-            else if (in.isRight() && dirX == 0) { nx = 1; ny = 0; }
+        void stepSnake(Keys in) {
+            if (in.f() && dirY == 0) { nx = 0; ny = -1; }
+            else if (in.b() && dirY == 0) { nx = 0; ny = 1; }
+            else if (in.l() && dirX == 0) { nx = -1; ny = 0; }
+            else if (in.r() && dirX == 0) { nx = 1; ny = 0; }
             if (t % Math.max(2, period - snake.size() / 8) != 0) return;
             dirX = nx; dirY = ny;
             int[] h = snake.peekFirst();
@@ -353,10 +371,10 @@ public final class Arcade implements Listener, CommandExecutor {
         }
 
         /** Dodge (skály padají, uhýbáš) a Catch (hvězdy chytáš do košíku, bomby ne) */
-        void stepDodge(Input in, boolean catchMode) {
+        void stepDodge(Keys in, boolean catchMode) {
             if (t % 2 == 0) {
-                if (in.isLeft()) sx = Math.max(catchMode ? 1 : 0, sx - 1);
-                else if (in.isRight()) sx = Math.min(catchMode ? W - 2 : W - 1, sx + 1);
+                if (in.l()) sx = Math.max(catchMode ? 1 : 0, sx - 1);
+                else if (in.r()) sx = Math.min(catchMode ? W - 2 : W - 1, sx + 1);
             }
             int per = Math.max(2, period - t / 500);
             if (t % per == 0) {
