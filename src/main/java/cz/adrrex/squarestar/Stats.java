@@ -7,6 +7,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.TextDisplay;
 
 import java.io.File;
@@ -84,13 +85,19 @@ public final class Stats {
         for (int i = 0; i < BOARDS.length && i < boards.size(); i++) {
             TextDisplay d = boards.get(i);
             if (!d.isValid()) { spawnBoards(); return; }
-            StringBuilder s = new StringBuilder(BOARDS[i][1]).append("\n&8▬▬▬▬▬▬▬▬▬▬▬▬\n");
             var t = top(BOARDS[i][0], 10);
-            if (t.isEmpty()) s.append("&7Zatím nikdo – buď první!\n");
-            for (int j = 0; j < t.size(); j++)
-                s.append(j < 3 ? medal[j] : "&7" + (j + 1) + ".").append(" &f").append(t.get(j).getKey()).append(" &8- &e").append(t.get(j).getValue()).append('\n');
-            s.append("&8▬▬▬▬▬▬▬▬▬▬▬▬");
-            Holo.setText(d, s.toString());
+            net.kyori.adventure.text.Component cs = Component.empty(), en = Component.empty();
+            String head = BOARDS[i][1] + "\n&8▬▬▬▬▬▬▬▬▬▬▬▬\n";
+            cs = cs.append(U.c(head)); en = en.append(U.c(Lang.toEn(head)));
+            if (t.isEmpty()) { cs = cs.append(U.c("&7Zatím nikdo – buď první!\n")); en = en.append(U.c(Lang.toEn("&7Zatím nikdo – buď první!\n"))); }
+            for (int j = 0; j < t.size(); j++) {
+                String name = t.get(j).getKey();
+                Component row = U.c(j < 3 ? medal[j] : "&7" + (j + 1) + ".").append(Component.text(" "))
+                        .append(pl.skins.head(name, null)).append(U.c(" &f" + name + " &8- &e" + t.get(j).getValue() + "\n"));
+                cs = cs.append(row); en = en.append(row);
+            }
+            Component foot = U.c("&8▬▬▬▬▬▬▬▬▬▬▬▬");
+            Holo.setComponents(d, cs.append(foot), en.append(foot));
         }
     }
 

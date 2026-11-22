@@ -23,6 +23,7 @@ public final class SquareStar extends JavaPlugin {
     public Intro intro;
     public Ufo ufo;
     public Arcade arcade;
+    public Skins skins;
     public Levels levels;
     public RedstoneWeek redstone;
     public Motd motd;
@@ -57,6 +58,7 @@ public final class SquareStar extends JavaPlugin {
         lobby = new Lobby(this);
         ranks = new Ranks(this);
         redstone = new RedstoneWeek(this);
+        skins = new Skins(this); Bukkit.getPluginManager().registerEvents(skins, this);
         fx = new LobbyFx(this);
         cosmetics = new Cosmetics(this);
         var pm = getServer().getPluginManager();
@@ -125,7 +127,7 @@ public final class SquareStar extends JavaPlugin {
         getLogger().info("SquareStar zapnut! Mars ceka. Gravitace: " + getConfig().getDouble("gravity.value"));
     }
 
-    @Override public void onDisable() { if (games != null) games.stopAll(); if (stats != null) stats.save(); }
+    @Override public void onDisable() { if (skins != null) skins.shutdown(); if (games != null) games.stopAll(); if (stats != null) stats.save(); }
 
     private void bind(String name, org.bukkit.command.CommandExecutor ex, org.bukkit.command.TabCompleter tc) {
         var c = getCommand(name);

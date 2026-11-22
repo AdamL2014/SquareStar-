@@ -191,7 +191,7 @@ public final class Ranks implements Listener {
         e.renderer((source, displayName, message, viewer) -> {
             // pack je povinný (require-resource-pack) -> obrázek ranku ukazuj vždy; jen kdo pack odmítl, vidí text
             boolean glyph = !(viewer instanceof Player v) || !declined.contains(v.getUniqueId());
-            Component head = Component.object(net.kyori.adventure.text.object.ObjectContents.playerHead().id(source.getUniqueId()).name(name).hat(true).build());
+            Component head = pl.skins.head(source);
             Component plat = U.c(bedrock(source) ? "&b☗" : "&a☕").hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c(bedrock(source) ? "&bHraje na Bedrocku" : "&aHraje na Javě")));
             return (glyph ? glyphBadge(r) : textBadge(r)).append(plat).append(Component.text(" ")).append(head).append(Component.text(" ")).append(U.c(lvl + nameColor(r) + name + "&8: &f")).append(message);
         });

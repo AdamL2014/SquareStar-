@@ -52,6 +52,12 @@ public final class Holo {
         cs.text(U.c(legacy));
     }
 
+    /** změna textu hotovými komponentami (např. s hlavami hráčů); cs a en zvlášť */
+    public static void setComponents(TextDisplay cs, net.kyori.adventure.text.Component csText, net.kyori.adventure.text.Component enText) {
+        for (Pair p : PAIRS) if (p.cs == cs) { cs.text(csText); if (p.en.isValid()) p.en.text(enText); return; }
+        cs.text(csText);
+    }
+
     private static void show(Player p, Pair x) {
         boolean en = Lang.en(p);
         if (en) { p.showEntity(SquareStar.I, x.en); p.hideEntity(SquareStar.I, x.cs); }
