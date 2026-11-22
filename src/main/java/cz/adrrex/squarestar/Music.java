@@ -57,11 +57,14 @@ public final class Music implements CommandExecutor, Listener {
             vanilla("tears", Sound.MUSIC_DISC_TEARS, "Tears – Amos Roddy", 175, Material.MUSIC_DISC_TEARS),
             vanilla("lavachicken", Sound.MUSIC_DISC_LAVA_CHICKEN, "Lava Chicken – Hyper Potions", 135, Material.MUSIC_DISC_LAVA_CHICKEN),
             new Track("xmas1", "squarestar:music.xmas1", "❄ Vánoce na Marsu – SquareStar", 60, Material.MUSIC_DISC_CAT),
-            new Track("xmas2", "squarestar:music.xmas2", "❄ Sněžná noc – SquareStar", 60, Material.MUSIC_DISC_13));
+            new Track("xmas2", "squarestar:music.xmas2", "❄ Sněžná noc – SquareStar", 60, Material.MUSIC_DISC_13),
+            new Track("bounce", "squarestar:music.bounce", "Bounce – fingerspit", 235, Material.MUSIC_DISC_STAL),
+            new Track("flurry", "squarestar:music.flurry", "Flurry – Hyper Potions", 155, Material.MUSIC_DISC_MELLOHI),
+            new Track("calm4", "squarestar:music.calm4", "Magnetic Circuit (calm4) – Notch", 194, Material.MUSIC_DISC_11));
     private static final List<String> AUTO = List.of("far", "relic", "otherside", "mall", "precipice", "creator");
     /** o Vánocích: vlastní vánoční písničky střídané s klidnými deskami */
     private static final List<String> AUTO_XMAS = List.of("xmas1", "far", "xmas2", "otherside");
-    private static final int[] SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38};
+    private static final int[] SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40};
 
     private static Track track(String id) { for (Track t : CAT) if (t.id.equals(id)) return t; return null; }
 
@@ -71,6 +74,50 @@ public final class Music implements CommandExecutor, Listener {
     public Music(SquareStar pl) {
         this.pl = pl;
         if (pl.getConfig().getBoolean("lobby.music", true)) Bukkit.getScheduler().runTaskTimer(pl, this::tick, 100, 20);
+        Bukkit.getScheduler().runTaskTimer(pl, this::ghastChoir, 20, 6);
+    }
+
+    // ---------------- zpívající ghasti v menu, když hraje Tears ----------------
+    private static final int[] GHAST_SLOTS = {41, 42, 43, 44};
+    private int ghastFrame = 0;
+    private static final String[] GHAST_NOTES = {"&b♪", "&d♫", "&e♪", "&a♫"};
+
+    private ItemStack ghastItem(int idx, int frame) {
+        Material m = Material.matchMaterial("HAPPY_GHAST_SPAWN_EGG");
+        if (m == null) m = Material.GHAST_SPAWN_EGG;
+        boolean open = ((frame + idx) % 4) < 2;   // „otevřená pusa“ se střídá
+        ItemStack it = U.item(m, 1, GHAST_NOTES[(frame + idx) % GHAST_NOTES.length] + " &f&lGast zpívá " + (open ? "&7(áááá)" : "&7(ú-ú-ú)"),
+                "&7Ghasti si prozpěvují &fTears", "&8♪ ♫ ♪ ♫");
+        var mm = it.getItemMeta();
+        mm.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+        mm.setEnchantmentGlintOverride(open);
+        it.setItemMeta(mm);
+        return it;
+    }
+
+    private static final net.kyori.adventure.key.Key GHAST_FONT = net.kyori.adventure.key.Key.key("squarestar", "ghast");
+    /** dva zpívající ghasti dole po stranách obrazovky (glyfy z resource packu, jen Java) */
+    private net.kyori.adventure.text.Component ghastHud(int frame) {
+        boolean a = (frame / 1) % 2 == 0;
+        String l = a ? "\uE200" : "\uE201", r = a ? "\uE201" : "\uE200";
+        return net.kyori.adventure.text.Component.text(l + "\uE210" + r).font(GHAST_FONT).color(net.kyori.adventure.text.format.NamedTextColor.WHITE);
+    }
+
+    private boolean tearsPlaying(Player p) {
+        Object[] cur = state.get(p.getUniqueId());
+        return cur != null && ((Track) cur[0]).id.equals("tears");
+    }
+
+    private void ghastChoir() {
+        ghastFrame++;
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (tearsPlaying(p) && !Ranks.bedrock(p)) p.sendActionBar(ghastHud(ghastFrame));
+            if (!(p.getOpenInventory().getTopInventory().getHolder() instanceof Holder)) continue;
+            var inv = p.getOpenInventory().getTopInventory();
+            boolean on = tearsPlaying(p);
+            for (int i = 0; i < GHAST_SLOTS.length; i++) inv.setItem(GHAST_SLOTS[i], on ? ghastItem(i, ghastFrame) : null);
+            if (on && ghastFrame % 3 == 0) p.playSound(p.getLocation(), Sound.ENTITY_GHAST_AMBIENT, SoundCategory.MASTER, 0.12f, 1.3f + (float) Math.random() * 0.5f);
+        }
     }
 
     // ---------------- uložené nastavení hráče ----------------
@@ -141,13 +188,13 @@ public final class Music implements CommandExecutor, Listener {
             Track t = CAT.get(i);
             int pos = pls.indexOf(t.id);
             boolean playing = now != null && now.id.equals(t.id);
-            String warn = t.id.equals("bounce") ? "&6⚠ Zní jen s klientem MC 26.2+" : t.id.equals("flurry") ? "&6⚠ Zní jen s klientem MC 26.4+" : null;
+            String warn = null;
             List<String> lore = new ArrayList<>();
             lore.add(pos >= 0 ? "&a✔ V playlistu &7(#" + (pos + 1) + ")" : "&8Není v playlistu");
             if (warn != null) lore.add(warn);
             lore.add(""); lore.add("&eLevý klik: &7přehrát hned"); lore.add("&ePravý klik: &7" + (pos >= 0 ? "odebrat z playlistu" : "přidat do playlistu"));
             ItemStack it = U.item(t.icon, 1, (playing ? "&a▶ " : "&f") + t.name, lore.toArray(new String[0]));
-            if (t.id.startsWith("xmas")) it = Gui.skin(p, it, "disc_" + t.id);   // vlastní disk (Java s resource packem)
+            if (t.id.startsWith("xmas") || t.id.equals("bounce") || t.id.equals("flurry") || t.id.equals("calm4")) it = Gui.skin(p, it, "disc_" + t.id);   // vlastní disk (Java s resource packem)
             var m = it.getItemMeta();
             m.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             if (playing || pos >= 0) m.setEnchantmentGlintOverride(true);
@@ -167,6 +214,7 @@ public final class Music implements CommandExecutor, Listener {
         h.inv.setItem(49, U.tag(U.item(Material.ARROW, 1, "&e&l⏭ Další skladba", "&7Přeskočí na další"), "ss_mus", "skip"));
         h.inv.setItem(51, U.tag(U.item(Material.REPEATER, 1, shuffle(p) ? "&a&lMíchání: ZAPNUTÉ" : "&7&lMíchání: vypnuté", "&eKlikni pro přepnutí"), "ss_mus", "shuf"));
         h.inv.setItem(52, U.tag(U.item(Material.LAVA_BUCKET, 1, "&c&lSmazat playlist", "&7Vyprázdní tvůj playlist"), "ss_mus", "clear"));
+        if (now != null && now.id.equals("tears")) for (int i = 0; i < GHAST_SLOTS.length; i++) h.inv.setItem(GHAST_SLOTS[i], ghastItem(i, ghastFrame));
         p.openInventory(h.inv);
     }
 

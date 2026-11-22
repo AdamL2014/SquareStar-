@@ -35,7 +35,10 @@ import java.util.*;
 public final class Arcade implements Listener, CommandExecutor {
     static final int AX = 240, NZ = -10;               // střed haly (x) a severní zeď (z)
     static final int W = 16, H = 12;                   // mřížka obrazovky
-    private static final int VER = 1;
+    private static final int VER = 3;
+    /** 8 automatů: severní a jižní řada (stejné hry, víc kusů) */
+    static final int[] OFFS = {-9, -3, 3, 9};
+    static final String[][] ROWS = {{"snake", "dodge", "catch", "snake"}, {"catch", "snake", "dodge", "catch"}};
     private static final String TAG = "ss_arc";
     private static final NamespacedKey TICKETS = new NamespacedKey("squarestar", "arc_tickets");
     private static final NamespacedKey BUILT = new NamespacedKey("squarestar", "arc_ver");
@@ -50,6 +53,7 @@ public final class Arcade implements Listener, CommandExecutor {
         this.pl = pl;
         Bukkit.getScheduler().runTaskLater(pl, this::setup, 60);
         Bukkit.getScheduler().runTaskTimer(pl, this::tick, 80, 1);
+        Bukkit.getScheduler().runTaskTimer(pl, this::sparks, 100, 3);
     }
 
     // ------------------------------------------------------------------ lístky
@@ -93,14 +97,17 @@ public final class Arcade implements Listener, CommandExecutor {
             b.fill(r[0], r[1], r[2], r[3], r[4], r[5], Material.MAGENTA_CONCRETE);
         // světelné sloupky u zdí
         for (int z = z0 + 3; z < z1; z += 5) { b.fill(x0 + 1, y + 1, z, x0 + 1, y + 3, z, Material.SEA_LANTERN); b.fill(x1 - 1, y + 1, z, x1 - 1, y + 3, z, Material.SEA_LANTERN); }
-        // automaty u severní zdi
-        for (int mx : new int[]{AX - 8, AX, AX + 8}) {
-            b.fill(mx - 2, y + 1, NZ + 1, mx + 2, y + 6, NZ + 1, Material.BLACK_CONCRETE);          // tělo
-            b.fill(mx - 2, y + 1, NZ + 2, mx + 2, y + 2, NZ + 2, Material.GRAY_CONCRETE);           // ovládací pult
-            b.fill(mx - 2, y + 3, NZ + 1, mx - 2, y + 6, NZ + 1, Material.PURPLE_CONCRETE);          // boky
-            b.fill(mx + 2, y + 3, NZ + 1, mx + 2, y + 6, NZ + 1, Material.PURPLE_CONCRETE);
-            b.fill(mx - 1, y + 6, NZ + 1, mx + 1, y + 6, NZ + 1, Material.SEA_LANTERN);              // svítící horní lišta
-            b.fill(mx - 1, y + 3, NZ + 2, mx + 1, y + 3, NZ + 2, Material.AIR);
+        // automaty u severní (s=+1) a jižní (s=-1) zdi
+        for (int row = 0; row < 2; row++) {
+            int s = row == 0 ? 1 : -1, zw = row == 0 ? NZ + 1 : z1 - 1;
+            for (int off : OFFS) {
+                int mx = AX + off;
+                b.fill(mx - 2, y + 1, zw, mx + 2, y + 5, zw, Material.BLACK_CONCRETE);                  // tělo (nižší)
+                b.fill(mx - 2, y + 1, zw + s, mx + 2, y + 1, zw + s, Material.GRAY_CONCRETE);           // ovládací pult
+                b.fill(mx - 2, y + 2, zw, mx - 2, y + 5, zw, Material.PURPLE_CONCRETE);                  // boky
+                b.fill(mx + 2, y + 2, zw, mx + 2, y + 5, zw, Material.PURPLE_CONCRETE);
+                b.fill(mx - 1, y + 5, zw, mx + 1, y + 5, zw, Material.SEA_LANTERN);                      // svítící horní lišta
+            }
         }
         // pokladna (východ) a výchozí plošina (západ)
         b.fill(AX + 11, y + 1, -2, AX + 13, y + 1, 3, Material.GOLD_BLOCK);
@@ -112,69 +119,112 @@ public final class Arcade implements Listener, CommandExecutor {
     private void spawnAll() {
         World w = pl.mars; int y = yy();
         machines.clear();
-        String[] ids = {"snake", "dodge", "catch"};
-        String[] names = {"&a&l🐍 Snake", "&b&l🚀 Dodge", "&e&l★ Catch"};
-        String[] desc = {"&7Sbírej jablka a nenarazy!", "&7Uhýbej padajícím skalám!", "&7Chytej hvězdy, vyhýbej se bombám!"};
-        for (int i = 0; i < 3; i++) {
-            Machine m = new Machine(ids[i], AX - 8 + i * 8);
+        java.util.Map<String, String> names = java.util.Map.of("snake", "&a&l🐍 Snake", "dodge", "&b&l🚀 Dodge", "catch", "&e&l★ Catch");
+        java.util.Map<String, String> desc = java.util.Map.of("snake", "&7Sbírej jablka a nenarazy!", "dodge", "&7Uhýbej padajícím skalám!", "catch", "&7Chytej hvězdy, vyhýbej se bombám!");
+        for (int i = 0; i < 8; i++) {
+            int row = i / 4, col = i % 4, sg = row == 0 ? 1 : -1, zw = row == 0 ? NZ + 1 : 9;
+            String mid = ROWS[row][col];
+            Machine m = new Machine(mid, AX + OFFS[col], zw, sg, i);
             machines.add(m);
-            m.screen = w.spawn(new Location(w, m.x + 0.5, y + 4.5, NZ + 2.03), TextDisplay.class, d -> {
-                d.setBillboard(Display.Billboard.VERTICAL);
+            m.screen = w.spawn(new Location(w, m.x + 0.5, y + 3.5, m.face() + m.s * 0.03, m.s > 0 ? 0f : 180f, 0f), TextDisplay.class, d -> {
+                d.setBillboard(Display.Billboard.FIXED);   // pevně otočená do haly (neotáčí se za hráčem)
                 d.setPersistent(false);
-                d.setLineWidth(400);
+                d.setLineWidth(2000);   // široký řádek: hra se nesmí zalamovat ani useknout
                 d.setBackgroundColor(Color.fromARGB(235, 6, 6, 12));
                 d.setAlignment(TextDisplay.TextAlignment.CENTER);
                 d.setBrightness(new Display.Brightness(15, 15));
                 d.setViewRange(1.2f);
-                d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(0.78f, 0.78f, 0.78f), new AxisAngle4f()));
+                d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(0.62f, 0.62f, 0.62f), new AxisAngle4f()));
                 d.addScoreboardTag(TAG);
             });
-            final int ii = i;
-            TextDisplay title = w.spawn(new Location(w, m.x + 0.5, y + 7.4, NZ + 2.0), TextDisplay.class, d -> {
-                d.setBillboard(Display.Billboard.VERTICAL);
+            final String ii = mid; final int idx = i;
+            TextDisplay title = w.spawn(new Location(w, m.x + 0.5, y + 6.0, m.face() + m.s * 0.05, m.s > 0 ? 0f : 180f, 0f), TextDisplay.class, d -> {
+                d.setBillboard(Display.Billboard.FIXED);
                 d.setPersistent(false);
                 d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
                 d.setBrightness(new Display.Brightness(15, 15));
                 d.addScoreboardTag(TAG);
-                Holo.dual(d, names[ii] + "\n" + desc[ii], null);
+                Holo.dual(d, names.get(ii) + "\n" + desc.get(ii), null);
             });
-            m.button = w.spawn(new Location(w, m.x + 0.5, y + 3.0, NZ + 2.5), Interaction.class, d -> {
-                d.setInteractionWidth(1.6f); d.setInteractionHeight(0.6f); d.setResponsive(true); d.setPersistent(false); d.addScoreboardTag(TAG);
-                d.addScoreboardTag("ss_arc_btn:" + ids[ii]);
+            double bz = m.face() + m.s * 0.5;
+            m.button = w.spawn(new Location(w, m.x - 0.4, y + 2.0, bz), Interaction.class, d -> {
+                d.setInteractionWidth(1.2f); d.setInteractionHeight(0.6f); d.setResponsive(true); d.setPersistent(false); d.addScoreboardTag(TAG);
+                d.addScoreboardTag("ss_arc_btn:" + idx);
             });
-            w.spawn(new Location(w, m.x + 0.5, y + 3.0, NZ + 2.5), BlockDisplay.class, d -> {
-                d.setBlock(Material.RED_CONCRETE.createBlockData());
-                d.setPersistent(false); d.addScoreboardTag(TAG);
-                d.setTransformation(new Transformation(new Vector3f(-0.35f, 0f, -0.35f), new AxisAngle4f(), new Vector3f(0.7f, 0.18f, 0.7f), new AxisAngle4f()));
+            w.spawn(new Location(w, m.x + 1.4, y + 2.0, bz), Interaction.class, d -> {
+                d.setInteractionWidth(1.2f); d.setInteractionHeight(0.6f); d.setResponsive(true); d.setPersistent(false); d.addScoreboardTag(TAG);
+                d.addScoreboardTag("ss_arc_quit:" + idx);
             });
-            TextDisplay go = w.spawn(new Location(w, m.x + 0.5, y + 3.55, NZ + 2.5), TextDisplay.class, d -> {
-                d.setBillboard(Display.Billboard.CENTER);
-                d.setPersistent(false);
-                d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
-                d.setBrightness(new Display.Brightness(15, 15));
-                d.addScoreboardTag(TAG);
-                d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(0.6f, 0.6f, 0.6f), new AxisAngle4f()));
-                Holo.dual(d, "&c&l▶ START", null);
-            });
+            for (int k = 0; k < 2; k++) {
+                final double bx = k == 0 ? m.x - 0.4 : m.x + 1.4; final Material bm = k == 0 ? Material.LIME_CONCRETE : Material.RED_CONCRETE; final String label = k == 0 ? "&a&l▶ START" : "&c&l✖ ODEJÍT";
+                w.spawn(new Location(w, bx, y + 2.0, bz), BlockDisplay.class, d -> {
+                    d.setBlock(bm.createBlockData());
+                    d.setPersistent(false); d.addScoreboardTag(TAG);
+                    d.setTransformation(new Transformation(new Vector3f(-0.3f, 0f, -0.3f), new AxisAngle4f(), new Vector3f(0.6f, 0.12f, 0.6f), new AxisAngle4f()));
+                });
+                w.spawn(new Location(w, bx, y + 2.45, bz, m.s > 0 ? 0f : 180f, 0f), TextDisplay.class, d -> {
+                    d.setBillboard(Display.Billboard.FIXED);
+                    d.setPersistent(false);
+                    d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+                    d.setBrightness(new Display.Brightness(15, 15));
+                    d.addScoreboardTag(TAG);
+                    d.setTransformation(new Transformation(new Vector3f(), new AxisAngle4f(), new Vector3f(0.45f, 0.45f, 0.45f), new AxisAngle4f()));
+                    Holo.dual(d, label, null);
+                });
+            }
             m.idle();
         }
         // NPC pokladna + východ v hale
         npc(new Location(w, AX + 12.5, y + 2, 0.5), new Vector(-1, 0, 0), "&6&l★ Pokladna", "&7Vyměň lístky za mince", "ss_arc_shop", Material.GOLD_INGOT, Color.fromRGB(0xFFD60A));
         npc(new Location(w, AX - 12.5, y + 2, 0.5), new Vector(1, 0, 0), "&b&l⏏ Východ", "&7Zpět do lobby", "ss_arc_exit", Material.COMPASS, Color.fromRGB(0x3A86FF));
         // NPC v lobby
-        npc(new Location(w, 11.5, y + 1, 1.5), new Vector(-11.5, 0, -1.5), "&d&l🕹 Herna", "&7Arkádové automaty &8| &eKlikni", "ss_arc_enter", Material.NETHER_STAR, Color.fromRGB(0xFF006E));
+        enterNpc = npc(new Location(w, 11.5, y + 1, 1.5), new Vector(-11.5, 0, -1.5), "&d&l🕹 Herna", "&7Arkádové automaty &8| &eKlikni", "ss_arc_enter", Material.NETHER_STAR, Color.fromRGB(0xFF006E));
+        look(enterNpc);
         if (w.getBlockAt(12, y, 10).getType() == Material.GOLD_BLOCK) w.getBlockAt(12, y, 10).setType(w.getBlockAt(13, y, 10).getType(), false);   // starý podstavec NPC
         w.getBlockAt(11, y, 1).setType(Material.GOLD_BLOCK, false);
     }
 
-    private void npc(Location l, Vector dir, String name, String desc, String tag, Material hand, Color col) {
+    private Mannequin npc(Location l, Vector dir, String name, String desc, String tag, Material hand, Color col) {
         l.setDirection(dir);
-        pl.mars.spawn(l, Mannequin.class, e -> {
+        return pl.mars.spawn(l, Mannequin.class, e -> {
             LobbyFx.npc(e, name, desc, "npc");
             LobbyFx.suit(e, col, hand);
             e.addScoreboardTag(TAG);
             e.addScoreboardTag(tag);
         });
+    }
+
+    // ------------------------------------------------------------------ vzhled NPC Herna: výraznější (neonová záře + jiskry)
+    private Mannequin enterNpc;
+    private int fx;
+    private static org.bukkit.inventory.ItemStack dyed(Material m, Color c) {
+        var it = new org.bukkit.inventory.ItemStack(m);
+        var lm = (org.bukkit.inventory.meta.LeatherArmorMeta) it.getItemMeta();
+        lm.setColor(c); it.setItemMeta(lm);
+        return it;
+    }
+    private void look(Mannequin e) {
+        var eq = e.getEquipment();
+        eq.setHelmet(dyed(Material.LEATHER_HELMET, Color.fromRGB(0xFF006E)));          // neonová helma
+        eq.setBoots(dyed(Material.LEATHER_BOOTS, Color.fromRGB(0xFFD60A)));            // žluté boty
+        eq.setItemInOffHand(new org.bukkit.inventory.ItemStack(Material.AMETHYST_SHARD));
+        e.setGlowing(true);                                                            // růžový obrys
+        var sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        var team = sb.getTeam("ss_arc_glow");
+        if (team == null) team = sb.registerNewTeam("ss_arc_glow");
+        team.color(net.kyori.adventure.text.format.NamedTextColor.LIGHT_PURPLE);
+        team.addEntry(e.getUniqueId().toString());
+    }
+    private void sparks() {
+        if (enterNpc == null || !enterNpc.isValid()) return;
+        fx++;
+        Location c = enterNpc.getLocation();
+        for (int i = 0; i < 3; i++) {
+            double a = fx * 0.5 + i * Math.PI * 2 / 3, h = 0.2 + (fx * 0.07 + i * 0.6) % 2.0;
+            Location p = c.clone().add(Math.cos(a) * 0.9, h, Math.sin(a) * 0.9);
+            c.getWorld().spawnParticle(Particle.DUST, p, 1, 0, 0, 0, 0, new Particle.DustOptions(i == 1 ? Color.fromRGB(0xFFD60A) : Color.fromRGB(0xFF006E), 1.1f));
+        }
+        if (fx % 4 == 0) c.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, c.clone().add(0, 1.2, 0), 4, 0.5, 0.7, 0.5, 0.1);
     }
 
     // ------------------------------------------------------------------ příkaz /herna
@@ -184,7 +234,7 @@ public final class Arcade implements Listener, CommandExecutor {
     }
     public void enter(Player p) {
         if (pl.games.of(p) != null) { U.msg(p, "&cUž jsi ve hře. &7Napiš &e/ss leave"); return; }
-        Location t = new Location(pl.mars, AX + 0.5, yy() + 1, 8.5, 180, 0);
+        Location t = new Location(pl.mars, AX + 0.5, yy() + 1, 1.5, 180, 0);
         p.teleport(t);
         p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.3f, 1.8f);
         U.title(p, "&d&l🕹 HERNA", "&7Sbírej lístky ★ a vyměň je za mince");
@@ -209,9 +259,13 @@ public final class Arcade implements Listener, CommandExecutor {
         if (t.contains("ss_arc_enter")) { enter(p); return true; }
         if (t.contains("ss_arc_exit")) { leave(p); return true; }
         if (t.contains("ss_arc_shop")) { openShop(p); return true; }
+        for (String s : t) if (s.startsWith("ss_arc_quit:")) {
+            try { Machine m = machines.get(Integer.parseInt(s.substring(12))); if (m.player == p) { m.end(true); U.msg(p, "&7Opustil jsi automat."); } } catch (Exception ignored) {}
+            return true;
+        }
         for (String s : t) if (s.startsWith("ss_arc_btn:")) {
-            String id = s.substring(11);
-            for (Machine m : machines) if (m.id.equals(id)) { startFor(p, m); return true; }
+            int idx; try { idx = Integer.parseInt(s.substring(11)); } catch (NumberFormatException ex) { continue; }
+            if (idx >= 0 && idx < machines.size()) { startFor(p, machines.get(idx)); return true; }
         }
         return false;
     }
@@ -254,11 +308,11 @@ public final class Arcade implements Listener, CommandExecutor {
         if (m.player == p && m.state == 1) return;
         for (Machine o : machines) if (o.player == p && o != m) o.end(false);
         m.player = p;
-        { Location c = m.stand(); c.setY(p.getLocation().getY()); c.setYaw(180f); c.setPitch(15f); p.teleport(c); }
+        { Location c = m.stand(); c.setY(p.getLocation().getY()); c.setYaw(m.s > 0 ? 180f : 0f); c.setPitch(-12f); p.teleport(c); }
         oldSpeed.putIfAbsent(p.getUniqueId(), p.getWalkSpeed());
         p.setWalkSpeed(0.02f);
         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.8f, 1.5f);
-        U.bar(p, "&7Ovládání: &eW A S D &8| &7Konec: &eodejdi / Shift");
+        U.bar(p, "&7Ovládání: &eW A S D &8| &7Konec: &cčervené tlačítko &7nebo &eShift");
         pl.getLogger().info("ARC start " + m.id + " by " + p.getName()); m.begin();
     }
     private void stop(Player p) {
@@ -290,8 +344,8 @@ public final class Arcade implements Listener, CommandExecutor {
         Location c = m.stand(), pos = p.getLocation();
         double dx = pos.getX() - c.getX(), dz = pos.getZ() - c.getZ();
         if (Math.abs(dx) > 0.006 || Math.abs(dz) > 0.006) {
-            // automat je u severní zdi, hráč kouká na sever: dopředu = -Z, doprava = +X
-            if (Math.abs(dz) >= Math.abs(dx)) { if (dz < 0) f = true; else b = true; } else { if (dx > 0) r = true; else l = true; }
+            // s=+1: automat u severní zdi, hráč kouká na sever (dopředu = -Z, doprava = +X); s=-1: obráceně
+            if (Math.abs(dz) >= Math.abs(dx)) { if (dz * m.s < 0) f = true; else b = true; } else { if (dx * m.s > 0) r = true; else l = true; }
             Location back = c.clone(); back.setY(pos.getY()); back.setYaw(pos.getYaw()); back.setPitch(pos.getPitch());
             p.teleport(back);
         }
@@ -300,7 +354,7 @@ public final class Arcade implements Listener, CommandExecutor {
 
     // ------------------------------------------------------------------ automat
     final class Machine {
-        final String id; final int x;
+        final String id; final int x, zw, s, idx;
         TextDisplay screen; Interaction button;
         Player player;
         int state;               // 0 volný, 1 hraje, 2 konec hry
@@ -313,8 +367,11 @@ public final class Arcade implements Listener, CommandExecutor {
         final List<int[]> objs = new ArrayList<>();       // dodge: skály, catch: {x,y,typ}
         int[] food = new int[]{5, 5};
 
-        Machine(String id, int x) { this.id = id; this.x = x; }
-        Location stand() { return new Location(pl.mars, x + 0.5, yy() + 1, NZ + 4.5); }
+        Machine(String id, int x, int zw, int s, int idx) { this.id = id; this.x = x; this.zw = zw; this.s = s; this.idx = idx; }
+        double face() { return s > 0 ? zw + 1 : zw; }   // přední stěna těla automatu (směrem do haly)
+        Location stand() { return new Location(pl.mars, x + 0.5, yy() + 1, face() + s * 2.5); }
+
+        void put(Component c) { screen.text(c); }
 
         void clear() { for (int[] r : g) Arrays.fill(r, BG); }
 
@@ -441,7 +498,7 @@ public final class Arcade implements Listener, CommandExecutor {
                 }
                 if (y < H - 1) c = c.append(Component.newline());
             }
-            screen.text(c);
+            put(c);
         }
 
         void renderOver() {
@@ -451,7 +508,7 @@ public final class Arcade implements Listener, CommandExecutor {
                     .append(line("+" + won + " ★ lístků\n\n", 0x7CFC00))
                     .append(line("▶ znovu: klikni na START\n", 0xBBBBBB))
                     .append(line("again: click START\n\n", 0x888888));
-            screen.text(c);
+            put(c);
         }
 
         void idle() {
@@ -461,9 +518,9 @@ public final class Arcade implements Listener, CommandExecutor {
             Component c = Component.empty()
                     .append(line("\n\n" + nm[0] + "\n\n", col))
                     .append(line(nm[1] + "\n", 0xDDDDDD)).append(line(nm[2] + "\n\n", 0x888888))
-                    .append(line("▶ klikni na červené tlačítko\n", 0xFF6B6B))
+                    .append(line("▶ klikni na zelené tlačítko\n", 0xFF6B6B))
                     .append(line("A S D W = ovládání\n\n", 0x999999));
-            screen.text(c);
+            put(c);
         }
     }
 }

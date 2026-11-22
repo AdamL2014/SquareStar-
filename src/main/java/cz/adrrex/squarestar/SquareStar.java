@@ -38,6 +38,7 @@ public final class SquareStar extends JavaPlugin {
     public Fly fly;
     public Updater updater;
     public EventManager events;
+    public Beggar beggar;
     public Meteors meteors;
     public Coins coins;
     public Christmas xmas;
@@ -61,6 +62,7 @@ public final class SquareStar extends JavaPlugin {
         skins = new Skins(this); Bukkit.getPluginManager().registerEvents(skins, this);
         fx = new LobbyFx(this);
         cosmetics = new Cosmetics(this);
+        new Footprints(this);
         var pm = getServer().getPluginManager();
         pm.registerEvents(items, this);
         pm.registerEvents(crates, this);
@@ -88,6 +90,7 @@ public final class SquareStar extends JavaPlugin {
         news = new News(this); pm.registerEvents(news, this);
         fly = new Fly(this);
         events = new EventManager(this); pm.registerEvents(events, this);
+        beggar = new Beggar(this); pm.registerEvents(beggar, this);
         updater = new Updater(this);
         bind("pritel", friends, friends);
         bind("event", events, events);
@@ -125,6 +128,18 @@ public final class SquareStar extends JavaPlugin {
         // gravitace + efekty vesmírného oblečení každých 10 ticků
         Bukkit.getScheduler().runTaskTimer(this, () -> { for (Player p : Bukkit.getOnlinePlayers()) applyGravity(p); }, 20, 10);
         getLogger().info("SquareStar zapnut! Mars ceka. Gravitace: " + getConfig().getDouble("gravity.value"));
+    }
+
+    /** soubor s daty mimo složku pluginu (přežije přepsání/smazání plugins/SquareStar při updatu); starý soubor se jednou zkopíruje */
+    public java.io.File dataFile(String name) {
+        java.io.File dir = new java.io.File(Bukkit.getWorldContainer(), "squarestar-data");
+        dir.mkdirs();
+        java.io.File f = new java.io.File(dir, name), old = new java.io.File(getDataFolder(), name);
+        if (!f.exists() && old.exists()) {
+            try { java.nio.file.Files.copy(old.toPath(), f.toPath()); getLogger().info("Data presunuta: " + name + " -> squarestar-data/"); }
+            catch (java.io.IOException e) { getLogger().warning("Presun dat selhal (" + name + "): " + e.getMessage()); return old; }
+        }
+        return f;
     }
 
     @Override public void onDisable() { if (skins != null) skins.shutdown(); if (games != null) games.stopAll(); if (stats != null) stats.save(); }

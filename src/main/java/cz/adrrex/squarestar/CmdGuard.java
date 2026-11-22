@@ -1,6 +1,9 @@
 package cz.adrrex.squarestar;
 
+import net.kyori.adventure.text.Component;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -22,8 +25,10 @@ public final class CmdGuard implements Listener {
     private static final Set<String> PLAYER = Set.of("ss", "squarestar", "hry", "games", "play", "hrat", "spawn", "lobby", "hub", "l", "emote", "e", "emoty",
             "pritel", "friend", "friends", "f", "pratele", "event", "fly", "letat", "novinky", "news", "changelog", "msg", "tell", "w", "m", "whisper", "zprava",
             "r", "reply", "odpoved", "ping", "pravidla", "rules", "discord", "dc", "afk", "online", "players", "hraci", "report", "nahlasit", "helpop", "pomoc",
-            "stats", "statistiky", "top", "kosmetika", "cosmetics", "jazyk", "lang", "language", "help", "napoveda", "list", "hudba", "music", "mince", "coins", "obchod", "shop", "penize", "advent", "kalendar", "vanoce");
+            "stats", "statistiky", "top", "kosmetika", "cosmetics", "emoji", "jazyk", "lang", "language", "help", "napoveda", "list", "hudba", "music", "mince", "coins", "obchod", "shop", "penize", "advent", "kalendar", "vanoce");
     private static final Set<String> SECRET = Set.of("plugins", "pl", "version", "ver", "about", "icanhasbukkit", "?", "paper", "spigot", "bukkit", "timings", "spark", "geyser", "floodgate", "viaversion", "viaver", "vvbukkit", "viabackwards", "grim", "grimac");
+    /** zakázané pro úplně všechny včetně majitele (příkaz hostingu, který hráče vyhodí z SquareStaru) */
+    private static final Set<String> ALL_BLOCKED = Set.of("mk");
 
     private boolean owner(Player p) { return p.isOp() || pl.ranks.of(p) == Ranks.Rank.OWNER; }
     private boolean staff(Player p) { return owner(p) || pl.ranks.of(p).admin || p.hasPermission("squarestar.helper"); }
@@ -31,9 +36,10 @@ public final class CmdGuard implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void cmd(PlayerCommandPreprocessEvent e) {
         Player p = e.getPlayer();
-        if (owner(p)) return;
         String label = e.getMessage().substring(1).split(" ")[0].toLowerCase(Locale.ROOT);
         String base = label.contains(":") ? label.substring(label.indexOf(':') + 1) : label;
+        if (ALL_BLOCKED.contains(base)) { e.setCancelled(true); U.msg(p, "&fZpět do lobby se vrátíš příkazem &e/spawn&f."); return; }   // i pro majitele
+        if (owner(p)) return;
         if (!label.contains(":") && (base.equals("help") || base.equals("napoveda") || base.equals("?"))) { e.setCancelled(true); help(p); return; }
         boolean blocked = label.contains(":") || SECRET.contains(base) || (!staff(p) && !PLAYER.contains(base));
         if (!blocked) return;
@@ -41,6 +47,15 @@ public final class CmdGuard implements Listener {
         if (SECRET.contains(base) || label.contains(":"))
             U.msg(p, "&fTento server běží na &6&lvlastních pluginech &fna míru od &bAdrrexStudio&f ✦ &7(SquareStar)");
         else U.msg(p, "&cTenhle příkaz neexistuje. &7Nápověda: &e/ss");
+    }
+
+    /**
+     * Hlášky „Sending you to… / You are now connected… / run the command /mk“ posílá proxy hostingu (ne tento plugin), takže je nejde vypnout odsud.
+     * Po připojení proto chat na chvíli „odsuneme“ prázdnými řádky, ať hráče nerušejí.
+     */
+    @EventHandler public void joinClear(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        Bukkit.getScheduler().runTaskLater(pl, () -> { if (p.isOnline()) for (int i = 0; i < 30; i++) p.sendMessage(Component.empty()); }, 25);
     }
 
     /** vlastní nápověda místo výpisu všech příkazů serveru */
@@ -60,6 +75,7 @@ public final class CmdGuard implements Listener {
     /** tab-doplňování: hráč uvidí jen svoje příkazy */
     @EventHandler public void tab(PlayerCommandSendEvent e) {
         Player p = e.getPlayer();
+        e.getCommands().removeIf(c -> ALL_BLOCKED.contains(c.toLowerCase(Locale.ROOT)));
         if (owner(p)) return;
         boolean staff = staff(p);
         e.getCommands().removeIf(c -> {

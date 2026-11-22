@@ -37,7 +37,7 @@ public final class Friends implements CommandExecutor, TabCompleter, Listener {
 
     public Friends(SquareStar pl) {
         this.pl = pl;
-        file = new File(pl.getDataFolder(), "squarestar-friends.yml");
+        file = pl.dataFile("squarestar-friends.yml");
         y = YamlConfiguration.loadConfiguration(file);
     }
 

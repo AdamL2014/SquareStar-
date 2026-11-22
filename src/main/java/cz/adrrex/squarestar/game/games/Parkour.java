@@ -160,22 +160,34 @@ public final class Parkour extends Game {
         // plošiny před hráči se vynoří z propasti
         if (state == State.RUNNING) {
             int n = 0;
-            for (int i = 0; i < plats.size() && n < 4; i++) {
+            for (int i = 0; i < plats.size() && n < 8; i++) {
                 if (shown.contains(i)) continue;
                 Plat pt = plats.get(i);
                 double px = ox + (pt.x1 + pt.x2) / 2.0, py = oy + pt.y, pz = oz + (pt.z1 + pt.z2) / 2.0;
-                boolean near = false;
-                for (Player p : alive) { Location l = p.getLocation(); if (Math.abs(l.getZ() - pz) < 26 && Math.abs(l.getX() - px) < 26 && Math.abs(l.getY() - py) < 40) { near = true; break; } }
-                if (near) { shown.add(i); reveal(pt); n++; }
+                boolean near = false; double minD = 1e9;
+                for (Player p : alive) {
+                    Location l = p.getLocation();
+                    if (Math.abs(l.getZ() - pz) < 40 && Math.abs(l.getX() - px) < 40 && Math.abs(l.getY() - py) < 40) { near = true; minD = Math.min(minD, Math.hypot(l.getX() - px, l.getZ() - pz)); }
+                }
+                // blízko hráče je plošina rovnou pevná (jinak by hráč proběhl animací a propadl se); daleko se hezky vynoří
+                if (near) { shown.add(i); reveal(pt, minD < 20); n++; }
             }
         }
         for (Ride r : rides) tickRide(r);
     }
 
     /** animace: plošina vyjede z propasti, pak se z ní stanou skutečné bloky */
-    private void reveal(Plat pt) {
+    private void reveal(Plat pt, boolean instant) {
         int wd = pt.x2 - pt.x1 + 1, dp = pt.z2 - pt.z1 + 1;
         Location base = new Location(w, ox + pt.x1, oy + pt.y, oz + pt.z1);
+        if (instant) {
+            for (int x = pt.x1; x <= pt.x2; x++) for (int z = pt.z1; z <= pt.z2; z++) {
+                Block bl = w.getBlockAt(ox + x, oy + pt.y, oz + z);
+                if (bl.getType().isAir()) { bl.setType(pt.m, false); markPlaced(bl); }
+            }
+            for (Ride r : rides) if (!r.spawned && Math.abs(r.x - (pt.x1 + pt.x2) / 2.0) < 1.5 && Math.abs(r.y - pt.y) < 1 && r.z0 - (pt.z2) < 4.5 && r.z0 > pt.z2) spawnRide(r);
+            return;
+        }
         BlockDisplay d = spawn(base, BlockDisplay.class, e -> {
             e.setBlock(pt.m.createBlockData());
             e.setBrightness(new Display.Brightness(15, 15));

@@ -26,9 +26,38 @@ public final class Updater {
 
     public Updater(SquareStar pl) {
         this.pl = pl;
+        verifyPrevious();
         if (!pl.getConfig().getBoolean("auto-update.enabled", true)) return;
         long every = Math.max(5, pl.getConfig().getLong("auto-update.check-minutes", 10)) * 1200L;
         Bukkit.getScheduler().runTaskTimerAsynchronously(pl, () -> check(null), 600, every);
+    }
+
+    /** po restartu: sedí běžící verze s tou, na kterou jsme aktualizovali? když ne, zapamatuj si to, ať se server nezačne donekonečna restartovat */
+    private void verifyPrevious() {
+        File m = pl.dataFile("update-expected.txt");
+        if (!m.exists()) return;
+        try {
+            String exp = Files.readString(m.toPath()).trim(), now = pl.getPluginMeta().getVersion();
+            Files.deleteIfExists(m.toPath());
+            if (exp.equals(now)) { pl.getLogger().info("Aktualizace na " + exp + " proběhla v pořádku."); return; }
+            pl.getLogger().warning("Aktualizace na " + exp + " se NEPOVEDLA – běží pořád " + now + " (jar v plugins/update/ se nevyměnil). Další pokus o " + exp + " se přeskočí; nahraj SquareStar.jar do plugins/ ručně.");
+            Files.writeString(pl.dataFile("update-failed.txt").toPath(), exp);
+        } catch (Exception ex) { pl.getLogger().warning("Kontrola po aktualizaci selhala: " + ex.getMessage()); }
+    }
+    private String failedVersion() {
+        try { File f = pl.dataFile("update-failed.txt"); return f.exists() ? Files.readString(f.toPath()).trim() : ""; } catch (Exception e) { return ""; }
+    }
+    /** verze zapsaná v plugin.yml uvnitř staženého jaru */
+    static String jarVersion(File jar) throws Exception {
+        try (var z = new java.util.zip.ZipFile(jar)) {
+            var e = z.getEntry("paper-plugin.yml"); if (e == null) e = z.getEntry("plugin.yml");
+            if (e == null) return "";
+            try (var in = z.getInputStream(e)) {
+                for (String l : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\\R"))
+                    if (l.startsWith("version:")) return l.substring(8).trim().replace("'", "").replace("\"", "");
+            }
+        }
+        return "";
     }
 
     static int[] parse(String v) {
@@ -54,6 +83,10 @@ public final class Updater {
                 if (who != null) who.sendMessage(U.c("&aServer má nejnovější verzi &e" + local + " &7(GitHub: " + remote + ")"));
                 return;
             }
+            if (remote.equals(failedVersion())) {
+                if (who != null) who.sendMessage(U.c("&cAktualizace na " + remote + " se minule nepovedla (jar se nevyměnil). Nahraj SquareStar.jar do plugins/ ručně a smaž squarestar-data/update-failed.txt."));
+                return;
+            }
             busy = true;
             File dir = Bukkit.getUpdateFolderFile();
             if (!dir.exists() && !dir.mkdirs()) throw new IllegalStateException("nelze vytvorit " + dir);
@@ -61,6 +94,9 @@ public final class Updater {
             HttpResponse<java.nio.file.Path> r = http.send(HttpRequest.newBuilder(URI.create(BASE + "SquareStar.jar?t=" + System.currentTimeMillis())).timeout(Duration.ofMinutes(3)).build(),
                     HttpResponse.BodyHandlers.ofFile(tmp.toPath()));
             if (r.statusCode() != 200 || tmp.length() < 50_000) { Files.deleteIfExists(tmp.toPath()); busy = false; throw new IllegalStateException("stazeni selhalo (HTTP " + r.statusCode() + ")"); }
+            String inJar = jarVersion(tmp);
+            if (!remote.equals(inJar)) { Files.deleteIfExists(tmp.toPath()); busy = false; throw new IllegalStateException("stažený jar je verze '" + inJar + "', GitHub hlásí " + remote + " (zkusím později)"); }
+            Files.writeString(pl.dataFile("update-expected.txt").toPath(), remote);
             // jméno musí sedět s jarem v plugins/
             String jar = new File(pl.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getName();
             Files.move(tmp.toPath(), new File(dir, jar).toPath(), StandardCopyOption.REPLACE_EXISTING);

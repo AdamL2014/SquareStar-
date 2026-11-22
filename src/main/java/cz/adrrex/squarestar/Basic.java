@@ -25,7 +25,7 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
 
     public Basic(SquareStar pl) { this.pl = pl; }
 
-    public static final String[] PLAYER_CMDS = {"msg", "r", "ping", "pravidla", "discord", "afk", "online", "report", "helpop", "stats", "kosmetika", "jazyk", "hry"};
+    public static final String[] PLAYER_CMDS = {"msg", "r", "ping", "pravidla", "discord", "afk", "online", "report", "helpop", "stats", "kosmetika", "jazyk", "hry", "emoji"};
     public static final String[] STAFF_CMDS = {"sc", "vanish", "gm", "bc", "clearchat", "heal", "tphere"};
 
     private boolean staff(CommandSender s) { return !(s instanceof Player p) || p.isOp() || pl.ranks.of(p).admin || p.hasPermission("squarestar.helper"); }
@@ -97,6 +97,7 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
             }
             case "stats" -> { if (p != null) pl.stats.show(p); }
             case "kosmetika" -> { if (p != null && pl.games.of(p) == null) pl.cosmetics.open(p); }
+            case "emoji" -> s.sendMessage(U.c(Emojis.list()));
             case "jazyk" -> { if (p != null) pl.intro.openLang(p); }
             case "hry" -> { if (p != null) pl.games.openMenu(p); }
             // ---------- tým ----------

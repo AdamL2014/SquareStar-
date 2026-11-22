@@ -13,6 +13,8 @@ import org.bukkit.entity.TextDisplay;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 
 /** Statistiky hráčů (výhry, hry, zabití, XP) + žebříčky (leaderboardy) v lobby. */
 public final class Stats {
@@ -25,7 +27,7 @@ public final class Stats {
 
     public Stats(SquareStar pl) {
         this.pl = pl;
-        file = new File(pl.getDataFolder(), "squarestar-stats.yml");
+        file = pl.dataFile("squarestar-stats.yml");
         y = YamlConfiguration.loadConfiguration(file);
         Bukkit.getScheduler().runTaskTimer(pl, this::save, 1200, 1200);
         Bukkit.getScheduler().runTaskTimer(pl, this::refresh, 100, 600);
@@ -57,21 +59,21 @@ public final class Stats {
     private static final String[][] BOARDS = {
             {"wins", "&6&l♛ NEJVÍC VÝHER"}, {"level", "&b&l★ NEJVYŠŠÍ LEVEL"}, {"kills", "&c&l⚔ NEJVÍC ZABITÍ"}, {"games", "&a&l✪ NEJVÍC HER"}};
     // jedna pevná tabule (neotáčí se za hráčem) uprostřed jižní části kopule, čelem ke spawnu
-    private static final double CX = 0.5, CZ = 16.5;
+    private static final double CX = 0.5, CZ = -14.5;   // sever, za řadou NPC minimaher, čelem ke spawnu (jih)
     private int cur;
     private BlockDisplayHolder panel;
     private static final class BlockDisplayHolder { org.bukkit.entity.BlockDisplay d; }
 
     private TextDisplay text(Location l, float scale, TextDisplay.TextAlignment al, int lineWidth) {
         return pl.mars.spawn(l, TextDisplay.class, d -> {
-            d.setBillboard(Display.Billboard.FIXED); d.setRotation(180f, 0f);
+            d.setBillboard(Display.Billboard.FIXED); d.setRotation(0f, 0f);
             d.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
             d.setDefaultBackground(false);
             d.setShadowed(true);
             d.setAlignment(al);
             d.setLineWidth(lineWidth);
             d.setBrightness(new Display.Brightness(15, 15));
-            d.setViewRange(1.5f);
+            d.setViewRange(2.5f);
             d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(), new org.joml.AxisAngle4f(), new org.joml.Vector3f(scale, scale, scale), new org.joml.AxisAngle4f()));
             d.addScoreboardTag(TAG);
             d.setPersistent(false);
@@ -81,11 +83,11 @@ public final class Stats {
     public void spawnBoards() {
         for (Entity e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(TAG)) e.remove();
         boards.clear();
-        double cy = Lobby.Y + 5.5, face = 180;   // yaw 180 = čelem k severu (ke spawnu)
+        double cy = Lobby.Y + 8.5, face = 0;   // yaw 0 = čelem k jihu (ke spawnu)
         // panel (zasklená tabule)
         panel = new BlockDisplayHolder();
-        panel.d = pl.mars.spawn(new Location(pl.mars, CX, cy, CZ + 0.08, (float) face, 0), org.bukkit.entity.BlockDisplay.class, d -> {
-            d.setRotation(180f, 0f);
+        panel.d = pl.mars.spawn(new Location(pl.mars, CX, cy, CZ - 0.08, (float) face, 0), org.bukkit.entity.BlockDisplay.class, d -> {
+            d.setRotation(0f, 0f); d.setViewRange(2.5f);
             d.setBlock(org.bukkit.Material.BLACK_CONCRETE.createBlockData());
             d.setPersistent(false); d.addScoreboardTag(TAG);
             d.setBrightness(new Display.Brightness(15, 15));
@@ -93,33 +95,37 @@ public final class Stats {
         });
         float sc = 1.2f;
         // pozn.: čelem k severu je pravá strana diváka = -X
-        TextDisplay title = text(new Location(pl.mars, CX, cy + 1.95, CZ - 0.05, (float) face, 0), 1.5f, TextDisplay.TextAlignment.CENTER, 300);
-        TextDisplay names = text(new Location(pl.mars, CX + 1.2, cy - 0.35, CZ - 0.05, (float) face, 0), sc, TextDisplay.TextAlignment.LEFT, 400);
-        TextDisplay vals = text(new Location(pl.mars, CX - 3.0, cy - 0.35, CZ - 0.05, (float) face, 0), sc, TextDisplay.TextAlignment.RIGHT, 200);
-        TextDisplay timer = text(new Location(pl.mars, CX - 2.8, cy - 2.68, CZ - 0.05, (float) face, 0), 0.9f, TextDisplay.TextAlignment.CENTER, 200);
+        TextDisplay title = text(new Location(pl.mars, CX, cy + 1.95, CZ + 0.05, (float) face, 0), 1.5f, TextDisplay.TextAlignment.CENTER, 300);
+        TextDisplay names = text(new Location(pl.mars, CX - 1.2, cy - 0.35, CZ + 0.05, (float) face, 0), sc, TextDisplay.TextAlignment.LEFT, 400);
+        TextDisplay vals = text(new Location(pl.mars, CX + 3.0, cy - 0.35, CZ + 0.05, (float) face, 0), sc, TextDisplay.TextAlignment.RIGHT, 200);
+        TextDisplay timer = text(new Location(pl.mars, CX + 2.8, cy - 2.68, CZ + 0.05, (float) face, 0), 0.9f, TextDisplay.TextAlignment.CENTER, 200);
         boards.add(title); boards.add(names); boards.add(vals); boards.add(timer);
         for (TextDisplay d : boards) Holo.dual(d, "");
         refresh();
         // tenká lišta dole: plní se a když se vyplní, tabule přepne na další kategorii
-        var track = pl.mars.spawn(new Location(pl.mars, CX, cy - 2.3, CZ - 0.06, 0f, 0f), org.bukkit.entity.BlockDisplay.class, d -> {
+        var track = pl.mars.spawn(new Location(pl.mars, CX, cy - 2.3, CZ + 0.06, 0f, 0f), org.bukkit.entity.BlockDisplay.class, d -> {
             d.setBlock(org.bukkit.Material.GRAY_CONCRETE.createBlockData()); d.setPersistent(false); d.addScoreboardTag(TAG);
-            d.setBrightness(new Display.Brightness(15, 15));
+            d.setBrightness(new Display.Brightness(15, 15)); d.setViewRange(2.5f);
             d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(-3.8f, 0f, 0f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(7.6f, 0.07f, 0.03f), new org.joml.AxisAngle4f()));
         });
-        fill = pl.mars.spawn(new Location(pl.mars, CX, cy - 2.3, CZ - 0.09, 0f, 0f), org.bukkit.entity.BlockDisplay.class, d -> {
+        fill = pl.mars.spawn(new Location(pl.mars, CX, cy - 2.3, CZ + 0.09, 0f, 0f), org.bukkit.entity.BlockDisplay.class, d -> {
             d.setBlock(org.bukkit.Material.WHITE_CONCRETE.createBlockData()); d.setPersistent(false); d.addScoreboardTag(TAG);
-            d.setBrightness(new Display.Brightness(15, 15));
-            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(3.8f, 0f, 0f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(0.001f, 0.07f, 0.03f), new org.joml.AxisAngle4f()));
+            d.setBrightness(new Display.Brightness(15, 15)); d.setViewRange(2.5f);
+            d.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(-3.8f, 0f, 0f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(0.001f, 0.07f, 0.03f), new org.joml.AxisAngle4f()));
         });
         cyc = 0; Holo.setText(timer, "&7⏱ &f" + CYCLE / 20 + " s");
         if (task == null) task = Bukkit.getScheduler().runTaskTimer(pl, () -> {
-            cyc += 4;
+            cyc += 4; phase++;
+            if (boards.size() >= 4 && boards.get(0).isValid()) {
+                if (step < rows.size() + 5) { step++; renderRows(); } else if (CYCLE - cyc <= 16) renderRows();
+                if (cyc % 8 == 0) renderTitle();
+            }
             if (boards.size() >= 4 && boards.get(3).isValid() && cyc % 20 == 0) Holo.setText(boards.get(3), "&7⏱ &f" + Math.max(1, (CYCLE - cyc) / 20) + " s");
             if (cyc >= CYCLE) { cyc = 0; cur = (cur + 1) % BOARDS.length; refresh(); }
             if (fill != null && fill.isValid()) {
                 float w = Math.max(0.001f, 7.6f * cyc / CYCLE);
                 fill.setInterpolationDelay(0); fill.setInterpolationDuration(4);
-                fill.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(3.8f - w, 0f, 0f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(w, 0.07f, 0.03f), new org.joml.AxisAngle4f()));
+                fill.setTransformation(new org.bukkit.util.Transformation(new org.joml.Vector3f(-3.8f, 0f, 0f), new org.joml.AxisAngle4f(), new org.joml.Vector3f(w, 0.07f, 0.03f), new org.joml.AxisAngle4f()));
             }
         }, 4, 4);
     }
@@ -128,23 +134,57 @@ public final class Stats {
     private int cyc;
     private static final int CYCLE = 300;   // 15 s
 
+    private List<Map.Entry<String, Integer>> rows = List.of();
+    private int step;       // krok animace fade-in (po řádcích)
+    private int phase;      // posun záblesku v nadpisu
+
     public void refresh() {
         if (boards.size() < 4) return;
         for (TextDisplay d : boards) if (!d.isValid()) { spawnBoards(); return; }
+        rows = top(BOARDS[cur][0], 10);
+        step = 0;
+        renderTitle();
+        renderRows();
+    }
+
+    /** nadpis: název kategorie + „ŽEBŘÍČEK“ s běžícím světelným zábleskem */
+    private void renderTitle() {
         String[] cat = BOARDS[cur];
-        var t = top(cat[0], 10);
-        String dots = "&8" + "●".repeat(BOARDS.length).substring(0, 0);
         StringBuilder ind = new StringBuilder();
         for (int i = 0; i < BOARDS.length; i++) ind.append(i == cur ? "&f● " : "&8● ");
-        String head = cat[1] + "\n&7ŽEBŘÍČEK &8| " + ind.toString().trim();
-        Holo.setText(boards.get(0), head);
+        String word = "ŽEBŘÍČEK", sub;
+        StringBuilder sb = new StringBuilder();
+        int n = word.length(), pos = phase % (n + 6) - 3;
+        for (int i = 0; i < n; i++) {
+            int d = Math.abs(i - pos);
+            sb.append(d == 0 ? "&f&l" : d == 1 ? "&e" : "&7").append(word.charAt(i));
+        }
+        sub = sb.toString();
+        Holo.setText(boards.get(0), cat[1] + "\n" + sub + " &8| " + ind.toString().trim());
+    }
+
+    private static int lerp(int from, int to, double f) {
+        f = Math.max(0, Math.min(1, f));
+        int r = (int) (((from >> 16) & 255) * (1 - f) + ((to >> 16) & 255) * f), g = (int) (((from >> 8) & 255) * (1 - f) + ((to >> 8) & 255) * f), bl = (int) ((from & 255) * (1 - f) + (to & 255) * f);
+        return (r << 16) | (g << 8) | bl;
+    }
+    private static final int DARK = 0x161616;
+
+    /** jména, hlavy i čísla se plynule „vyjasní“ z tmavé (fade-in, jeden řádek po druhém) a před přepnutím zase zhasnou (fade-out) */
+    private void renderRows() {
         Component names = Component.empty(), vals = Component.empty();
-        String[] medal = {"&6&l#1", "&f&l#2", "&c&l#3"};
+        int[] medal = {0xFFAA00, 0xFFFFFF, 0xFF5555};
+        var t = rows;
+        double out = Math.min(1.0, Math.max(0.0, (CYCLE - cyc) / 16.0));   // posledních 16 ticků zhasíná
         if (t.isEmpty()) { names = U.c("&7Zatím nikdo\n&7buď první!"); vals = U.c(" "); }
         for (int j = 0; j < t.size(); j++) {
+            double f = Math.min(1.0, Math.max(0.0, (step - j) / 4.0)) * out;
             String name = t.get(j).getKey();
-            Component row = U.c(j < 3 ? medal[j] : "&7#" + (j + 1)).append(Component.text(" ")).append(pl.skins.head(name, null)).append(U.c(" &f" + name));
-            names = names.append(row); vals = vals.append(U.c("&e" + t.get(j).getValue()));
+            Component rank = Component.text("#" + (j + 1), TextColor.color(lerp(DARK, j < 3 ? medal[j] : 0xAAAAAA, f))).decoration(TextDecoration.BOLD, j < 3);
+            Component head = pl.skins.head(name, null).color(TextColor.color(lerp(DARK, 0xFFFFFF, f)));
+            Component nm = Component.text(" " + name, TextColor.color(lerp(DARK, j == 0 ? 0xFFAA00 : 0xFFFFFF, f))).decoration(TextDecoration.BOLD, j == 0);
+            names = names.append(Component.empty().append(rank).append(Component.text(" ")).append(head).append(nm));
+            vals = vals.append(Component.text(String.valueOf(t.get(j).getValue()), TextColor.color(lerp(DARK, 0xFFFF55, f))));
             if (j < t.size() - 1) { names = names.append(Component.newline()); vals = vals.append(Component.newline()); }
         }
         Holo.setComponents(boards.get(1), names, names);

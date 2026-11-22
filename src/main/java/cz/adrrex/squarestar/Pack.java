@@ -22,7 +22,12 @@ public final class Pack implements Listener {
     private static final UUID ID = UUID.fromString("5a1b2c3d-0000-4000-8000-5157a25a7a2a");
     public Pack(SquareStar pl) { this.pl = pl; refresh(); }
 
-    public String url() { return pl.getConfig().getString("resource-pack.url", "https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip"); }
+    private static final String DEFAULT = "https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip";
+    /** výchozí adresa dostane ?v=<verze pluginu>: GitHub CDN drží starý soubor pár minut, takže po updatu by hráči dostali starý pack (bez nových modelů) */
+    public String url() {
+        String u = pl.getConfig().getString("resource-pack.url", DEFAULT);
+        return u.equals(DEFAULT) ? u + "?v=" + pl.getPluginMeta().getVersion() : u;
+    }
 
     /** stáhne pack a spočítá SHA-1 (na pozadí, neblokuje server) */
     public void refresh() {

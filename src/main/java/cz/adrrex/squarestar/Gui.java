@@ -43,7 +43,7 @@ public final class Gui implements org.bukkit.event.Listener {
         int last = inv.getSize() - 1;
         if (inv.getItem(last) == null) inv.setItem(last, closeButton());
         // občas menu přelétne padající meteor (animovaná textura, jen Java s resource packem)
-        if (enabled && !Ranks.bedrock(p)) for (int s : new int[]{0, 8, 1, 7, 9}) if (s < inv.getSize() && inv.getItem(s) == null) { inv.setItem(s, meteor()); break; }
+        if (enabled && !Ranks.bedrock(p) && !(h instanceof Cosmetics.Holder)) for (int s : new int[]{0, 8, 1, 7, 9}) if (s < inv.getSize() && inv.getItem(s) == null) { inv.setItem(s, meteor()); break; }
         for (int i = 0; i < inv.getSize(); i++) { var it = inv.getItem(i); if (it != null) inv.setItem(i, Lang.item(p, it)); }
     }
     @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.HIGHEST) public void click(org.bukkit.event.inventory.InventoryClickEvent e) {
@@ -56,6 +56,8 @@ public final class Gui implements org.bukkit.event.Listener {
 
     /** vesmírný panel (minihry, kosmetika, hlasování, obchod) */
     public static Component title(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }
+    /** panel kosmetiky ve stylu Essential Wardrobe (jen 54 slotů) */
+    public static Component wardrobe(String legacy) { return make('\uE266', legacy); }
     /** zlato-modrý panel pro bedny */
     public static Component crate(int size, String legacy) { return make((char) (0xE200 + rows(size)), legacy); }
     /** růžový panel pro kosmetiku */

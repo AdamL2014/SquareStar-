@@ -132,6 +132,7 @@ public final class Lang {
         a("Stavitelská bitva", "Build Battle");
         a("Speedrun: Edice zdarma", "Speedrun: Free Edition");
         a("Pád šachtou", "Dropper");
+        a("Neon Beat", "Neon Beat"); a("Beat Saber v Minecraftu: kostky letí v rytmu, červené levým, modré pravým tlačítkem. TNT netrefuj!", "Beat Saber in Minecraft: cubes fly to the rhythm, red with left click, blue with right click. Avoid the TNT!");
         a("Bitva o postele, Války asteroidů, Stavitelská bitva a další", "Bed Wars, SkyWars, Build Battle and more"); a("edice zdarma", "Free Edition"); a("Edice zdarma", "Free Edition"); a("EDICE ZDARMA!", "FREE EDITION!");
         a("Letí nad tebou v lobby", "Floats above you in the lobby"); a("klíč!", "key!"); a("Klíče získáš za výhry v minihrách.", "You get keys by winning minigames.");
         a("Emoty jen v lobby a v čekárně.", "Emotes only in the lobby and waiting room."); a("REDSTONE TÝDEN", "REDSTONE WEEK"); a("V neděli se hlasuje!", "Voting on Sunday!");
@@ -207,7 +208,7 @@ public final class Lang {
         a("v bedrockové místnosti.", "in a bedrock room.");
         a("Automatické aktualizace", "Automatic updates");
         a("- spoluhráč na pozemku", "- teammate on your plot");
-        a("Ve hrách: 3× pak pauza", "In games: 3× then a cooldown of");
+        a("Ve hrách: 3× pak pauza", "In games: 3× then a cooldown of"); a("Ve hrách: 5× pak pauza", "In games: 5× then a cooldown of");
         a("Hodně štěstí na Marsu!", "Good luck on Mars!");
         a("Stůj na něčím pozemku.", "Stand on someone's plot.");
         a("Teleport ke kamarádovi", "Teleport to your friend");

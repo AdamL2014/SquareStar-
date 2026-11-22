@@ -53,7 +53,7 @@ public final class Ufo implements CommandExecutor {
         if (flying) return;
         flying = true;
         double ang = rnd.nextDouble() * Math.PI * 2;
-        double R = 95, y = Lobby.Y + 48 + rnd.nextInt(10);
+        double R = 95, y = Lobby.Y + 30 + rnd.nextInt(8);
         Location start = new Location(pl.mars, Math.cos(ang) * R, y, Math.sin(ang) * R);
         double endAng = ang + Math.PI + (rnd.nextDouble() - 0.5) * 0.6;
         Location end = new Location(pl.mars, Math.cos(endAng) * R, y + rnd.nextInt(8) - 4, Math.sin(endAng) * R);

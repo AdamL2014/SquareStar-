@@ -21,7 +21,7 @@ public final class News implements Listener {
 
     /** stránky knihy – nejnovější nahoře; při každé verzi sem přidej novou stránku */
     private static final String[][] PAGES = {
-            {"&4&lCO JE NOVÉ\n&8verze 4.6\n\n&0✦ Jedna pevná\n&0   tabule žebříčku\n&0✦ Filmovější intro\n&0✦ Nové disky:\n&0   Tears, Lava Chicken\n&0✦ Hlasitost hudby\n&0✦ Hvězda sedí na\n&0   stromě"},
+            {"&4&lCO JE NOVÉ\n&8verze 4.6\n\n&0✦ Jedna pevná\n&0   tabule žebříčku\n&0✦ Filmovější intro\n&0✦ Nové disky: Tears,\n&0   Lava Chicken, Bounce,\n&0   Flurry, Calm 4 (Notch)\n&0✦ Hlasitost hudby\n&0✦ Herna: 8 automatů\n&0   a hra na celou\n&0   obrazovku"},
             {"&4&lCO JE NOVÉ\n&8verze 4.5.1\n\n&0✦ Skutečné &6hlavy\n&0   hráčů v chatu\n&0✦ Hlavy v žebříčcích\n&0✦ Skin se stáhne\n&0   automaticky"},
             {"&4&lCO JE NOVÉ\n&8verze 4.5\n\n&0✦ &d/herna&0 – arkáda:\n&0   Snake, Dodge, Catch\n&0✦ Lístky ★ → mince\n&0✦ Jedno &cPvP&0 NPC\n&0✦ Parkour: jezdící\n&0   plošiny, nová mapa\n&0✦ Závody: každá\n&0   trať jiná\n&0✦ Filmové intro"},
             {"&4&lCO JE NOVÉ\n&8verze 4.4.5\n\n&0✦ &a/ufo&0 – UFO nad\n&0   kopulí\n&0✦ Vyšší kopule,\n&0   malé vchody\n&0✦ &d/hudba&0 playlist\n&0✦ Disky vánočních\n&0   písniček\n&0✦ Dárky skáčou"},

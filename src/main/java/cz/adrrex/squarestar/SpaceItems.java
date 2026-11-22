@@ -29,8 +29,8 @@ public final class SpaceItems implements Listener {
 
     public SpaceItems(SquareStar pl) {
         this.pl = pl;
-        add("laser_pistol", Material.IRON_HOE, "&c&lLaserová pistole", null, "&7Pravý klik: laserový paprsek", "&7Poškození: &c5 &7| Nabíjení: &e1 s");
-        add("jetpack", Material.FIREWORK_STAR, "&b&lJetpack", null, "&7Pravý klik: vystřelí tě nahoru", "&7Nabíjení: &e2 s", "&7Ve hrách: 3× pak pauza &e14 s");
+        add("laser_pistol", Material.IRON_HOE, "&c&lLaserová pistole", null, "&7Pravý klik: laserový paprsek", "&7Poškození: &c3 &7| Nabíjení: &e1.5 s");
+        add("jetpack", Material.FIREWORK_STAR, "&b&lJetpack", null, "&7Pravý klik: vystřelí tě nahoru", "&7Nabíjení: &e2 s", "&7Ve hrách: 5× pak pauza &e8 s");
         add("meteor_grenade", Material.SNOWBALL, "&6&lMeteoritový granát", null, "&7Hoď ho! Výbuch neničí mapu");
         add("gravity_boots", Material.LEATHER_BOOTS, "&d&lGravitační boty", Color.fromRGB(0x8A2BE2), "&7Obuj si je: skáčeš mnohem výš");
         add("oxygen_helmet", Material.LEATHER_HELMET, "&f&lKyslíková helma", Color.fromRGB(0xDDEEFF), "&7Dýchání pod vodou + noční vidění");
@@ -65,7 +65,7 @@ public final class SpaceItems implements Listener {
             case "laser_pistol" -> {
                 e.setCancelled(true);
                 if (p.hasCooldown(it)) return;
-                p.setCooldown(it, 20);
+                p.setCooldown(it, 30);
                 laser(p);
             }
             case "jetpack" -> {
@@ -76,13 +76,13 @@ public final class SpaceItems implements Listener {
                 if (inGame) {
                     // ve hrách (PvP, BedWars...): 3 použití, pak 14 s pauza; a žádné létání do nebe
                     int n = jetUses.merge(p.getUniqueId(), 1, Integer::sum);
-                    if (n >= 3) { jetUses.remove(p.getUniqueId()); p.setCooldown(it, 280); U.bar(p, "&c&lJetpack se přehřál! &7Pauza &e14 s"); }
-                    else { p.setCooldown(it, 40); U.bar(p, "&bJetpack: &e" + (3 - n) + "&7× do přehřátí"); }
+                    if (n >= 5) { jetUses.remove(p.getUniqueId()); p.setCooldown(it, 160); U.bar(p, "&c&lJetpack se přehřál! &7Pauza &e8 s"); }
+                    else { p.setCooldown(it, 30); U.bar(p, "&bJetpack: &e" + (5 - n) + "&7× do přehřátí"); }
                     var hit = p.getWorld().rayTraceBlocks(p.getLocation(), new Vector(0, -1, 0), 40, org.bukkit.FluidCollisionMode.NEVER, true);
                     double ground = hit == null ? 40 : p.getLocation().getY() - hit.getHitPosition().getY();
-                    up = ground > 7 ? 0.12 : 0.55;           // vysoko nad zemí už nevyletí
-                    if (ground > 7) U.bar(p, "&cMoc vysoko – jetpack už víc nevyletí!");
-                } else p.setCooldown(it, 40);
+                    up = ground > 10 ? 0.12 : 0.8;           // vysoko nad zemí už nevyletí
+                    if (ground > 10) U.bar(p, "&cMoc vysoko – jetpack už víc nevyletí!");
+                } else p.setCooldown(it, 30);
                 Vector v = p.getLocation().getDirection().multiply(0.6).setY(up);
                 p.setVelocity(v);
                 p.getWorld().spawnParticle(Particle.FLAME, p.getLocation(), 30, 0.2, 0.1, 0.2, 0.05);
@@ -169,13 +169,13 @@ public final class SpaceItems implements Listener {
     private void laser(Player p) {
         Location eye = p.getEyeLocation();
         Vector dir = eye.getDirection();
-        RayTraceResult r = p.getWorld().rayTrace(eye, dir, 30, FluidCollisionMode.NEVER, true, 0.3,
+        RayTraceResult r = p.getWorld().rayTrace(eye, dir, 22, FluidCollisionMode.NEVER, true, 0.3,
                 en -> en instanceof LivingEntity && en != p && !(en instanceof ArmorStand));
-        double dist = r == null ? 30 : r.getHitPosition().distance(eye.toVector());
+        double dist = r == null ? 22 : r.getHitPosition().distance(eye.toVector());
         Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(255, 40, 40), 1.0f);
         for (double d = 0.5; d < dist; d += 0.4) p.getWorld().spawnParticle(Particle.DUST, eye.clone().add(dir.clone().multiply(d)), 1, 0, 0, 0, 0, dust);
         p.getWorld().playSound(eye, Sound.BLOCK_BEACON_DEACTIVATE, 0.6f, 2f);
-        if (r != null && r.getHitEntity() instanceof LivingEntity le) le.damage(5, p);
+        if (r != null && r.getHitEntity() instanceof LivingEntity le) le.damage(3, p);
     }
 
     @EventHandler public void throwGrenade(ProjectileLaunchEvent e) {

@@ -44,7 +44,7 @@ public final class Ranks implements Listener {
 
     public Ranks(SquareStar pl) {
         this.pl = pl;
-        Bukkit.getScheduler().runTaskTimer(pl, () -> { for (Player p : Bukkit.getOnlinePlayers()) tab(p); }, 40, 40);
+        Bukkit.getScheduler().runTaskTimer(pl, () -> { tabTick++; for (Player p : Bukkit.getOnlinePlayers()) tab(p); }, 10, 10);
         // ranky leží MIMO složku pluginu (hlavní složka serveru), aby přežily update/smazání plugins/SquareStar
         file = new File(Bukkit.getWorldContainer(), "squarestar-ranks.yml");
         File old = new File(pl.getDataFolder(), "ranks.yml");
@@ -97,14 +97,62 @@ public final class Ranks implements Listener {
 
     private boolean glyphsEverywhere() { return pl.getConfig().getBoolean("ranks.badges-in-tab", true); }
 
-    /** hezký tab: logo nahoře, info dole */
+    private int tabTick = 0;
+    /** barevná vlna přes text (animace záhlaví) */
+    private static Component wave(String text, int tick, boolean bold) {
+        Component c = Component.empty();
+        for (int i = 0; i < text.length(); i++) {
+            float h = ((i * 0.035f) + tick * 0.02f) % 1f;
+            int rgb = java.awt.Color.HSBtoRGB(0.02f + 0.12f * (0.5f + 0.5f * (float) Math.sin(h * Math.PI * 2)), 0.75f, 1f) & 0xFFFFFF;
+            Component ch = Component.text(String.valueOf(text.charAt(i)), net.kyori.adventure.text.format.TextColor.color(rgb));
+            c = c.append(bold ? ch.decorate(net.kyori.adventure.text.format.TextDecoration.BOLD) : ch);
+        }
+        return c;
+    }
+
+    private static final String[][] TIPS = {
+        {"Na Marsu skáčeš výš – využij nízkou gravitaci!", "Jump higher on Mars - use the low gravity!"},
+        {"Zkus /emote hi a zamávej ostatním.", "Try /emote hi and wave to everyone."},
+        {"V herně si zahraj automaty o mince.", "Play the arcade machines to earn coins."},
+        {"Hudbu si pustíš přes hudební přehrávač v lobby.", "Play music with the jukebox in the lobby."},
+        {"Po každé hře dostaneš XP a mince.", "You get XP and coins after every game."},
+        {"Zpět do lobby se vrátíš příkazem /spawn.", "Return to the lobby with /spawn."}
+    };
+
+    /** lišta XP k dalšímu levelu */
+    private static String bar(int cur, int max, int len) {
+        int f = max <= 0 ? 0 : Math.min(len, cur * len / max);
+        return "&a" + "█".repeat(f) + "&8" + "█".repeat(len - f);
+    }
+
+    /** nejhezčí tab: logo, animovaný nadpis, osobní statistiky, tipy a info o serveru */
     public void tab(Player p) {
+        boolean en = Lang.en(p);
         int on = Bukkit.getOnlinePlayers().size();
+        int max = Bukkit.getMaxPlayers();
+        int ping = p.getPing();
+        String pc = ping < 60 ? "&a" : ping < 130 ? "&e" : "&c";
+        double tps = Math.min(20.0, Bukkit.getTPS()[0]);
+        String tc = tps >= 19 ? "&a" : tps >= 16 ? "&e" : "&c";
+        int xp = pl.levels.xp(p), lvl = Levels.levelOf(xp), spent = 0;
+        for (int i = 1; i < lvl; i++) spent += Levels.need(i);
+        int cur = xp - spent, need = Levels.need(lvl);
+        Rank r = of(p);
+        String game = pl.games.of(p) == null ? "Lobby" : pl.games.of(p).type.display;
+        String[] tip = TIPS[(tabTick / 60) % TIPS.length];
+
         Component logo = Component.text(String.valueOf((char) 0xE100)).font(FONT).color(NamedTextColor.WHITE);
-        Component header = Component.text("\n").append(!declined.contains(p.getUniqueId()) ? logo : U.c("&c&l✦ &6&lSQUARE&c&lSTAR &c&l✦"))
-                .append(U.c("\n&7Minihry na Marsu &8• &bnízká gravitace\n"));
-        Component footer = U.c("\n&7Online: &a" + on + " &8• &7Ping: &e" + p.getPing() + " ms &8• &7Hra: &6" +
-                (pl.games.of(p) == null ? "Lobby" : pl.games.of(p).type.display) + "\n&8vidriftvideo.netlify.app\n");
+        String line = "&8&m                                          ";
+        Component header = Component.text("\n")
+                .append(!declined.contains(p.getUniqueId()) ? logo : wave("✦ SQUARESTAR ✦", tabTick, true))
+                .append(U.c("\n" + (en ? "&7Minigames on Mars &8• &blow gravity" : "&7Minihry na Marsu &8• &bnízká gravitace") + "\n" + line + "\n"))
+                .append(U.c("&7" + (en ? "Rank" : "Rank") + ": " + r.color + r.name() + "  &8│  &7Level: &e" + lvl + "  &8│  &6" + Coins.ICON + " &e" + pl.coins.get(p) + "\n"))
+                .append(U.c("&8[" + bar(cur, need, 20) + "&8] &7" + cur + "&8/&7" + need + " XP\n"));
+        Component footer = U.c("\n" + line + "\n&7" + (en ? "Online" : "Online") + ": &a" + on + "&8/&7" + max
+                + " &8│ &7Ping: " + pc + ping + " ms &8│ &7TPS: " + tc + String.format(java.util.Locale.ROOT, "%.1f", tps)
+                + "\n&7" + (en ? "Playing" : "Hraješ") + ": &6" + game + "\n"
+                + "&8» &e" + (en ? tip[1] : tip[0]) + " &8«\n")
+                .append(wave("vidriftvideo.netlify.app", tabTick, false)).append(Component.text("\n"));
         p.sendPlayerListHeaderAndFooter(header, footer);
     }
 
@@ -168,6 +216,7 @@ public final class Ranks implements Listener {
         t.prefix(g ? glyphBadge(r) : textBadge(r));
         t.color(r == Rank.HRAC ? NamedTextColor.GRAY : NamedTextColor.WHITE);
         t.suffix(U.c(platform(p)));
+        t.setCanSeeFriendlyInvisibles(false);   // neviditelný spoluhráč (emote) se nesmí zobrazit jako průhledný duch
         if (!t.hasEntry(p.getName())) t.addEntry(p.getName());
     }
 
@@ -193,7 +242,7 @@ public final class Ranks implements Listener {
             boolean glyph = !(viewer instanceof Player v) || !declined.contains(v.getUniqueId());
             Component head = pl.skins.head(source);
             Component plat = U.c(bedrock(source) ? "&b☗" : "&a☕").hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c(bedrock(source) ? "&bHraje na Bedrocku" : "&aHraje na Javě")));
-            return (glyph ? glyphBadge(r) : textBadge(r)).append(plat).append(Component.text(" ")).append(head).append(Component.text(" ")).append(U.c(lvl + nameColor(r) + name + "&8: &f")).append(message);
+            return (glyph ? glyphBadge(r) : textBadge(r)).append(plat).append(Component.text(" ")).append(head).append(Component.text(" ")).append(U.c(lvl + nameColor(r) + name + "&8: &f")).append(Emojis.apply(message, glyph && !(viewer instanceof Player vv && bedrock(vv))));
         });
     }
 }

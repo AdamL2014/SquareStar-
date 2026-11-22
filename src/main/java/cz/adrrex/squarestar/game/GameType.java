@@ -21,7 +21,8 @@ public enum GameType {
     ZOMBIES("Vesmírní zombíci", Material.ZOMBIE_HEAD, 1, 8, "Tým brání reaktor před vlnami mimozemských zombíků."),
     SPEEDRUN("Speedrun: Edice zdarma", Material.WHITE_WOOL, 1, 8, "Levný vlněný svět, moby jsou jen hlavy. Posbírej díly a odleť raketou!"),
     ROVER("Závod roverů", Material.MINECART, 1, 9, "Mario Kart na Marsu: itemy, drift a turbo. 3 kola!"),
-    DROPPER("Pád šachtou", Material.FEATHER, 1, 12, "Padej šachtou, nenaraz do ničeho a dopadni do vody. 8 levelů!");
+    DROPPER("Pád šachtou", Material.FEATHER, 1, 12, "Padej šachtou, nenaraz do ničeho a dopadni do vody. 8 levelů!"),
+    BEAT("Neon Beat", Material.NOTE_BLOCK, 1, 1, "Beat Saber v Minecraftu (pro 1 hráče): kostky letí pomalu v rytmu, červené levým, modré pravým tlačítkem. Uhýbej zdem do stran!");
 
     /** PvP režimy (v lobby jedno NPC / jedna položka menu s výběrem) */
     public boolean isPvp() { return this == PVP || this == PVP1V1 || this == PVP5V5 || this == PVP10V10 || this == SUMO; }
@@ -50,6 +51,7 @@ public enum GameType {
             case SPEEDRUN -> new SpeedrunFE(gm, slot);
             case ROVER -> new RoverRace(gm, slot);
             case DROPPER -> new Dropper(gm, slot);
+            case BEAT -> new Beat(gm, slot);
         };
     }
 }

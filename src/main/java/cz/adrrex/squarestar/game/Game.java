@@ -235,6 +235,7 @@ public abstract class Game {
         else p.teleport(waitSpot());
         if (hideNames()) gm.hideName(p, true);
         pl.applyGravity(p);
+        onJoin(p);
         broadcast("&a" + p.getName() + " &7se připojil &8(" + players.size() + "/" + maxPlayers() + ")");
         checkStart();
     }
@@ -255,6 +256,8 @@ public abstract class Game {
     }
 
     protected void onLeave(Player p) {}
+    /** hráč se právě připojil do čekárny */
+    protected void onJoin(Player p) {}
 
     void checkStart() {
         if (eventHold) return;
