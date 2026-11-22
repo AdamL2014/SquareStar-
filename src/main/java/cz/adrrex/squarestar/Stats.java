@@ -56,7 +56,7 @@ public final class Stats {
 
     private static final String[][] BOARDS = {
             // po stranách náměstí (ne na cestách ani přímo za nimi)
-            {"wins", "&6&l♛ NEJVÍC VÝHER", "-14", "5"},
+            {"wins", "&6&l♛ NEJVÍC VÝHER", "0", "15"},
             {"level", "&b&l★ NEJVYŠŠÍ LEVEL", "-9", "12"},
             {"kills", "&c&l⚔ NEJVÍC ZABITÍ", "8.5", "12"},
             {"games", "&a&l✪ NEJVÍC HER", "13.5", "5"}};
