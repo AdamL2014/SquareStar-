@@ -39,14 +39,44 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
     public Ai(SquareStar pl) { this.pl = pl; }
 
     // ---------------- konfigurace ----------------
+    /** místa, kde se klíč hledá (od nejpřednějšího). Soubor v kořeni serveru přežije smazání složky plugins při updatu. */
+    private java.io.File rootFile() { return new java.io.File(Bukkit.getWorldContainer(), "ai-key.txt"); }
+    private java.io.File pluginFile() { return new java.io.File(pl.getDataFolder(), "ai-key.txt"); }
+    private static String readKey(java.io.File f) {
+        try { return f.isFile() ? java.nio.file.Files.readString(f.toPath()).trim() : ""; } catch (java.io.IOException e) { return ""; }
+    }
+    private String keySource() {
+        if (!readKey(rootFile()).isEmpty()) return "ai-key.txt v hlavní složce serveru";
+        if (!readKey(pluginFile()).isEmpty()) return "plugins/SquareStar/ai-key.txt";
+        if (!pl.getConfig().getString("ai.groq-api-key", "").trim().isEmpty()) return "config.yml";
+        if (!System.getenv().getOrDefault("GROQ_API_KEY", "").trim().isEmpty()) return "proměnná GROQ_API_KEY";
+        return "";
+    }
     private String key() {
-        String k = pl.getConfig().getString("ai.groq-api-key", "").trim();
-        if (k.isEmpty()) {   // soubor plugins/SquareStar/ai-key.txt (přežije výměnu config.yml při updatu)
-            try { var f = new java.io.File(pl.getDataFolder(), "ai-key.txt"); if (f.isFile()) k = java.nio.file.Files.readString(f.toPath()).trim(); } catch (java.io.IOException ignored) {}
-        }
+        String k = readKey(rootFile());
+        if (k.isEmpty()) k = readKey(pluginFile());
+        if (k.isEmpty()) k = pl.getConfig().getString("ai.groq-api-key", "").trim();
         if (k.isEmpty()) k = System.getenv().getOrDefault("GROQ_API_KEY", "").trim();
         return k;
     }
+    private void saveKey(String k) throws java.io.IOException {
+        java.nio.file.Files.writeString(rootFile().toPath(), k + "\n");
+        pl.getDataFolder().mkdirs();
+        java.nio.file.Files.writeString(pluginFile().toPath(), k + "\n");
+    }
+    /** ověří klíč dotazem na seznam modelů (HTTP 200 = platný) */
+    private void verify(Player p, String k) {
+        Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
+            String res;
+            try {
+                var r = http.send(HttpRequest.newBuilder(URI.create("https://api.groq.com/openai/v1/models")).timeout(Duration.ofSeconds(12)).header("Authorization", "Bearer " + k).GET().build(), HttpResponse.BodyHandlers.ofString());
+                res = r.statusCode() == 200 ? "&a✔ klíč je platný, AdrrexAI funguje!" : r.statusCode() == 401 ? "&c✘ Groq klíč odmítl (neplatný nebo smazaný)." : "&e? Groq odpověděl HTTP " + r.statusCode();
+            } catch (Exception e) { res = "&e? Nepodařilo se spojit s Groq (zkus znovu)."; }
+            final String m = res;
+            Bukkit.getScheduler().runTask(pl, () -> { if (p.isOnline()) say(p, m); });
+        });
+    }
+
     private boolean enabled() { return pl.getConfig().getBoolean("ai.enabled", true); }
     private String model() { return pl.getConfig().getString("ai.model", "llama-3.3-70b-versatile"); }
 
@@ -57,7 +87,16 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         if (a.length == 0) { intro(p); return true; }
         if (a[0].equalsIgnoreCase("reset") || a[0].equalsIgnoreCase("nova")) { history.remove(p.getUniqueId()); say(p, Lang.en(p) ? "Fresh start! Ask me anything." : "Začínáme od nuly! Ptej se na cokoliv."); return true; }
         if (admin && a[0].equalsIgnoreCase("status")) {
-            say(p, "Klíč: " + (key().isEmpty() ? "&cCHYBÍ &7(ai-key.txt nebo config.yml)" : "&anastaven") + "&f, model &e" + model() + "&f, zapnuto: " + enabled());
+            say(p, "Klíč: " + (key().isEmpty() ? "&cCHYBÍ &7(nastav: &e/ai setkey <klíč>&7)" : "&anastaven &7(" + keySource() + ")") + "&f, model &e" + model() + "&f, zapnuto: " + enabled());
+            if (!key().isEmpty()) verify(p, key());
+            return true;
+        }
+        if (admin && (a[0].equalsIgnoreCase("setkey") || a[0].equalsIgnoreCase("klic"))) {
+            if (a.length < 2 || !a[1].startsWith("gsk_") || a[1].length() < 20) { say(p, "&cPoužití: &e/ai setkey gsk_xxxxxxxx &7(klíč z console.groq.com/keys, začíná gsk_)"); return true; }
+            try { saveKey(a[1]); } catch (java.io.IOException ex) { say(p, "&cKlíč se nepodařilo uložit: " + ex.getMessage()); return true; }
+            say(p, "&aKlíč uložen &7(hlavní složka serveru + plugins/SquareStar). &7Ověřuji…");
+            p.sendMessage(U.c("&8Tip: zprávu s klíčem si můžeš z historie chatu smazat, v logu serveru ale zůstane – je-li to problém, vygeneruj na Groq nový klíč."));
+            verify(p, a[1]);
             return true;
         }
         if (admin && a[0].equalsIgnoreCase("reload")) { pl.reloadConfig(); say(p, "Konfigurace znovu načtena."); return true; }
@@ -66,7 +105,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
     }
 
     @Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a) {
-        if (a.length == 1) { List<String> r = new ArrayList<>(List.of("reset")); if (s.isOp()) { r.add("status"); r.add("reload"); } return r.stream().filter(x -> x.startsWith(a[0].toLowerCase())).toList(); }
+        if (a.length == 1) { List<String> r = new ArrayList<>(List.of("reset")); if (s.isOp()) { r.add("status"); r.add("reload"); r.add("setkey"); } return r.stream().filter(x -> x.startsWith(a[0].toLowerCase())).toList(); }
         return List.of();
     }
 
@@ -90,7 +129,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         if (!enabled()) { say(p, en ? "&cAdrrexAI is turned off." : "&cAdrrexAI je vypnutá."); return; }
         if (key().isEmpty()) {
             say(p, en ? "&cI am not set up yet." : "&cZatím nejsem nastavená.");
-            if (p.isOp()) p.sendMessage(U.c("&7(Admin: vlož klíč Groq do souboru &fplugins/SquareStar/ai-key.txt &7(nebo config.yml → ai.groq-api-key) a restartuj / dej &f/ai reload&7)"));
+            if (p.isOp()) p.sendMessage(U.c("&7(Admin: napiš &f/ai setkey gsk_tvůj_klíč &7– uloží se a ověří; klíč získáš na console.groq.com/keys)"));
             return;
         }
         q = q.strip(); if (q.length() > 400) q = q.substring(0, 400);
