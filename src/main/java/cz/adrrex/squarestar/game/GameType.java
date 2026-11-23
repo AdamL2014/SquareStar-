@@ -22,6 +22,9 @@ public enum GameType {
     SPEEDRUN("Speedrun: Edice zdarma", Material.WHITE_WOOL, 1, 8, "Levný vlněný svět, moby jsou jen hlavy. Posbírej díly a odleť raketou!"),
     ROVER("Závod roverů", Material.MINECART, 1, 9, "Mario Kart na Marsu: itemy, drift a turbo. 3 kola!"),
     DROPPER("Pád šachtou", Material.FEATHER, 1, 12, "Padej šachtou, nenaraz do ničeho a dopadni do vody. 8 levelů!"),
+    ONLYUP("Only Up", Material.LADDER, 1, 12, "Věž plná překážek: skákej jen nahoru! Spadneš = zpět na checkpoint. Kdo první dolezne na smaragd, vyhrává."),
+    DUELS("Duels", Material.GOLDEN_SWORD, 2, 2, "Duel 1v1 na kola s kity. Kdo první vyhraje 3 kola, vyhrává."),
+    BRIDGE("The Bridge", Material.DIAMOND_PICKAXE, 2, 8, "Dva týmy na ostrovech spojených mostem. Skoč do cizí brány, první na 5 bodů vyhrává."),
     BEAT("Neon Beat", Material.NOTE_BLOCK, 1, 1, "Beat Saber v Minecraftu (pro 1 hráče): červené kostky letí v rytmu hudby z Minecraftu, sekej je světelným mečem a uhýbej zdem do stran!");
 
     /** PvP režimy (v lobby jedno NPC / jedna položka menu s výběrem) */
@@ -52,6 +55,9 @@ public enum GameType {
             case ROVER -> new RoverRace(gm, slot);
             case DROPPER -> new Dropper(gm, slot);
             case BEAT -> new Beat(gm, slot);
+            case ONLYUP -> new OnlyUp(gm, slot);
+            case DUELS -> new Duels(gm, slot);
+            case BRIDGE -> new TheBridge(gm, slot);
         };
     }
 }
