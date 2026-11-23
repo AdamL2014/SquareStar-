@@ -269,7 +269,7 @@ public final class LobbyFx implements Listener {
         m.setSilent(true);
         m.setCollidable(false);
         m.setPersistent(false);
-        Color col = switch (look) { case "npc_shop" -> Color.ORANGE; default -> Color.WHITE; };
+        Color col = switch (look) { case "npc_shop" -> Color.ORANGE; case "ai" -> Color.AQUA; default -> Color.WHITE; };
         suit(m, col, null);
     }
 

@@ -18,18 +18,19 @@ import java.time.Duration;
  * Když je tam novější verze, stáhne SquareStar.jar do plugins/update/ (Paper ho při startu sám vymění),
  * odpočítá, vykopne hráče se zprávou a vypne server. MineKeep ho pak znovu zapne (nebo ho zapni ručně).
  */
-public final class Updater {
+public final class Updater implements org.bukkit.event.Listener {
     private static final String BASE = "https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/";
     private final SquareStar pl;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
-    private boolean busy;
+    private boolean busy, restarting;
 
     public Updater(SquareStar pl) {
         this.pl = pl;
         verifyPrevious();
         if (!pl.getConfig().getBoolean("auto-update.enabled", true)) return;
-        long every = Math.max(5, pl.getConfig().getLong("auto-update.check-minutes", 10)) * 1200L;
-        Bukkit.getScheduler().runTaskTimerAsynchronously(pl, () -> check(null), 600, every);
+        pl.getServer().getPluginManager().registerEvents(this, pl);
+        long every = Math.max(5, pl.getConfig().getLong("auto-update.check-seconds", 10)) * 20L;   // kontrola každých 10 s
+        Bukkit.getScheduler().runTaskTimerAsynchronously(pl, () -> check(null), 200, every);
     }
 
     /** po restartu: sedí běžící verze s tou, na kterou jsme aktualizovali? když ne, zapamatuj si to, ať se server nezačne donekonečna restartovat */
@@ -109,20 +110,18 @@ public final class Updater {
         }
     }
 
+    /** hráčům se hned ukáže kick se zprávou, po pár sekundách (výchozí 3) se server vypne a hosting ho zapne s novým jarem */
     private void countdown(String v) {
-        int[] left = {Bukkit.getOnlinePlayers().isEmpty() ? 0 : pl.getConfig().getInt("auto-update.countdown-seconds", 60)};
-        Bukkit.getScheduler().runTaskTimer(pl, t -> {
-            int s = left[0]--;
-            if (s == 60 || s == 30 || s == 10 || (s <= 5 && s > 0)) {
-                U.all("&d&l⟳ AKTUALIZACE &7na verzi &e" + v + "&7 – restart za &c" + s + " s");
-                for (Player p : Bukkit.getOnlinePlayers()) { U.title(p, "&d&l⟳ AKTUALIZACE", "&7Restart za &c" + s + " s"); p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, s <= 5 ? 2f : 1f); }
-            }
-            if (s > 0) return;
-            t.cancel();
-            if (pl.stats != null) pl.stats.save();
-            for (Player p : Bukkit.getOnlinePlayers())
-                p.kick(U.c(Lang.t(p, "&6&lSQUARE&c&lSTAR\n\n&d⟳ Server se aktualizuje na verzi &e" + v + "\n&7Restartuje se – připoj se znovu za minutku!")));
-            Bukkit.getScheduler().runTaskLater(pl, Bukkit::shutdown, 20);
-        }, 0, 20);
+        restarting = true;
+        if (pl.stats != null) pl.stats.save();
+        for (Player p : Bukkit.getOnlinePlayers())
+            p.kick(U.c(Lang.t(p, "&6&lSQUARE&c&lSTAR\n\n&d⟳ Server se aktualizuje na verzi &e" + v + "\n&7Restartuje se – připoj se znovu za minutku!")));
+        long delay = Math.max(1, pl.getConfig().getLong("auto-update.shutdown-delay-seconds", 3)) * 20L;
+        Bukkit.getScheduler().runTaskLater(pl, Bukkit::shutdown, delay);
+    }
+
+    @org.bukkit.event.EventHandler
+    public void preLogin(org.bukkit.event.player.AsyncPlayerPreLoginEvent e) {
+        if (restarting) e.disallow(org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result.KICK_OTHER, U.c("&d⟳ Server se právě aktualizuje.\n&7Připoj se znovu za minutku!"));
     }
 }

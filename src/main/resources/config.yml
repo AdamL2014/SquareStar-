@@ -121,8 +121,10 @@ security:
 # automaticka aktualizace z GitHubu (download/version.txt + SquareStar.jar)
 auto-update:
   enabled: true
-  check-minutes: 10
-  countdown-seconds: 60
+  # jak často se server pta GitHubu na novou verzi (sekundy, min 5)
+  check-seconds: 10
+  # po nalezeni nove verze: hraci dostanou hned kick, za tolik sekund se server vypne (a hosting ho zapne s novym jarem)
+  shutdown-delay-seconds: 3
 
 # Pety nad hlavou (kosmetika -> 3D čepice -> Pet:)
 pets:
@@ -140,6 +142,9 @@ ai:
   model: "llama-3.3-70b-versatile"
   max-tokens: 450
   cooldown-seconds: 4
+  # tydenni limit zprav (tym/admini maji bez limitu)
+  limit-free: 3
+  limit-vip: 10
   max-per-minute: 25
   # dalsi informace o serveru, ktere ma AI znat (kazda polozka = jedna veta)
   extra-knowledge: []
