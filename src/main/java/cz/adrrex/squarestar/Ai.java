@@ -101,8 +101,8 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
     // ---------------- NPC v lobby ----------------
     private void spawnNpc() {
         for (var e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(NPC_TAG)) e.remove();
-        Location l = new Location(pl.mars, 5.5, Lobby.Y + 1, 4.5);
-        l.setDirection(new org.bukkit.util.Vector(-5.5, 0, -4.5));
+        Location l = new Location(pl.mars, 1.5, Lobby.Y + 1, 4.5);   // daleko od vánočního stromu (8.5, 5.5), bedny jsou na z=9
+        l.setDirection(new org.bukkit.util.Vector(-1.5, 0, -4.5));
         npc = pl.mars.spawn(l, Mannequin.class, m -> {
             LobbyFx.npc(m, "&b&l✦ AdrrexAI", "&eKlikni = zeptej se mě na cokoliv", "ai");
             m.addScoreboardTag(NPC_TAG);
