@@ -179,6 +179,26 @@ public final class Beat extends Game {
         for (int z = oz - 12; z >= z0; z -= 12) for (int sd : new int[]{-10, 10}) {
             for (int y = 1; y <= 14; y++) { b.set(cx + sd, oy + y, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, oy + y, z}); }
         }
+        // šikmé neonové čáry po stranách (do X, mizí v dálce – jako v originále)
+        for (int sd : new int[]{-9, 9}) for (int dir = 0; dir < 2; dir++) {
+            int za = oz - 8, zb = z0, ya = dir == 0 ? oy + 1 : oy + 12, yb = dir == 0 ? oy + 12 : oy + 1;
+            int n = za - zb;
+            for (int i = 0; i <= n; i++) {
+                int z = za - i, y = (int) Math.round(ya + (yb - ya) * (i / (double) n));
+                b.set(cx + sd, y, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, y, z});
+            }
+        }
+        // mřížka na podlaze (rychlost vnímáš podle čar, co ti ubíhají pod nohama)
+        for (int z = z1; z >= z0; z -= 4) b.fill(cx - 12, oy, z, cx + 12, oy, z, Material.RED_TERRACOTTA);
+        for (int x = -12; x <= 12; x += 4) if (Math.abs(x) != 3) b.fill(cx + x, oy, z0, cx + x, oy, z1, Material.RED_TERRACOTTA);
+        // velký svítící disk na konci tunelu
+        int zd = z0 - 2, yc = oy + 6;
+        for (int dx = -12; dx <= 12; dx++) for (int dy = -12; dy <= 12; dy++) {
+            double r = Math.hypot(dx, dy); int y = yc + dy; if (y < oy + 1) continue;
+            if (r <= 4.3) b.set(cx + dx, y, zd, Material.PINK_CONCRETE);
+            else if (r >= 5.4 && r <= 6.4 || r >= 9 && r <= 10) { b.set(cx + dx, y, zd, Material.RED_CONCRETE); li.add(new int[]{cx + dx, y, zd}); }
+            else if (r <= 11.5) b.set(cx + dx, y, zd, Material.BLACK_CONCRETE);
+        }
         lights.put(0, li);
     }
 
