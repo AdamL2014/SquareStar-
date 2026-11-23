@@ -141,6 +141,7 @@ ai:
   groq-api-key: ""
   model: "llama-3.3-70b-versatile"
   max-tokens: 450
+  fallback-model: "meta-llama/llama-4-scout-17b-16e-instruct"   # záloha při 413/429 (větší limit tokenů)
   cooldown-seconds: 4
   # tydenni limit zprav (tym/admini maji bez limitu)
   limit-free: 3

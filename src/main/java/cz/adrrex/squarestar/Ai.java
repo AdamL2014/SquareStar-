@@ -48,6 +48,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
             "online", "report", "helpop", "stats", "kosmetika", "emoji", "jazyk", "hudba", "mince", "herna", "advent", "ai");
 
     private final SquareStar pl;
+    private boolean sizeLogged;
     private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(8)).build();
     private final Map<UUID, Deque<String[]>> history = new ConcurrentHashMap<>();   // {role, text}
     private final Map<UUID, Long> last = new ConcurrentHashMap<>();
@@ -116,7 +117,56 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
     @EventHandler public void npcHit(EntityDamageEvent e) { if (e.getEntity().getScoreboardTags().contains(NPC_TAG)) e.setCancelled(true); }
 
     // ---------------- okno chatu přímo ve hře ----------------
+    // ---------------- souhlas s pravidly (jednou na hráče) ----------------
+    private static final NamespacedKey CONSENT = new NamespacedKey("squarestar", "ai_consent");
+    private boolean consented(Player p) { return p.getPersistentDataContainer().has(CONSENT, PersistentDataType.BYTE); }
+    private void accept(Player p) {
+        p.getPersistentDataContainer().set(CONSENT, PersistentDataType.BYTE, (byte) 1);
+        say(p, Lang.en(p) ? "&aThanks! You can ask now: &e/ai <question>" : "&aDíky! Můžeš se ptát: &e/ai <otázka>");
+    }
+    private static String[] rules(boolean en) {
+        return en ? new String[]{
+                "AdrrexAI is an AI, so it can be wrong. Double-check important things.",
+                "Never write passwords, real name, address, phone or other personal info.",
+                "Your questions are sent to an outside AI service (Groq) to get an answer.",
+                "Every question counts into your weekly limit (Free 3, VIP 10).",
+                "No insults, spam or rule-breaking requests. Abuse can lead to a ban from AdrrexAI."}
+        : new String[]{
+                "AdrrexAI je umělá inteligence, takže se může mýlit. Důležité věci si ověř.",
+                "Nikdy nepiš hesla, pravé jméno, adresu, telefon ani jiné osobní údaje.",
+                "Tvoje otázky se posílají externí AI službě (Groq), aby odpověděla.",
+                "Každá otázka se počítá do týdenního limitu (Free 3, VIP 10).",
+                "Žádné urážky, spam ani porušování pravidel. Zneužití může skončit zákazem AdrrexAI."};
+    }
+    private void consent(Player p) {
+        boolean en = Lang.en(p);
+        String[] r = rules(en);
+        if (p.getUniqueId().getMostSignificantBits() == 0) {   // Bedrock: bez okna
+            say(p, en ? "&eBefore you start, please read the rules:" : "&eNež začneš, přečti si pravidla:");
+            for (String x : r) p.sendMessage(U.c("&7 • &f" + x));
+            say(p, en ? "&aType &e/ai accept &ato agree." : "&aSouhlasíš příkazem &e/ai accept&a.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String x : r) sb.append("• ").append(x).append("\n\n");
+        try {
+            Dialog d = Dialog.create(f -> f.empty()
+                    .base(DialogBase.builder(Component.text(en ? "✦ AdrrexAI – rules" : "✦ AdrrexAI – pravidla", NamedTextColor.AQUA, TextDecoration.BOLD))
+                            .canCloseWithEscape(true)
+                            .body(List.of(DialogBody.plainMessage(Component.text(en ? "Please confirm before you use the AI:" : "Před použitím AI to prosím potvrď:", NamedTextColor.YELLOW), 340),
+                                    DialogBody.plainMessage(Component.text(sb.toString().strip(), NamedTextColor.WHITE), 340)))
+                            .build())
+                    .type(DialogType.confirmation(
+                            ActionButton.create(Component.text(en ? "I agree" : "Souhlasím", NamedTextColor.GREEN), null, 150,
+                                    DialogAction.customClick((view, aud) -> Bukkit.getScheduler().runTask(pl, () -> { accept(p); open(p); }),
+                                            ClickCallback.Options.builder().uses(1).lifetime(Duration.ofMinutes(15)).build())),
+                            ActionButton.create(Component.text(en ? "I disagree" : "Nesouhlasím", NamedTextColor.RED), null, 150, null))));
+            p.showDialog(d);
+        } catch (Throwable t) { pl.getLogger().warning("AdrrexAI souhlas: " + t); say(p, en ? "&aType &e/ai accept &ato agree to the rules." : "&aSouhlas s pravidly: &e/ai accept"); for (String x : r) p.sendMessage(U.c("&7 • &f" + x)); }
+    }
+
     private void open(Player p) {
+        if (!consented(p)) { consent(p); return; }
         if (p.getUniqueId().getMostSignificantBits() == 0) { intro(p); return; }   // Bedrock (Floodgate) okna nemá
         boolean en = Lang.en(p);
         dialogMode.add(p.getUniqueId());
@@ -196,6 +246,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
     @Override public boolean onCommand(CommandSender s, Command c, String label, String[] a) {
         if (!(s instanceof Player p)) { s.sendMessage("AdrrexAI: jen pro hráče. Stav: klíč " + (key().isEmpty() ? "CHYBÍ" : "nastaven") + ", model " + model()); return true; }
         boolean admin = p.isOp() || p.hasPermission("squarestar.admin");
+        if (a.length >= 1 && (a[0].equalsIgnoreCase("accept") || a[0].equalsIgnoreCase("souhlasim"))) { accept(p); return true; }
         if (a.length == 0) { open(p); return true; }
         if (a[0].equalsIgnoreCase("reset") || a[0].equalsIgnoreCase("nova")) { history.remove(p.getUniqueId()); say(p, Lang.en(p) ? "Fresh start! Ask me anything." : "Začínáme od nuly! Ptej se na cokoliv."); return true; }
         if (admin && a[0].equalsIgnoreCase("status")) {
@@ -217,7 +268,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
     }
 
     @Override public List<String> onTabComplete(CommandSender s, Command c, String l, String[] a) {
-        if (a.length == 1) { List<String> r = new ArrayList<>(List.of("reset")); if (s.isOp()) { r.add("status"); r.add("reload"); r.add("setkey"); } return r.stream().filter(x -> x.startsWith(a[0].toLowerCase())).toList(); }
+        if (a.length == 1) { List<String> r = new ArrayList<>(List.of("reset", "accept")); if (s.isOp()) { r.add("status"); r.add("reload"); r.add("setkey"); } return r.stream().filter(x -> x.startsWith(a[0].toLowerCase())).toList(); }
         return List.of();
     }
 
@@ -239,6 +290,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
     private void ask(Player p, String q) {
         boolean en = Lang.en(p);
         if (!enabled()) { respond(p, en ? "&cAdrrexAI is turned off." : "&cAdrrexAI je vypnutá."); return; }
+        if (!consented(p)) { consent(p); return; }
         if (key().isEmpty()) {
             respond(p, en ? "&cI am not set up yet." : "&cZatím nejsem nastavená.");
             if (p.isOp()) p.sendMessage(U.c("&7(Admin: napiš &f/ai setkey gsk_tvůj_klíč &7– uloží se a ověří; klíč získáš na console.groq.com/keys)"));
@@ -259,6 +311,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         last.put(p.getUniqueId(), now);
         final String question = q;
         final String system = system(p);
+        if (!sizeLogged) { sizeLogged = true; pl.getLogger().info("AdrrexAI: system prompt ~" + system.length() + " znaku (~" + system.length() / 4 + " tokenu)"); }
         final List<String[]> hist = new ArrayList<>(history.computeIfAbsent(p.getUniqueId(), k -> new ArrayDeque<>()));
         p.sendActionBar(U.c("&b✦ AdrrexAI " + (en ? "is thinking…" : "přemýšlí…")));
         if (dialogMode.contains(p.getUniqueId())) dialog(p, Component.text((en ? "You: " : "Ty: ") + question + "\n\n" + (en ? "AdrrexAI is thinking…" : "AdrrexAI přemýšlí…"), NamedTextColor.GRAY));
@@ -279,9 +332,10 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         boolean en = Lang.en(p);
         if (ans == null) {
             String msg;
-            if ("401".equals(err) || "403".equals(err)) { msg = en ? "&cMy connection is not set up correctly. Please tell an admin." : "&cMé spojení není správně nastavené. Řekni to prosím adminovi."; if (!keyWarned) { keyWarned = true; pl.getLogger().warning("AdrrexAI: Groq odmítl API klíč (HTTP " + err + "). Zkontroluj ai.groq-api-key."); } }
-            else if ("429".equals(err)) msg = en ? "&7Too many questions at once – try again in a moment." : "&7Příliš mnoho dotazů najednou – zkus to za chvilku.";
-            else { msg = en ? "&cI couldn't reach my brain right now. Try again later." : "&cTeď se mi nepodařilo spojit s mozkem. Zkus to později."; pl.getLogger().warning("AdrrexAI chyba: " + err); }
+            String code = err == null ? "" : err.split(":")[0].trim();
+            if ("401".equals(code) || "403".equals(code)) { msg = en ? "&cMy connection is not set up correctly. Please tell an admin." : "&cMé spojení není správně nastavené. Řekni to prosím adminovi."; if (!keyWarned) { keyWarned = true; pl.getLogger().warning("AdrrexAI: Groq odmítl API klíč (HTTP " + err + "). Zkontroluj ai.groq-api-key."); } }
+            else if ("429".equals(code)) msg = en ? "&7Too many questions at once – try again in a moment." : "&7Příliš mnoho dotazů najednou – zkus to za chvilku.";
+            else { msg = en ? "&cI couldn't reach my brain right now. Try again later." : "&cTeď se mi nepodařilo spojit s mozkem. Zkus to později."; pl.getLogger().warning("AdrrexAI chyba: " + err); if (p.hasPermission("squarestar.admin")) msg += " &8[" + (err == null ? "?" : err.substring(0, Math.min(160, err.length()))) + "]"; }
             respond(p, msg);
             return;
         }
@@ -316,8 +370,23 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         msgs.add(msg("system", system));
         for (String[] m : hist) msgs.add(msg(m[0], m[1]));
         msgs.add(msg("user", q));
+        String m1 = model(), m2 = pl.getConfig().getString("ai.fallback-model", "meta-llama/llama-4-scout-17b-16e-instruct");
+        try { return post(m1, msgs); }
+        catch (HttpErr e) {
+            // 413 = žádost větší než minutový limit tokenů modelu, 429/400/404 = limit/model; zkus záložní model s větším limitem
+            if (e.code == 401 || e.code == 403 || m2.isBlank() || m2.equals(m1)) throw e;
+            pl.getLogger().warning("AdrrexAI: model " + m1 + " selhal (" + e.getMessage() + "), zkousim " + m2);
+            return post(m2, msgs);
+        }
+    }
+
+    private static final class HttpErr extends Exception {
+        final int code; HttpErr(int code, String body) { super(code + (body == null || body.isBlank() ? "" : ": " + body.substring(0, Math.min(300, body.length())))); this.code = code; }
+    }
+
+    private String post(String model, JsonArray msgs) throws Exception {
         JsonObject body = new JsonObject();
-        body.addProperty("model", model());
+        body.addProperty("model", model);
         body.add("messages", msgs);
         body.addProperty("temperature", 0.3);
         body.addProperty("max_tokens", pl.getConfig().getInt("ai.max-tokens", 450));
@@ -325,7 +394,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
                 .header("Authorization", "Bearer " + key()).header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body.toString())).build();
         HttpResponse<String> r = http.send(req, HttpResponse.BodyHandlers.ofString());
-        if (r.statusCode() != 200) throw new Exception(String.valueOf(r.statusCode()));
+        if (r.statusCode() != 200) throw new HttpErr(r.statusCode(), r.body());
         JsonObject o = JsonParser.parseString(r.body()).getAsJsonObject();
         return o.getAsJsonArray("choices").get(0).getAsJsonObject().getAsJsonObject("message").get("content").getAsString().strip();
     }
