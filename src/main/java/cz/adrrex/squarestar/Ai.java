@@ -232,6 +232,20 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
             String res;
             try {
                 var r = http.send(HttpRequest.newBuilder(URI.create("https://api.groq.com/openai/v1/models")).timeout(Duration.ofSeconds(12)).header("Authorization", "Bearer " + k).GET().build(), HttpResponse.BodyHandlers.ofString());
+                if (r.statusCode() == 200) {
+                    StringBuilder ids = new StringBuilder();
+                    for (var el : JsonParser.parseString(r.body()).getAsJsonObject().getAsJsonArray("data")) {
+                        String id = el.getAsJsonObject().get("id").getAsString();
+                        if (!id.matches(".*(whisper|guard|tts|orpheus|allam|safeguard|prompt-guard|compound).*")) ids.append(id).append(", ");
+                    }
+                    final String list = ids.toString();
+                    Bukkit.getScheduler().runTask(pl, () -> { if (p.isOnline()) say(p, "&7Dostupné modely: &f" + list); });
+                    String t;
+                    try { JsonArray one = new JsonArray(); one.add(msg("user", "Reply with the single word OK.")); t = "&a✔ hlavní model &e" + model() + " &aodpovídá: &f" + post(model(), one); }
+                    catch (Exception ex) { t = "&c✘ hlavní model &e" + model() + " &cselhal: &f" + String.valueOf(ex.getMessage()); }
+                    final String tm = t;
+                    Bukkit.getScheduler().runTask(pl, () -> { if (p.isOnline()) say(p, tm); });
+                }
                 res = r.statusCode() == 200 ? "&a✔ klíč je platný, AdrrexAI funguje!" : r.statusCode() == 401 ? "&c✘ Groq klíč odmítl (neplatný nebo smazaný)." : "&e? Groq odpověděl HTTP " + r.statusCode();
             } catch (Exception e) { res = "&e? Nepodařilo se spojit s Groq (zkus znovu)."; }
             final String m = res;
@@ -418,6 +432,9 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
                 - Reply in the language the player writes in (Czech or English; the player's chosen language is given below).
                 - Be friendly, accurate and concise: normally 1-4 short sentences. Longer only if the player clearly asks for a detailed guide.
                 - Plain text only. No markdown, no headings, no tables. For lists use lines starting with "- ".
+                - Stay on the topic of the player's question. Never bring up server rules, punishments or bans unless the player asks about them.
+                - If the player asks what you would recommend / what to play / what to do, suggest 2-3 concrete minigames or features from the SERVER KNOWLEDGE with one short reason each, then ask what kind of games they like (fast, team, building, parkour, chill).
+                - If a question is vague, answer the most likely meaning briefly and ask one short follow-up question.
                 - Facts about the SquareStar server MUST come from the SERVER KNOWLEDGE below. If something about the server is not there, say you are not sure and suggest asking staff (/helpop) - never invent games, commands, prices, ranks or features.
                 - For general Minecraft questions (crafting, redstone, mobs, commands, building, survival tips) use your knowledge, and say when something differs between versions. The server runs Minecraft Java 1.21.11.
                 - You cannot run commands or change anything; only suggest commands the player can type. Never claim you did something in the game.
