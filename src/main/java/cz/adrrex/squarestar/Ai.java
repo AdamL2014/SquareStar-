@@ -335,7 +335,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
             String code = err == null ? "" : err.split(":")[0].trim();
             if ("401".equals(code) || "403".equals(code)) { msg = en ? "&cMy connection is not set up correctly. Please tell an admin." : "&cMé spojení není správně nastavené. Řekni to prosím adminovi."; if (!keyWarned) { keyWarned = true; pl.getLogger().warning("AdrrexAI: Groq odmítl API klíč (HTTP " + err + "). Zkontroluj ai.groq-api-key."); } }
             else if ("429".equals(code)) msg = en ? "&7Too many questions at once – try again in a moment." : "&7Příliš mnoho dotazů najednou – zkus to za chvilku.";
-            else { msg = en ? "&cI couldn't reach my brain right now. Try again later." : "&cTeď se mi nepodařilo spojit s mozkem. Zkus to později."; pl.getLogger().warning("AdrrexAI chyba: " + err); if (p.hasPermission("squarestar.admin")) msg += " &8[" + (err == null ? "?" : err.substring(0, Math.min(160, err.length()))) + "]"; }
+            else { msg = en ? "&cI couldn't reach my brain right now. Try again later." : "&cTeď se mi nepodařilo spojit s mozkem. Zkus to později."; pl.getLogger().warning("AdrrexAI chyba: " + err); if (p.hasPermission("squarestar.admin")) msg += " &8[" + (err == null ? "?" : err.substring(0, Math.min(330, err.length()))) + "]"; }
             respond(p, msg);
             return;
         }
@@ -370,13 +370,21 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         msgs.add(msg("system", system));
         for (String[] m : hist) msgs.add(msg(m[0], m[1]));
         msgs.add(msg("user", q));
-        String m1 = model(), m2 = pl.getConfig().getString("ai.fallback-model", "meta-llama/llama-4-scout-17b-16e-instruct");
+        String m1 = model();
         try { return post(m1, msgs); }
-        catch (HttpErr e) {
-            // 413 = žádost větší než minutový limit tokenů modelu, 429/400/404 = limit/model; zkus záložní model s větším limitem
-            if (e.code == 401 || e.code == 403 || m2.isBlank() || m2.equals(m1)) throw e;
-            pl.getLogger().warning("AdrrexAI: model " + m1 + " selhal (" + e.getMessage() + "), zkousim " + m2);
-            return post(m2, msgs);
+        catch (HttpErr first) {
+            // 413/429 = limit tokenů modelu, 400/404 = model nedostupný: zkus záložní modely (první dostupný vyhraje)
+            if (first.code == 401 || first.code == 403) throw first;
+            List<String> fb = pl.getConfig().getStringList("ai.fallback-models");
+            if (fb.isEmpty()) fb = List.of("llama-3.1-8b-instant", "openai/gpt-oss-20b", "openai/gpt-oss-120b");
+            StringBuilder trail = new StringBuilder(first.getMessage());
+            for (String m : fb) {
+                if (m.isBlank() || m.equals(m1)) continue;
+                pl.getLogger().warning("AdrrexAI: model " + m1 + " selhal (" + first.getMessage() + "), zkousim " + m);
+                try { return post(m, msgs); }
+                catch (HttpErr e) { trail.append(" || ").append(m).append(" ").append(e.getMessage()); if (e.code == 401 || e.code == 403) break; }
+            }
+            throw new Exception(trail.toString());
         }
     }
 
