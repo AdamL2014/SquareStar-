@@ -92,6 +92,7 @@ public final class SquareStar extends JavaPlugin {
         fly = new Fly(this);
         events = new EventManager(this); pm.registerEvents(events, this);
         beggar = new Beggar(this); pm.registerEvents(beggar, this);
+        new Hud(this);
         ai = new Ai(this); pm.registerEvents(ai, this); bind("ai", ai, ai);
         updater = new Updater(this);
         bind("pritel", friends, friends);

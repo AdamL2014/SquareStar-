@@ -340,7 +340,7 @@ public abstract class Game {
                 second();
                 if (state != State.RUNNING) return;
                 if (time >= timeLimit()) { broadcast("&eČas vypršel!"); timeUp(); return; }
-                for (Player p : players) U.bar(p, status(p));
+                for (Player p : players) U.bar(p, status(p) + " &8| &c❤ " + (int) Math.ceil(p.getHealth()));
             }
             default -> {}
         }
