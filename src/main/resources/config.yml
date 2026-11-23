@@ -128,3 +128,18 @@ auto-update:
 pets:
   # když se pet kouká dozadu místo dopředu, dej 180 (a restart)
   yaw-offset: 0
+
+# ============================================
+#   AdrrexAI - chatovaci pomocnik (Groq)
+# ============================================
+ai:
+  enabled: true
+  # API klic z https://console.groq.com/keys  (NEPOSILEJ ho nikomu, nedavej ho na GitHub)
+  # misto sem ho muzes dat i do promenne prostredi GROQ_API_KEY
+  groq-api-key: ""
+  model: "llama-3.3-70b-versatile"
+  max-tokens: 450
+  cooldown-seconds: 4
+  max-per-minute: 25
+  # dalsi informace o serveru, ktere ma AI znat (kazda polozka = jedna veta)
+  extra-knowledge: []

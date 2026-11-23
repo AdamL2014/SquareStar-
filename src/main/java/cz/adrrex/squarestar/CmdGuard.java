@@ -25,7 +25,7 @@ public final class CmdGuard implements Listener {
     private static final Set<String> PLAYER = Set.of("ss", "squarestar", "hry", "games", "play", "hrat", "spawn", "lobby", "hub", "l", "emote", "e", "emoty",
             "pritel", "friend", "friends", "f", "pratele", "event", "fly", "letat", "novinky", "news", "changelog", "msg", "tell", "w", "m", "whisper", "zprava",
             "r", "reply", "odpoved", "ping", "pravidla", "rules", "discord", "dc", "afk", "online", "players", "hraci", "report", "nahlasit", "helpop", "pomoc",
-            "stats", "statistiky", "top", "kosmetika", "cosmetics", "emoji", "jazyk", "lang", "language", "help", "napoveda", "list", "hudba", "music", "mince", "coins", "obchod", "shop", "penize", "advent", "kalendar", "vanoce");
+            "stats", "statistiky", "top", "kosmetika", "cosmetics", "emoji", "jazyk", "lang", "language", "help", "napoveda", "list", "hudba", "music", "mince", "coins", "obchod", "shop", "penize", "advent", "kalendar", "vanoce", "ai", "adrrexai", "ask", "ptej");
     private static final Set<String> SECRET = Set.of("plugins", "pl", "version", "ver", "about", "icanhasbukkit", "?", "paper", "spigot", "bukkit", "timings", "spark", "geyser", "floodgate", "viaversion", "viaver", "vvbukkit", "viabackwards", "grim", "grimac");
     /** zakázané pro úplně všechny včetně majitele (příkaz hostingu, který hráče vyhodí z SquareStaru) */
     private static final Set<String> ALL_BLOCKED = Set.of("mk");

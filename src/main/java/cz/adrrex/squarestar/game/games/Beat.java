@@ -10,6 +10,7 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -77,7 +78,7 @@ public final class Beat extends Game {
 
     private static final class Live { Note n; BlockDisplay d; List<BlockDisplay> extra = new ArrayList<>(); int spawn; boolean done; double wx, ww, cx, cy; List<BlockDisplay> all() { List<BlockDisplay> a = new ArrayList<>(); a.add(d); a.addAll(extra); return a; } }
     private static final class St {
-        int score, combo, best, energy = 100, hits, misses, idx; double sx; String last = "";
+        int score, combo, best, energy = 100, hits, misses, idx, hudC = -1, hudM = -1; double sx; String last = ""; TextDisplay comboTd, multTd;
         final List<Live> live = new ArrayList<>();
     }
     public static final class SongHolder implements InventoryHolder {
@@ -151,54 +152,50 @@ public final class Beat extends Game {
     }
 
     // ---------------- stavba: otevřený neonový tunel (nic nad hráčem) ----------------
+    /** Tunel jako v Beat Saberu: uzavřená červená chodba, bránami tvaru „domečku“ (obdélník + střecha) a svítícími čarami na podlaze. */
     @Override protected void buildMap(U.BlockQueue.Builder b) {
         int cx = (int) Math.floor(sx(0));
         lights.clear();
-        int z0 = oz - 84, z1 = oz + 4;
-        // temná dráha + široká tmavá podlaha po stranách
-        b.fill(cx - 12, oy, z0, cx + 12, oy, z1, Material.BLACK_CONCRETE);
-        b.fill(cx - 3, oy, z0, cx + 3, oy, z1, Material.GRAY_CONCRETE);
-        b.fill(cx - 2, oy, oz - 3, cx + 2, oy, oz - 3, Material.LIGHT_GRAY_CONCRETE);                 // zóna zásahu
+        final int W = 7, z0 = oz - 84, z1 = oz + 4;
+        List<int[]> li = new ArrayList<>();
+        // podlaha
+        b.fill(cx - W, oy - 2, z0, cx + W, oy - 2, z1, Material.BLACK_CONCRETE);        // propast po stranách
+        b.fill(cx - 3, oy, z0, cx + 3, oy, z1, Material.BLACK_CONCRETE);                // „most“, po kterém jedou kostky
+        b.fill(cx - 3, oy - 1, z0, cx + 3, oy - 1, z1, Material.RED_NETHER_BRICKS);
+        // stěny + střecha (špičatá)
+        b.fill(cx - W, oy - 1, z0, cx - W, oy + 9, z1, Material.RED_NETHER_BRICKS);
+        b.fill(cx + W, oy - 1, z0, cx + W, oy + 9, z1, Material.RED_NETHER_BRICKS);
+        int[] hh = new int[2 * W + 1];
+        for (int dx = -W; dx <= W; dx++) {
+            hh[dx + W] = oy + 9 + (int) Math.round((W - Math.abs(dx)) * 4.0 / W);
+            b.fill(cx + dx, hh[dx + W] - 1, z0, cx + dx, hh[dx + W], z1, Material.RED_NETHER_BRICKS);
+        }
+        // zadní zeď (za hráčem) a koncová zeď s rozžhaveným středem
+        for (int dx = -W; dx <= W; dx++) {
+            b.fill(cx + dx, oy + 1, z1, cx + dx, hh[dx + W], z1, Material.BLACK_CONCRETE);
+            if (Math.abs(dx) < W) b.fill(cx + dx, oy + 1, z0 - 1, cx + dx, hh[dx + W] - 2, z0 - 1, Material.RED_CONCRETE);
+        }
+        // vodorovný pruh po stěnách
+        b.fill(cx - W, oy + 5, z0, cx - W, oy + 5, z1 - 1, Material.RED_TERRACOTTA);
+        b.fill(cx + W, oy + 5, z0, cx + W, oy + 5, z1 - 1, Material.RED_TERRACOTTA);
+        // brány: obrys „domečku“ z jasných čar (každých 8 bloků)
+        for (int z = oz - 8; z >= z0; z -= 8) {
+            for (int y = 1; y <= 8; y++) for (int sd : new int[]{-W, W}) { b.set(cx + sd, oy + y, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, oy + y, z}); }
+            for (int dx = -W; dx <= W; dx++) { int y = hh[dx + W] - 1; b.set(cx + dx, y, z, Material.RED_CONCRETE); li.add(new int[]{cx + dx, y, z}); }
+        }
+        // světelné čáry na podlaze (v dálce se sbíhají)
+        for (int x : new int[]{-3, -1, 1, 3}) for (int z = z0; z <= z1 - 1; z++) { b.set(cx + x, oy, z, Material.RED_CONCRETE); li.add(new int[]{cx + x, oy, z}); }
+        // hranice zóny zásahu
+        b.fill(cx - 3, oy, oz - 3, cx + 3, oy, oz - 3, Material.PINK_CONCRETE);
         // neviditelné bariéry kolem hráče: hýbe se jen do stran
         b.fill(cx - 4, oy + 1, oz - 1, cx - 4, oy + 9, oz + 2, Material.BARRIER);
         b.fill(cx + 4, oy + 1, oz - 1, cx + 4, oy + 9, oz + 2, Material.BARRIER);
         b.fill(cx - 4, oy + 1, oz - 1, cx + 4, oy + 9, oz - 1, Material.BARRIER);
         b.fill(cx - 4, oy + 1, oz + 2, cx + 4, oy + 9, oz + 2, Material.BARRIER);
         b.fill(cx - 4, oy + 9, oz - 1, cx + 4, oy + 9, oz + 2, Material.BARRIER);
-        List<int[]> li = new ArrayList<>();
-        // světelné pruhy po okrajích dráhy
-        for (int z = z0; z <= z1; z++) for (int sd : new int[]{-3, 3}) { b.set(cx + sd, oy, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, oy, z}); }
-        // tunel z obdélníkových rámů (jako v Beat Saberu) mizí do dálky
-        for (int z = oz - 6; z >= z0; z -= 6) {
-            for (int y = 1; y <= 10; y++) for (int sd : new int[]{-6, 6}) { b.set(cx + sd, oy + y, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, oy + y, z}); }
-            for (int x = -6; x <= 6; x++) { b.set(cx + x, oy + 11, z, Material.RED_CONCRETE); li.add(new int[]{cx + x, oy + 11, z}); }
-            // tmavé výplně mezi rámy, ať je tunel „hluboký"
-            for (int y = 1; y <= 10; y += 3) for (int sd : new int[]{-7, 7}) b.fill(cx + sd, oy + y, z - 5, cx + sd, oy + y + 1, z - 1, Material.BLACK_CONCRETE);
-        }
-        // vysoké neonové sloupy po stranách
-        for (int z = oz - 12; z >= z0; z -= 12) for (int sd : new int[]{-10, 10}) {
-            for (int y = 1; y <= 14; y++) { b.set(cx + sd, oy + y, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, oy + y, z}); }
-        }
-        // šikmé neonové čáry po stranách (do X, mizí v dálce – jako v originále)
-        for (int sd : new int[]{-9, 9}) for (int dir = 0; dir < 2; dir++) {
-            int za = oz - 8, zb = z0, ya = dir == 0 ? oy + 1 : oy + 12, yb = dir == 0 ? oy + 12 : oy + 1;
-            int n = za - zb;
-            for (int i = 0; i <= n; i++) {
-                int z = za - i, y = (int) Math.round(ya + (yb - ya) * (i / (double) n));
-                b.set(cx + sd, y, z, Material.RED_CONCRETE); li.add(new int[]{cx + sd, y, z});
-            }
-        }
-        // mřížka na podlaze (rychlost vnímáš podle čar, co ti ubíhají pod nohama)
-        for (int z = z1; z >= z0; z -= 4) b.fill(cx - 12, oy, z, cx + 12, oy, z, Material.RED_TERRACOTTA);
-        for (int x = -12; x <= 12; x += 4) if (Math.abs(x) != 3) b.fill(cx + x, oy, z0, cx + x, oy, z1, Material.RED_TERRACOTTA);
-        // velký svítící disk na konci tunelu
-        int zd = z0 - 2, yc = oy + 6;
-        for (int dx = -12; dx <= 12; dx++) for (int dy = -12; dy <= 12; dy++) {
-            double r = Math.hypot(dx, dy); int y = yc + dy; if (y < oy + 1) continue;
-            if (r <= 4.3) b.set(cx + dx, y, zd, Material.PINK_CONCRETE);
-            else if (r >= 5.4 && r <= 6.4 || r >= 9 && r <= 10) { b.set(cx + dx, y, zd, Material.RED_CONCRETE); li.add(new int[]{cx + dx, y, zd}); }
-            else if (r <= 11.5) b.set(cx + dx, y, zd, Material.BLACK_CONCRETE);
-        }
+        // neviditelná světla, ať je chodba osvětlená
+        BlockData lit = Bukkit.createBlockData("minecraft:light[level=11]");
+        for (int z = oz + 2; z >= z0; z -= 4) b.set(cx, oy + 11, z, lit);
         lights.put(0, li);
     }
 
@@ -212,6 +209,7 @@ public final class Beat extends Game {
         for (Player p : new ArrayList<>(players)) {
             St s = new St(); s.idx = i++; s.sx = sx(s.idx); st.put(p, s);
             p.teleport(new Location(w, s.sx, oy + 1, oz + 0.5, 180, 0));
+            makeHud(p, s);
             p.setWalkSpeed(0.2f);
             p.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, PotionEffect.INFINITE_DURATION, 250, false, false, false));
             ItemStack sw = cz.adrrex.squarestar.Cosmetics.model(Material.DIAMOND_SWORD, "saber_red", "&c&lSvětelný meč", "&7Klikni (levé i pravé) na červenou kostku", "&7Pohybuj se &fA/D &7a uhýbej zdem", "&4TNT netrefuj!");
@@ -242,7 +240,7 @@ public final class Beat extends Game {
         }
 
         for (var e : new ArrayList<>(st.entrySet())) {
-            Player p = e.getKey(); St s = e.getValue();
+            Player p = e.getKey(); St s = e.getValue(); updateHud(s);
             if (!p.isOnline()) continue;
             for (Live l : new ArrayList<>(s.live)) {
                 if (!l.d.isValid()) { for (var x_ : l.extra) x_.remove(); s.live.remove(l); continue; }
@@ -400,11 +398,49 @@ public final class Beat extends Game {
         checkEnergy(p, s);
     }
 
+    private static int mult(int combo) { return 1 + Math.min(combo, 70) / 10; }
+
+    /** panely jako v Beat Saberu: vlevo COMBO, vpravo násobič ×N s ukazatelem do dalšího */
+    private void makeHud(Player p, St s) {
+        double y = oy + 3.6, z = oz - 7.5;
+        s.comboTd = hudText(p, new Location(w, s.sx - 4.6, y, z), 1.7f);
+        s.multTd = hudText(p, new Location(w, s.sx + 4.6, y, z), 1.7f);
+        s.hudC = s.hudM = -1; updateHud(s);
+    }
+    private TextDisplay hudText(Player p, Location l, float sc) {
+        TextDisplay td = w.spawn(l, TextDisplay.class, x -> {
+            x.setPersistent(false); x.setVisibleByDefault(false); x.setBillboard(Display.Billboard.CENTER);
+            x.setBackgroundColor(Color.fromARGB(0, 0, 0, 0)); x.setBrightness(new Display.Brightness(15, 15)); x.setViewRange(2f);
+            x.setTransformation(new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(sc, sc, sc), new Quaternionf()));
+            x.text(U.c("&7"));
+        });
+        p.showEntity(pl, td);
+        return td;
+    }
+    private void updateHud(St s) {
+        if (s.comboTd == null) return;
+        int m = mult(s.combo);
+        if (s.hudC != s.combo) {
+            s.hudC = s.combo;
+            s.comboTd.text(U.c("&f&lCOMBO\n" + (s.combo >= 10 ? "&c&l" : "&f&l") + s.combo));
+        }
+        if (s.hudM != m * 100 + (s.combo % 10)) {
+            s.hudM = m * 100 + (s.combo % 10);
+            int f = m >= 8 ? 10 : s.combo % 10;
+            s.multTd.text(U.c("&c&l×" + m + "\n&c" + "▮".repeat(f) + "&8" + "▮".repeat(10 - f)));
+        }
+    }
+    private void clearHud(St s) {
+        if (s.comboTd != null) s.comboTd.remove();
+        if (s.multTd != null) s.multTd.remove();
+        s.comboTd = s.multTd = null;
+    }
+
     private void checkEnergy(Player p, St s) {
         if (s.energy > 0 || !alive.contains(p)) return;
         s.energy = 0;
         for (Live l : s.live) { l.d.remove(); for (var x_ : l.extra) x_.remove(); }
-        s.live.clear();
+        s.live.clear(); clearHud(s);
         p.setWalkSpeed(0.2f); p.stopSound(key(), SoundCategory.RECORDS);
         U.title(p, "&c&lDošla energie", "&7Skóre: &e" + s.score);
         eliminate(p, null);
@@ -458,7 +494,7 @@ public final class Beat extends Game {
         int base; String rate;
         if (err <= 1.5) { base = 100; rate = "&6&lPERFEKT"; } else if (err <= 2.8) { base = 70; rate = "&a&lDobře"; } else { base = 40; rate = "&7OK"; }
         s.combo++; s.best = Math.max(s.best, s.combo); s.hits++;
-        int mult = 1 + Math.min(s.combo, 30) / 10;
+        int mult = mult(s.combo);
         s.score += base * mult; s.energy = Math.min(100, s.energy + 1); s.last = rate;
         cutFx(pos, n.kind, look_(p));
         popup(pos, (n.kind == 0 ? "&c&l" : "&9&l") + (base * mult));

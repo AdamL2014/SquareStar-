@@ -1,5 +1,5 @@
 name: SquareStar
-version: 4.6.49
+version: 4.6.50
 main: cz.adrrex.squarestar.SquareStar
 api-version: '1.21.11'
 author: AdrrexStudio
@@ -80,6 +80,9 @@ commands:
   jazyk:
     description: Jazyk / Language
     aliases: [lang, language]
+  ai:
+    description: AdrrexAI - chatovaci pomocnik (/ai otazka)
+    aliases: [adrrexai, ask, ptej]
   hry:
     description: Menu miniher
     aliases: [games, play, hrat]

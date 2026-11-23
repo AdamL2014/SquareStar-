@@ -39,6 +39,7 @@ public final class SquareStar extends JavaPlugin {
     public Updater updater;
     public EventManager events;
     public Beggar beggar;
+    public Ai ai;
     public Meteors meteors;
     public Coins coins;
     public Christmas xmas;
@@ -91,6 +92,7 @@ public final class SquareStar extends JavaPlugin {
         fly = new Fly(this);
         events = new EventManager(this); pm.registerEvents(events, this);
         beggar = new Beggar(this); pm.registerEvents(beggar, this);
+        ai = new Ai(this); pm.registerEvents(ai, this); bind("ai", ai, ai);
         updater = new Updater(this);
         bind("pritel", friends, friends);
         bind("event", events, events);
