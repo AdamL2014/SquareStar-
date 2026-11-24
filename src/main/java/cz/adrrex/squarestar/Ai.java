@@ -2,6 +2,7 @@ package cz.adrrex.squarestar;
 
 import com.google.gson.*;
 import org.bukkit.Bukkit;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.command.*;
@@ -64,6 +65,20 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         this.pl = pl;
         Bukkit.getScheduler().runTaskLater(pl, this::spawnNpc, 80);
         Bukkit.getScheduler().runTaskTimer(pl, () -> { if (npc == null || !npc.isValid()) spawnNpc(); }, 200, 100);
+        // jemné světýlko kolem NPC: kroužící jiskry + sloupec nahoru, ať je vidět kam jít pro pomoc
+        Bukkit.getScheduler().runTaskTimer(pl, new Runnable() {
+            double ang;
+            @Override public void run() {
+                if (npc == null || !npc.isValid() || pl.mars.getPlayers().isEmpty()) return;
+                ang += 0.35;
+                Location c = npc.getLocation();
+                for (int i = 0; i < 3; i++) {
+                    double a = ang + i * 2.094;
+                    pl.mars.spawnParticle(Particle.END_ROD, c.getX() + Math.cos(a) * 0.9, c.getY() + 0.1 + (Math.sin(ang * 0.7 + i) + 1) * 0.9, c.getZ() + Math.sin(a) * 0.9, 1, 0, 0, 0, 0);
+                }
+                pl.mars.spawnParticle(Particle.END_ROD, c.getX(), c.getY() + 3.0 + Math.random() * 6, c.getZ(), 1, 0.05, 0.1, 0.05, 0.01, null, true);
+            }
+        }, 60, 3);
     }
 
     // ---------------- týdenní limit zpráv ----------------
@@ -101,12 +116,18 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
     // ---------------- NPC v lobby ----------------
     private void spawnNpc() {
         for (var e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(NPC_TAG)) e.remove();
-        Location l = new Location(pl.mars, 1.5, Lobby.Y + 1, 4.5);   // daleko od vánočního stromu (8.5, 5.5), bedny jsou na z=9
-        l.setDirection(new org.bukkit.util.Vector(-1.5, 0, -4.5));
+        Location l = new Location(pl.mars, 0.5, Lobby.Y + 1, 13.5);   // v koutku za bednami (z=9), mimo davy u spawnu
+        l.setDirection(new org.bukkit.util.Vector(0, 0, -1));
         npc = pl.mars.spawn(l, Mannequin.class, m -> {
-            LobbyFx.npc(m, "&b&l✦ AdrrexAI", "&eKlikni = zeptej se mě na cokoliv", "ai");
+            LobbyFx.npc(m, "&b&l✦ AdrrexAI", "&eMáš otázku nebo potřebuješ pomoct? Klikni!", "ai");
             m.addScoreboardTag(NPC_TAG);
+            m.setGlowing(true);                                    // zvýrazněný obrys, vidět i zdálky
         });
+        var sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        var team = sb.getTeam("ss_ai_glow");
+        if (team == null) team = sb.registerNewTeam("ss_ai_glow");
+        team.color(net.kyori.adventure.text.format.NamedTextColor.AQUA);
+        team.addEntry(npc.getUniqueId().toString());
     }
     @EventHandler public void npcClick(PlayerInteractEntityEvent e) {
         if (!e.getRightClicked().getScoreboardTags().contains(NPC_TAG)) return;
