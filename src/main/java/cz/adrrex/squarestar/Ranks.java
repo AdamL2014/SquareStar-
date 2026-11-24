@@ -44,7 +44,7 @@ public final class Ranks implements Listener {
 
     public Ranks(SquareStar pl) {
         this.pl = pl;
-        Bukkit.getScheduler().runTaskTimer(pl, () -> { tabTick++; for (Player p : Bukkit.getOnlinePlayers()) tab(p); }, 10, 10);
+        Bukkit.getScheduler().runTaskTimer(pl, () -> { tabTick++; for (Player p : Bukkit.getOnlinePlayers()) { tab(p); if (tabTick % 300 == 0) apply(p); } }, 10, 10);
         // ranky leží MIMO složku pluginu (hlavní složka serveru), aby přežily update/smazání plugins/SquareStar
         file = new File(Bukkit.getWorldContainer(), "squarestar-ranks.yml");
         File old = new File(pl.getDataFolder(), "ranks.yml");
@@ -119,6 +119,15 @@ public final class Ranks implements Listener {
         {"Zpět do lobby se vrátíš příkazem /spawn.", "Return to the lobby with /spawn."}
     };
 
+    /** celková doba hraní na serveru, např. „12 h 5 min“ nebo „35 min“ */
+    @SuppressWarnings("deprecation")
+    static String playtime(Player p, boolean shortForm) {
+        long min = p.getStatistic(org.bukkit.Statistic.PLAY_ONE_MINUTE) / 1200L;   // ticky -> minuty
+        long h = min / 60, m = min % 60;
+        if (shortForm) return h > 0 ? h + "h " + m + "m" : m + "m";
+        return h > 0 ? h + " h " + m + " min" : m + " min";
+    }
+
     /** lišta XP k dalšímu levelu */
     private static String bar(int cur, int max, int len) {
         int f = max <= 0 ? 0 : Math.min(len, cur * len / max);
@@ -147,6 +156,7 @@ public final class Ranks implements Listener {
                 .append(!declined.contains(p.getUniqueId()) ? logo : wave("✦ SQUARESTAR ✦", tabTick, true))
                 .append(U.c("\n" + (en ? "&7Minigames on Mars &8• &blow gravity" : "&7Minihry na Marsu &8• &bnízká gravitace") + "\n" + line + "\n"))
                 .append(U.c("&7" + (en ? "Rank" : "Rank") + ": " + r.color + r.name() + "  &8│  &7Level: &e" + lvl + "  &8│  &6" + Coins.ICON + " &e" + pl.coins.get(p) + "\n"))
+                .append(U.c("&7" + (en ? "Played" : "Odehráno") + ": &b" + playtime(p, false) + "\n"))
                 .append(U.c("&8[" + bar(cur, need, 20) + "&8] &7" + cur + "&8/&7" + need + " XP\n"));
         Component footer = U.c("\n" + line + "\n&7" + (en ? "Online" : "Online") + ": &a" + on + "&8/&7" + max
                 + " &8│ &7Ping: " + pc + ping + " ms &8│ &7TPS: " + tc + String.format(java.util.Locale.ROOT, "%.1f", tps)
@@ -207,7 +217,7 @@ public final class Ranks implements Listener {
         if (bedrock(p)) declined.add(p.getUniqueId());
         Rank r = of(p);
         boolean g = glyphsEverywhere();
-        p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName() + " " + pl.levels.tag(p).trim() + platform(p))));
+        p.playerListName((g ? glyphBadge(r) : textBadge(r)).append(U.c(nameColor(r) + p.getName() + " " + pl.levels.tag(p).trim() + platform(p) + " &8⏱ &7" + playtime(p, true))));
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         String tn = String.format("ss_s%02d%s", r.sort, bedrock(p) ? "b" : "j");
         Team t = sb.getTeam(tn);
