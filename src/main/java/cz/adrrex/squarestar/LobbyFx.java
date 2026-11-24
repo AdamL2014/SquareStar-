@@ -30,7 +30,7 @@ public final class LobbyFx implements Listener {
     private final List<ItemDisplay> spinners = new ArrayList<>();
     private ItemDisplay earth, clouds;
     private float earthSpin, cloudSpin;
-    private final Map<GameType, Mannequin> npcs = new EnumMap<>(GameType.class);
+    private final Map<String, Mannequin> npcs = new LinkedHashMap<>();
     private double phase, orbit;
     private float spin;
     private int tick;
@@ -320,12 +320,12 @@ public final class LobbyFx implements Listener {
             Color.fromRGB(0x6A040F), Color.fromRGB(0x2A9D8F), Color.fromRGB(0xFFD60A), Color.fromRGB(0x3A86FF), Color.fromRGB(0x8AC926), Color.fromRGB(0xFF006E)};
 
     private void spawnNpcs() {
-        java.util.List<GameType> tl = new java.util.ArrayList<>();
-        for (GameType x : GameType.values()) if (!x.isPvp() || x == GameType.PVP) tl.add(x);   // PvP = jedno NPC s výběrem režimu
-        GameType[] t = tl.toArray(new GameType[0]);
-        int n = t.length;
+        // jedno NPC na kategorii (stejné kategorie jako v menu miniher) + PvP
+        java.util.List<String> keys = new java.util.ArrayList<>();
+        keys.add("PVP");
+        for (var c : cz.adrrex.squarestar.game.GameManager.Cat.values()) keys.add(c.name());
+        int n = keys.size();
         for (int i = 0; i < n; i++) {
-            // dvě řady v půlkruhu za spawnem, uvnitř kopule (kopule má poloměr 18)
             int inner = (n + 1) / 2;
             boolean front = i < inner;
             int k = front ? i : i - inner, cnt = front ? inner : n - inner;
@@ -334,15 +334,16 @@ public final class LobbyFx implements Listener {
             double x = Math.cos(a) * r, z = Math.sin(a) * r;
             Location l = new Location(pl.mars, x + 0.5, Lobby.Y + 1, z + 0.5);
             l.setDirection(new Vector(-x, 0, -z));
-            GameType g = t[i];
-            boolean pvp = g == GameType.PVP;
+            String key = keys.get(i);
+            boolean pvp = key.equals("PVP");
+            var cat = pvp ? null : cz.adrrex.squarestar.game.GameManager.Cat.valueOf(key);
             Mannequin m = pl.mars.spawn(l, Mannequin.class, e -> {
-                npc(e, pvp ? "&c&l⚔ PvP" : "&6&l" + g.display, pvp ? "&eVyber si režim" : "&eKlikni pro hru", "game");
-                suit(e, pvp ? Color.fromRGB(0xE63946) : COLORS[g.ordinal() % COLORS.length], pvp ? Material.DIAMOND_SWORD : g.icon);
+                npc(e, pvp ? "&c&l⚔ PvP" : cat.title, pvp ? "&eVyber si režim" : "&eVyber si hru", "game");
+                suit(e, pvp ? Color.fromRGB(0xE63946) : COLORS[(keys.indexOf(key) * 3) % COLORS.length], pvp ? Material.DIAMOND_SWORD : cat.icon);
                 e.addScoreboardTag(TAG);
-                e.addScoreboardTag(pvp ? "ss_npc_pvp" : "ss_npc_game:" + g.name());
+                e.addScoreboardTag(pvp ? "ss_npc_pvp" : "ss_npc_cat:" + key);
             });
-            npcs.put(g, m);
+            npcs.put(key, m);
             pl.mars.getBlockAt(l.getBlockX(), Lobby.Y, l.getBlockZ()).setType(Material.GOLD_BLOCK, false);
         }
     }
@@ -435,10 +436,11 @@ public final class LobbyFx implements Listener {
                 }
                 for (var e : npcs.entrySet()) {
                     if (!e.getValue().isValid()) continue;
-                    boolean pvpN = e.getKey() == GameType.PVP;
-                    int n = pvpN ? pl.games.playingPvp() : pl.games.playing(e.getKey());
+                    boolean pvpN = e.getKey().equals("PVP");
+                    var cat = pvpN ? null : cz.adrrex.squarestar.game.GameManager.Cat.valueOf(e.getKey());
+                    int n = pvpN ? pl.games.playingPvp() : cat.games.stream().mapToInt(pl.games::playing).sum();
                     for (var x : e.getValue().getPassengers()) if (x instanceof TextDisplay lbl)
-                        Holo.setText(lbl, (pvpN ? "&c&l⚔ PvP" : "&6&l" + e.getKey().display) + "\n" + (n > 0 ? "&a" + n + " hraje" : "&7nikdo nehraje") + " &8| &eKlikni");
+                        Holo.setText(lbl, (pvpN ? "&c&l⚔ PvP" : cat.title) + "\n" + (n > 0 ? "&a" + n + " hraje" : "&7nikdo nehraje") + " &8| &eKlikni");
                 }
             }
         }, 40, 2);
@@ -545,6 +547,11 @@ public final class LobbyFx implements Listener {
     }
 
     // ---------------- interakce ----------------
+    private cz.adrrex.squarestar.game.GameManager.Cat npcCat(Entity e) {
+        for (String t : e.getScoreboardTags()) if (t.startsWith("ss_npc_cat:")) return cz.adrrex.squarestar.game.GameManager.Cat.valueOf(t.substring(11));
+        return null;
+    }
+
     private GameType npcGame(Entity e) {
         for (String t : e.getScoreboardTags()) if (t.startsWith("ss_npc_game:")) return GameType.valueOf(t.substring(12));
         return null;
@@ -555,6 +562,8 @@ public final class LobbyFx implements Listener {
         if (e.getRightClicked().getScoreboardTags().contains("ss_npc_vidrift")) { e.setCancelled(true); openVidrift(e.getPlayer()); return; }
         if (e.getRightClicked().getScoreboardTags().contains("ss_npc_redstone")) { e.setCancelled(true); openRedstone(e.getPlayer()); return; }
         if (e.getRightClicked().getScoreboardTags().contains("ss_npc_pvp")) { e.setCancelled(true); pl.games.openPvp(e.getPlayer()); return; }
+        var cc = npcCat(e.getRightClicked());
+        if (cc != null) { e.setCancelled(true); pl.games.openCat(e.getPlayer(), cc); return; }
         GameType g = npcGame(e.getRightClicked());
         if (g == null) return;
         e.setCancelled(true);
@@ -565,6 +574,8 @@ public final class LobbyFx implements Listener {
         if (e.getEntity().getScoreboardTags().contains("ss_npc_vidrift")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) openVidrift(p); return; }
         if (e.getEntity().getScoreboardTags().contains("ss_npc_redstone")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) openRedstone(p); return; }
         if (e.getEntity().getScoreboardTags().contains("ss_npc_pvp")) { e.setCancelled(true); if (e.getDamager() instanceof Player p) pl.games.openPvp(p); return; }
+        var cc = npcCat(e.getEntity());
+        if (cc != null) { e.setCancelled(true); if (e.getDamager() instanceof Player p) pl.games.openCat(p, cc); return; }
         GameType g = npcGame(e.getEntity());
         if (g == null) return;
         e.setCancelled(true);

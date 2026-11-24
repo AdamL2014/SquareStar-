@@ -89,11 +89,21 @@ public final class EventManager implements CommandExecutor, TabCompleter, Listen
     public void open(Player p) {
         Holder h = new Holder();
         h.inv = Bukkit.createInventory(h, 54, Gui.title(54, Lang.t(p, "&f&l★ Pořádání eventu")));
-        GameType[] t = GameType.values();
-        for (int i = 0; i < t.length && i < 27; i++) {
-            ItemStack it = Gui.skin(p, U.item(t[i].icon, 1, (t[i] == type ? "&a&l✔ " : "&e") + t[i].display, "&7" + t[i].desc, "", t[i] == type ? "&aVybráno" : "&eKlikni pro výběr"), "icon_" + t[i].name().toLowerCase(Locale.ROOT));
-            if (t[i] == type && mode == Mode.GAME) { var m = it.getItemMeta(); m.setEnchantmentGlintOverride(true); it.setItemMeta(m); }
-            h.inv.setItem(i, U.tag(it, "ss_ev", "type:" + t[i].name()));
+        // stejné kategorie jako v menu miniher: PvP + HIDE v 1. řadě, BITVY v 2., ZÁBAVA + ZÁVODY ve 3.
+        java.util.LinkedHashMap<String, java.util.List<GameType>> groups = new java.util.LinkedHashMap<>();
+        groups.put("&c⚔ PvP", GameType.PVP_MODES);
+        for (var c : cz.adrrex.squarestar.game.GameManager.Cat.values()) groups.put(c.title, c.games);
+        int[][] slots = {{0, 1, 2, 3, 4}, {9, 10, 11, 12, 13, 14, 15, 16}, {6, 7, 8}, {21, 22, 23, 24, 25, 26}, {18, 19, 20}};
+        int gi = 0;
+        for (var en : groups.entrySet()) {
+            java.util.List<GameType> l = en.getValue();
+            for (int i = 0; i < l.size(); i++) {
+                GameType g = l.get(i);
+                ItemStack it = Gui.skin(p, U.item(g.icon, 1, (g == type ? "&a&l✔ " : "&e") + g.display, "&7" + g.desc, "", "&8Kategorie: " + en.getKey(), g == type ? "&aVybráno" : "&eKlikni pro výběr"), "icon_" + g.name().toLowerCase(Locale.ROOT));
+                if (g == type && mode == Mode.GAME) { var m = it.getItemMeta(); m.setEnchantmentGlintOverride(true); it.setItemMeta(m); }
+                h.inv.setItem(slots[gi][i], U.tag(it, "ss_ev", "type:" + g.name()));
+            }
+            gi++;
         }
         ItemStack room = U.item(Material.BEDROCK, 1, (mode == Mode.ROOM ? "&a&l✔ " : "&f&l") + "Bedrocková místnost", "&7Všichni jsou spolu zavření", "&7v bedrockové místnosti.", "&7Ty jim tam něco uspořádáš.", "", mode == Mode.ROOM ? "&aVybráno" : "&eKlikni pro výběr");
         ItemStack build = U.item(Material.BRICKS, 1, (mode == Mode.BUILD ? "&a&l✔ " : "&6&l") + "Builder event", "&7Každý hráč dostane svůj", "&7pozemek a staví v kreativu.", "&7Okraje nejdou rozbít.", "", mode == Mode.BUILD ? "&aVybráno" : "&eKlikni pro výběr");

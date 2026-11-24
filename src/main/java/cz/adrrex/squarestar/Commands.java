@@ -123,7 +123,13 @@ public final class Commands implements CommandExecutor, TabCompleter {
         if (s.hasPermission("squarestar.admin")) return true;
         s.sendMessage(U.tc(s, "&cNa tohle nemáš práva.")); return false;
     }
-    private static List<String> names() { return Arrays.stream(GameType.values()).map(g -> g.name().toLowerCase(Locale.ROOT)).toList(); }
+    /** názvy her seřazené podle kategorií (PvP, pak stejné kategorie jako v menu) */
+    private static List<String> names() {
+        List<GameType> o = new ArrayList<>(GameType.PVP_MODES);
+        for (var c : cz.adrrex.squarestar.game.GameManager.Cat.values()) o.addAll(c.games);
+        for (GameType g : GameType.values()) if (!o.contains(g)) o.add(g);
+        return o.stream().map(g -> g.name().toLowerCase(Locale.ROOT)).toList();
+    }
 
     @Override public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {
         List<String> out = new ArrayList<>();

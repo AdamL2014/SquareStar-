@@ -60,7 +60,7 @@ public final class GameManager implements Listener {
                 GameType.PARKOUR, GameType.ONLYUP, GameType.DROPPER, GameType.ROVER, GameType.SPEEDRUN, GameType.BEAT),
         FUN("&a&l🎲 Zábava a přežití", Material.TNT, "Spleef, TNT, šťastná věž",
                 GameType.SPLEEF, GameType.TNTRUN, GameType.LUCKYTOWER);
-        final String title; final Material icon; final String desc; final java.util.List<GameType> games;
+        public final String title; public final Material icon; public final String desc; public final java.util.List<GameType> games;
         Cat(String t, Material i, String d, GameType... g) { title = t; icon = i; desc = d; games = java.util.List.of(g); }
     }
 
