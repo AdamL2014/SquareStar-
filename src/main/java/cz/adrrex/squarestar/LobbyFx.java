@@ -319,18 +319,35 @@ public final class LobbyFx implements Listener {
     private static final Color[] COLORS = {Color.fromRGB(0xFF9F1C), Color.fromRGB(0x9ADCFF), Color.fromRGB(0xE63946), Color.fromRGB(0x8D99AE), Color.fromRGB(0xD62828),
             Color.fromRGB(0x6A040F), Color.fromRGB(0x2A9D8F), Color.fromRGB(0xFFD60A), Color.fromRGB(0x3A86FF), Color.fromRGB(0x8AC926), Color.fromRGB(0xFF006E)};
 
+    /** odstraní zlaté podstavce starých NPC (dřív byly dál od spawnu) a vrátí tam podlahu */
+    static void clearOldPedestals() {
+        var w = org.bukkit.Bukkit.getWorld("ss_mars");
+        if (w == null) return;
+        for (int x = -17; x <= 17; x++) for (int z = -17; z <= 17; z++) {
+            double d = Math.sqrt(x * x + z * z);
+            if (d < 8.5 || d > 16) continue;
+            var b = w.getBlockAt(x, Lobby.Y, z);
+            if (b.getType() != Material.GOLD_BLOCK) continue;
+            Material m = Material.POLISHED_BLACKSTONE_BRICKS;
+            for (int[] o : new int[][]{{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {2, 0}, {-2, 0}, {0, 2}, {0, -2}}) {
+                Material nb = w.getBlockAt(x + o[0], Lobby.Y, z + o[1]).getType();
+                if (nb != Material.GOLD_BLOCK && nb != Material.AIR) { m = nb; break; }
+            }
+            b.setType(m, false);
+        }
+    }
+
     private void spawnNpcs() {
         // jedno NPC na kategorii (stejné kategorie jako v menu miniher) + PvP
         java.util.List<String> keys = new java.util.ArrayList<>();
         keys.add("PVP");
         for (var c : cz.adrrex.squarestar.game.GameManager.Cat.values()) keys.add(c.name());
         int n = keys.size();
+        clearOldPedestals();
         for (int i = 0; i < n; i++) {
-            int inner = (n + 1) / 2;
-            boolean front = i < inner;
-            int k = front ? i : i - inner, cnt = front ? inner : n - inner;
-            double a = Math.toRadians(195 + 150.0 * (k + (front ? 0 : 0.5)) / Math.max(1, cnt - (front ? 1 : 0)));
-            double r = front ? 9.5 : 13.5;
+            // jedna řada v půlkruhu těsně za spawnem (blíž než dřív)
+            double a = Math.toRadians(195 + 150.0 * i / Math.max(1, n - 1));
+            double r = 7.5;
             double x = Math.cos(a) * r, z = Math.sin(a) * r;
             Location l = new Location(pl.mars, x + 0.5, Lobby.Y + 1, z + 0.5);
             l.setDirection(new Vector(-x, 0, -z));

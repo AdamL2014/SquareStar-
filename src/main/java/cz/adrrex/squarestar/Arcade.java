@@ -178,10 +178,11 @@ public final class Arcade implements Listener, CommandExecutor {
         npc(new Location(w, AX + 12.5, y + 2, 0.5), new Vector(-1, 0, 0), "&6&l★ Pokladna", "&7Vyměň lístky za mince", "ss_arc_shop", Material.GOLD_INGOT, Color.fromRGB(0xFFD60A));
         npc(new Location(w, AX - 12.5, y + 2, 0.5), new Vector(1, 0, 0), "&b&l⏏ Východ", "&7Zpět do lobby", "ss_arc_exit", Material.COMPASS, Color.fromRGB(0x3A86FF));
         // NPC v lobby
-        enterNpc = npc(new Location(w, 11.5, y + 1, 1.5), new Vector(-11.5, 0, -1.5), "&d&l🕹 Herna", "&7Arkádové automaty &8| &eKlikni", "ss_arc_enter", Material.NETHER_STAR, Color.fromRGB(0xFF006E));
+        enterNpc = npc(new Location(w, 7.5, y + 1, 1.5), new Vector(-7.5, 0, -1.5), "&d&l🕹 Herna", "&7Arkádové automaty &8| &eKlikni", "ss_arc_enter", Material.NETHER_STAR, Color.fromRGB(0xFF006E));
         look(enterNpc);
         if (w.getBlockAt(12, y, 10).getType() == Material.GOLD_BLOCK) w.getBlockAt(12, y, 10).setType(w.getBlockAt(13, y, 10).getType(), false);   // starý podstavec NPC
-        w.getBlockAt(11, y, 1).setType(Material.GOLD_BLOCK, false);
+        if (w.getBlockAt(11, y, 1).getType() == Material.GOLD_BLOCK) w.getBlockAt(11, y, 1).setType(w.getBlockAt(11, y, 4).getType() == Material.GOLD_BLOCK ? Material.POLISHED_BLACKSTONE_BRICKS : w.getBlockAt(11, y, 4).getType(), false);   // starý podstavec (dál od spawnu)
+        w.getBlockAt(7, y, 1).setType(Material.GOLD_BLOCK, false);
     }
 
     private Mannequin npc(Location l, Vector dir, String name, String desc, String tag, Material hand, Color col) {
