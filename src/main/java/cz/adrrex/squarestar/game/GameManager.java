@@ -368,7 +368,7 @@ public final class GameManager implements Listener {
     @EventHandler public void blockExplode(BlockExplodeEvent e) { if (pl.isArena(e.getBlock().getWorld())) e.blockList().clear(); }
 
     @EventHandler public void creature(CreatureSpawnEvent e) {
-        if (pl.isArena(e.getLocation().getWorld()) && e.getSpawnReason() != CreatureSpawnEvent.SpawnReason.CUSTOM) e.setCancelled(true);
+        if (pl.isArena(e.getLocation().getWorld()) && e.getSpawnReason() != CreatureSpawnEvent.SpawnReason.CUSTOM && !(e.getSpawnReason() == CreatureSpawnEvent.SpawnReason.CHUNK_GEN && pl.uhcWorlds.contains(e.getLocation().getWorld()))) e.setCancelled(true);
     }
 
     @EventHandler public void teleport(PlayerTeleportEvent e) {

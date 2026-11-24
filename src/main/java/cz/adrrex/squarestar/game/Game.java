@@ -41,11 +41,13 @@ public abstract class Game {
     private boolean destroyed;
 
     protected Game(GameManager gm, GameType type, int slot) {
-        this.pl = gm.pl; this.gm = gm; this.type = type; this.slot = slot; this.w = pl.world(type); this.ox = slot * 1000; this.oz = type.ordinal() * 1000;
+        this.pl = gm.pl; this.gm = gm; this.type = type; this.slot = slot; this.w = pickWorld(); this.ox = slot * 1000; this.oz = type.ordinal() * 1000;
         // každá minihra má vlastní oblast (řádek Z), takže se mapy různých her nikdy nepřekryjí
     }
 
     // ---------- co implementuje každá hra ----------
+    /** svět, ve kterém se hra odehrává (většina her = sdílená arena, UHC Run = vlastní vanilla overworld) */
+    protected World pickWorld() { return pl.world(type); }
     protected abstract void buildMap(U.BlockQueue.Builder b);
     /** názvy variant mapy (hlasování) */
     public List<String> maps() { return List.of("Standard"); }
@@ -340,7 +342,7 @@ public abstract class Game {
                 second();
                 if (state != State.RUNNING) return;
                 if (time >= timeLimit()) { broadcast("&eČas vypršel!"); timeUp(); return; }
-                for (Player p : players) U.bar(p, status(p) + " &8| &c❤ " + (int) Math.ceil(p.getHealth()));
+                for (Player p : players) U.bar(p, status(p));
             }
             default -> {}
         }

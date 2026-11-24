@@ -46,6 +46,7 @@ public final class SquareStar extends JavaPlugin {
 
     @Override public void onEnable() {
         I = this;
+        cleanupUhcWorlds();
         saveDefaultConfig();
         Gui.enabled = getConfig().getBoolean("gui.custom", true);
         queue = new U.BlockQueue(getConfig().getInt("blocks-per-tick", 6000));
@@ -155,7 +156,47 @@ public final class SquareStar extends JavaPlugin {
 
     public final java.util.Map<cz.adrrex.squarestar.game.GameType, World> gameWorlds = new java.util.EnumMap<>(cz.adrrex.squarestar.game.GameType.class);
     public World world(cz.adrrex.squarestar.game.GameType t) { return gameWorlds.getOrDefault(t, arenas); }
-    public boolean isArena(World w) { return w == arenas || gameWorlds.containsValue(w); }
+    public boolean isArena(World w) { return w == arenas || gameWorlds.containsValue(w) || uhcWorlds.contains(w); }
+
+    /** UHC Run hraje v čerstvě vygenerovaném vanilla overworldu (po hře se smaže) */
+    public final java.util.Set<World> uhcWorlds = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    public World newUhcWorld() {
+        java.util.Random rnd = new java.util.Random();
+        World w = null; long t0 = System.currentTimeMillis();
+        for (int attempt = 0; attempt < 2; attempt++) {                     // seed s málo souší (samý oceán) zahodíme
+            if (w != null) { uhcWorlds.remove(w); java.io.File d = w.getWorldFolder(); Bukkit.unloadWorld(w, false); deleteDir(d); }
+            w = new WorldCreator("ss_uhc_" + (System.currentTimeMillis() % 10000000) + "_" + attempt).environment(World.Environment.NORMAL).seed(rnd.nextLong()).createWorld();
+            if (w == null) throw new IllegalStateException("Nelze vytvorit UHC svet");
+            w.setKeepSpawnInMemory(false);
+            getLogger().info("UHC svet vytvoren za " + (System.currentTimeMillis() - t0) + " ms");
+            break;                                                          // souš hledá až start() (levné); kontrola seedu zdržovala server
+        }
+        w.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
+        w.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+        w.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+        w.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
+        w.setTime(6000); w.setStorm(false);
+        w.setDifficulty(Difficulty.NORMAL);
+        w.setAutoSave(false);
+        uhcWorlds.add(w);
+        return w;
+    }
+    public void deleteUhcWorld(World w) {
+        uhcWorlds.remove(w);
+        java.io.File dir = w.getWorldFolder();
+        if (!Bukkit.unloadWorld(w, false)) { getLogger().warning("UHC svet " + w.getName() + " nejde odnacist"); return; }
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> deleteDir(dir));
+    }
+    static void deleteDir(java.io.File f) {
+        java.io.File[] c = f.listFiles();
+        if (c != null) for (java.io.File x : c) deleteDir(x);
+        f.delete();
+    }
+    /** zbytky UHC světů po pádu serveru */
+    private void cleanupUhcWorlds() {
+        java.io.File[] fs = Bukkit.getWorldContainer().listFiles();
+        if (fs != null) for (java.io.File f : fs) if (f.isDirectory() && f.getName().startsWith("ss_uhc_")) deleteDir(f);
+    }
 
     private World makeWorld(String name, long time) {
         World w = Bukkit.getWorld(name);

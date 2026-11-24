@@ -239,6 +239,7 @@ public final class Ranks implements Listener {
     @EventHandler public void quit(PlayerQuitEvent e) { packed.remove(e.getPlayer().getUniqueId()); declined.remove(e.getPlayer().getUniqueId()); perms.remove(e.getPlayer().getUniqueId()); }
 
     @EventHandler public void pack(PlayerResourcePackStatusEvent e) {
+        if (!e.getID().equals(Pack.ID)) return;   // druhý (lobby HUD) pack sem nepatří
         if (e.getStatus() == PlayerResourcePackStatusEvent.Status.SUCCESSFULLY_LOADED) { packed.add(e.getPlayer().getUniqueId()); declined.remove(e.getPlayer().getUniqueId()); }
         else if (e.getStatus() == PlayerResourcePackStatusEvent.Status.DECLINED || e.getStatus() == PlayerResourcePackStatusEvent.Status.FAILED_DOWNLOAD || e.getStatus() == PlayerResourcePackStatusEvent.Status.DISCARDED) { packed.remove(e.getPlayer().getUniqueId()); declined.add(e.getPlayer().getUniqueId()); }
     }

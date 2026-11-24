@@ -18,8 +18,11 @@ import java.util.UUID;
  */
 public final class Pack implements Listener {
     private final SquareStar pl;
-    private volatile byte[] hash;
-    private static final UUID ID = UUID.fromString("5a1b2c3d-0000-4000-8000-5157a25a7a2a");
+    private volatile byte[] hash, hudHash;
+    private final java.util.Set<UUID> hudOn = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private static final UUID HUD_ID = UUID.fromString("5a1b2c3d-0000-4000-8000-5157a25a7a2b");
+    private static final String HUD_DEFAULT = "https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-LobbyHud.zip";
+    public static final UUID ID = UUID.fromString("5a1b2c3d-0000-4000-8000-5157a25a7a2a");
     public Pack(SquareStar pl) { this.pl = pl; refresh(); }
 
     private static final String DEFAULT = "https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip";
@@ -29,21 +32,45 @@ public final class Pack implements Listener {
         return u.equals(DEFAULT) ? u + "?v=" + pl.getPluginMeta().getVersion() : u;
     }
 
+    /** druhý, malý pack: schová vanilla srdíčka a hlad. Hráč ho má jen v lobby (v minihrách se odebere a srdíčka se vrátí). */
+    public String hudUrl() {
+        String u = pl.getConfig().getString("resource-pack.lobby-hud-url", HUD_DEFAULT);
+        return u.equals(HUD_DEFAULT) ? u + "?v=" + pl.getPluginMeta().getVersion() : u;
+    }
+
+    public void lobbyHud(Player p, boolean lobby) {
+        if (!pl.getConfig().getBoolean("resource-pack.enabled", true) || Ranks.bedrock(p)) return;
+        boolean on = hudOn.contains(p.getUniqueId());
+        if (lobby && !on) {
+            hudOn.add(p.getUniqueId());
+            p.addResourcePack(HUD_ID, hudUrl(), hudHash, null, false);
+        } else if (!lobby && on) {
+            hudOn.remove(p.getUniqueId());
+            p.removeResourcePack(HUD_ID);
+        }
+    }
+
+    @EventHandler public void quit(org.bukkit.event.player.PlayerQuitEvent e) { hudOn.remove(e.getPlayer().getUniqueId()); }
+
     /** stáhne pack a spočítá SHA-1 (na pozadí, neblokuje server) */
     public void refresh() {
         Bukkit.getScheduler().runTaskAsynchronously(pl, () -> {
-            try (InputStream in = URI.create(url()).toURL().openStream()) {
-                MessageDigest md = MessageDigest.getInstance("SHA-1");
-                byte[] buf = new byte[65536]; int n;
-                while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
-                hash = md.digest();
-                StringBuilder sb = new StringBuilder(); for (byte b : hash) sb.append(String.format("%02x", b));
-                pl.getLogger().info("Resource pack nacten, sha1=" + sb);
-            } catch (Exception e) {
-                pl.getLogger().warning("Resource pack se nepodarilo stahnout (" + e.getMessage() + ") - posilam bez kontroly sha1.");
-            }
+            try { hash = sha1(url()); pl.getLogger().info("Resource pack nacten, sha1=" + hex(hash)); }
+            catch (Exception e) { pl.getLogger().warning("Resource pack se nepodarilo stahnout (" + e.getMessage() + ") - posilam bez kontroly sha1."); }
+            try { hudHash = sha1(hudUrl()); pl.getLogger().info("Lobby HUD pack nacten, sha1=" + hex(hudHash)); }
+            catch (Exception e) { pl.getLogger().warning("Lobby HUD pack se nepodarilo stahnout (" + e.getMessage() + ")."); }
         });
     }
+
+    private static byte[] sha1(String url) throws Exception {
+        try (InputStream in = URI.create(url).toURL().openStream()) {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            byte[] buf = new byte[65536]; int n;
+            while ((n = in.read(buf)) > 0) md.update(buf, 0, n);
+            return md.digest();
+        }
+    }
+    private static String hex(byte[] b) { StringBuilder sb = new StringBuilder(); for (byte x : b) sb.append(String.format("%02x", x)); return sb.toString(); }
 
     public void send(Player p) {
         if (!pl.getConfig().getBoolean("resource-pack.enabled", true) || Ranks.bedrock(p)) return;
