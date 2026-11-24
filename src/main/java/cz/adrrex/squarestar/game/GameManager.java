@@ -268,7 +268,7 @@ public final class GameManager implements Listener {
     /** díry v mapě (např. v asteroidu ve SkyWars) se po 5 minutách samy opraví */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true) public void heal(BlockBreakEvent e) {
         Game g = map.get(e.getPlayer());
-        if (g == null || g.isPlaced(e.getBlock()) || EnumSet.of(GameType.SPLEEF, GameType.TNTRUN, GameType.BUILDBATTLE, GameType.SPEEDRUN).contains(g.type)) return;
+        if (g == null || g.isPlaced(e.getBlock()) || EnumSet.of(GameType.SPLEEF, GameType.TNTRUN, GameType.BUILDBATTLE, GameType.SPEEDRUN, GameType.UHCRUN).contains(g.type)) return;
         Block b = e.getBlock();
         if (b.getType().name().endsWith("_BED")) return;      // zničená postel v BedWars zůstane zničená
         org.bukkit.block.data.BlockData was = b.getBlockData().clone();

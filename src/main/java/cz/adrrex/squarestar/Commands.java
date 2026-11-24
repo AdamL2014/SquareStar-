@@ -21,7 +21,7 @@ public final class Commands implements CommandExecutor, TabCompleter {
             case "join" -> {
                 if (p == null || a.length < 2) { s.sendMessage(U.tc(s, "&c/ss join <" + String.join("|", names()) + ">")); return true; }
                 try { pl.games.join(p, GameType.valueOf(a[1].toUpperCase(Locale.ROOT))); }
-                catch (IllegalArgumentException ex) { U.msg(p, "&cNeznámá hra. Možnosti: &e" + String.join(", ", names())); }
+                catch (IllegalArgumentException ex) { pl.getLogger().log(java.util.logging.Level.WARNING, "join " + a[1], ex); U.msg(p, "&cNeznámá hra. Možnosti: &e" + String.join(", ", names())); }
             }
             case "leave" -> { if (p != null) pl.games.leave(p); }
             case "lobby", "spawn" -> { if (p != null) { if (pl.games.of(p) != null) pl.games.leave(p); else pl.lobby.send(p); } }
