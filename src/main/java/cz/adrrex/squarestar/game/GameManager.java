@@ -50,29 +50,49 @@ public final class GameManager implements Listener {
 
     public Game of(Player p) { return map.get(p); }
 
+    /** kategorie hlavního menu: každá se otevře jako podmenu (stejně jako PvP) */
+    public enum Cat {
+        BATTLE("&e&l🏰 Bitvy a týmovky", Material.RED_BED, "Týmové bitvy a souboje",
+                GameType.BEDWARS, GameType.EGGWARS, GameType.BRIDGE, GameType.ANNIRUN, GameType.DUELS, GameType.SKYWARS, GameType.UHCRUN, GameType.ZOMBIES),
+        HIDE("&d&l🎭 Schovávaná a hádanky", Material.BARREL, "Schovávaná, vrah a stavění",
+                GameType.HIDESEEK, GameType.MURDER, GameType.BUILDBATTLE),
+        RACE("&b&l🏁 Závody a skákání", Material.LADDER, "Parkour, věže, závody a rytmus",
+                GameType.PARKOUR, GameType.ONLYUP, GameType.DROPPER, GameType.ROVER, GameType.SPEEDRUN, GameType.BEAT),
+        FUN("&a&l🎲 Zábava a přežití", Material.TNT, "Spleef, TNT, šťastná věž",
+                GameType.SPLEEF, GameType.TNTRUN, GameType.LUCKYTOWER);
+        final String title; final Material icon; final String desc; final java.util.List<GameType> games;
+        Cat(String t, Material i, String d, GameType... g) { title = t; icon = i; desc = d; games = java.util.List.of(g); }
+    }
+
+    private ItemStack gameItem(Player p, GameType g) {
+        int waiting = games.stream().filter(x -> x.type == g && x.joinable()).mapToInt(x -> x.players.size()).sum();
+        int playing = playing(g);
+        ItemStack it = U.item(g.icon, 1, "&6&l" + g.display, "&7" + g.desc, "",
+                "&7Hráči: &f" + g.min + "–" + g.max, "&7Čeká: &a" + waiting + " &8| &7Celkem hraje: &e" + playing, "", "&e▶ Klikni pro připojení");
+        // vlastní ikonka z resource packu (Bedrock ji nevidí -> zůstane obyčejný item)
+        if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var im = it.getItemMeta(); im.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_" + g.name().toLowerCase(java.util.Locale.ROOT))); if (playing > 0) im.setEnchantmentGlintOverride(true); it.setItemMeta(im); }
+        if (playing > 0) it.setAmount(Math.min(64, playing));
+        return U.tag(it, "ss_menu", g.name());
+    }
+
     public void openMenu(Player p) {
         MenuHolder h = new MenuHolder();
         h.inv = Bukkit.createInventory(h, 45, cz.adrrex.squarestar.Gui.title(45, cz.adrrex.squarestar.Lang.t(p, "&f&l✦ Minihry na Marsu")));
-        int[] pos = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
-        java.util.List<GameType> t = new java.util.ArrayList<>();
-        for (GameType x : GameType.values()) if (!x.isPvp() || x == GameType.PVP) t.add(x);   // PvP režimy = jedna položka s podmenu
-        for (int i = 0; i < t.size(); i++) {
-            GameType g = t.get(i);
-            if (g == GameType.PVP) {
-                ItemStack pv = U.item(Material.DIAMOND_SWORD, 1, "&c&l⚔ PvP", "&7Vyber si, jaké PvP chceš:", "&f1v1&7, &fvšichni proti všem&7, &f5v5&7, &f10v10&7, &fsumo", "",
-                        "&7Celkem hraje: &e" + playingPvp(), "", "&e▶ Klikni pro výběr režimu");
-                if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var im = pv.getItemMeta(); im.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_pvp")); pv.setItemMeta(im); }
-                h.inv.setItem(pos[i], U.tag(pv, "ss_menu", "PVPMENU"));
-                continue;
-            }
-            int waiting = games.stream().filter(x -> x.type == g && x.joinable()).mapToInt(x -> x.players.size()).sum();
-            int playing = games.stream().filter(x -> x.type == g).mapToInt(x -> x.players.size()).sum();
-            ItemStack it = U.item(g.icon, 1, "&6&l" + g.display, "&7" + g.desc, "",
-                    "&7Hráči: &f" + g.min + "–" + g.max, "&7Čeká: &a" + waiting + " &8| &7Celkem hraje: &e" + playing, "", "&e▶ Klikni pro připojení");
-            // vlastní ikonka z resource packu (Bedrock ji nevidí -> zůstane obyčejný item)
-            if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var im = it.getItemMeta(); im.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_" + g.name().toLowerCase(java.util.Locale.ROOT))); if (playing > 0) im.setEnchantmentGlintOverride(true); it.setItemMeta(im); }
-            if (playing > 0) it.setAmount(Math.min(64, playing));
-            h.inv.setItem(pos[i], U.tag(it, "ss_menu", g.name()));
+        // PvP = podmenu (stejně jako dřív)
+        ItemStack pv = U.item(Material.DIAMOND_SWORD, 1, "&c&l⚔ PvP", "&7Vyber si, jaké PvP chceš:", "&f1v1&7, &fvšichni proti všem&7, &f5v5&7, &f10v10&7, &fsumo", "",
+                "&7Celkem hraje: &e" + playingPvp(), "", "&e▶ Klikni pro výběr režimu");
+        if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var im = pv.getItemMeta(); im.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_pvp")); pv.setItemMeta(im); }
+        h.inv.setItem(20, U.tag(pv, "ss_menu", "PVPMENU"));
+        int[] pos = {21, 22, 23, 24};
+        Cat[] cats = Cat.values();
+        for (int i = 0; i < cats.length; i++) {
+            Cat c = cats[i];
+            int playing = c.games.stream().mapToInt(this::playing).sum();
+            StringBuilder names = new StringBuilder();
+            for (GameType g : c.games) names.append(names.length() == 0 ? "" : "&7, ").append("&f").append(g.display);
+            ItemStack it = U.item(c.icon, 1, c.title, "&7" + c.desc + ":", names.toString(), "", "&7Celkem hraje: &e" + playing, "", "&e▶ Klikni pro výběr hry");
+            if (playing > 0) { var im = it.getItemMeta(); im.setEnchantmentGlintOverride(true); it.setItemMeta(im); }
+            h.inv.setItem(pos[i], U.tag(it, "ss_menu", "CAT:" + c.name()));
         }
         // Redstone týden (trvalý režim, ne kolo minihry)
         boolean vote = cz.adrrex.squarestar.RedstoneWeek.voting();
@@ -80,6 +100,16 @@ public final class GameManager implements Listener {
                 "&7Téma: &e" + pl.redstone.theme(), vote ? "&d&lDnes se hlasuje!" : "&7Hlasování: &fneděle", "", "&e▶ Klikni pro vstup");
         if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var rm = rsIcon.getItemMeta(); rm.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_redstone")); rsIcon.setItemMeta(rm); }
         h.inv.setItem(40, U.tag(rsIcon, "ss_menu", "REDSTONE"));
+        p.openInventory(h.inv);
+    }
+
+    /** podmenu kategorie – všechny hry z kategorie najednou */
+    public void openCat(Player p, Cat c) {
+        MenuHolder h = new MenuHolder();
+        h.inv = Bukkit.createInventory(h, 45, cz.adrrex.squarestar.Gui.title(45, cz.adrrex.squarestar.Lang.t(p, c.title)));
+        int[] pos = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
+        for (int i = 0; i < c.games.size(); i++) h.inv.setItem(pos[i], gameItem(p, c.games.get(i)));
+        h.inv.setItem(40, U.tag(U.item(Material.ARROW, 1, "&7◀ Zpět do menu", "&7Zpět na všechny minihry"), "ss_menu", "BACK"));
         p.openInventory(h.inv);
     }
 
@@ -210,6 +240,8 @@ public final class GameManager implements Listener {
         if (t != null && e.getWhoClicked() instanceof Player p) {
             p.closeInventory();
             if (t.equals("PVPMENU")) openPvp(p);
+            else if (t.equals("BACK")) openMenu(p);
+            else if (t.startsWith("CAT:")) openCat(p, Cat.valueOf(t.substring(4)));
             else if (t.equals("REDSTONE")) { if (cz.adrrex.squarestar.RedstoneWeek.voting()) pl.redstone.visit(p, 0); else pl.redstone.join(p); }
             else join(p, GameType.valueOf(t));
         }
