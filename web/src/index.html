@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SquareStar – Minecraft minihry na Marsu</title>
+<meta name="description" content="SquareStar – Minecraft minihry na Marsu s nízkou gravitací. Přes 20 miniher, denní odměny, party a žebříčky. Java 1.21.11.">
+<meta name="theme-color" content="#0d0605">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+</head>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+ <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+ <symbol id="i-cpu" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+ <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></symbol>
+ <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+ <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+ <symbol id="i-party" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5M14 15.5c.6-.3 1.3-.5 2-.5 3 0 6 2 6 5"/></symbol>
+ <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
+ <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/><path d="M19 3v4M17 5h4"/></symbol>
+ <symbol id="i-bot" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V4M8 4h8"/><circle cx="9" cy="14" r="1.2"/><circle cx="15" cy="14" r="1.2"/></symbol>
+ <symbol id="i-sword" viewBox="0 0 24 24"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+ <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+ <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+ <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></symbol>
+ <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+ <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+ <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2"/></symbol>
+ <symbol id="i-crown" viewBox="0 0 24 24"><path d="m2 7 5 4 5-7 5 7 5-4-2 12H4z"/></symbol>
+ <symbol id="i-game" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/></symbol>
+ <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+ <symbol id="i-pack" viewBox="0 0 24 24"><path d="m21 16-9 5-9-5V8l9-5 9 5z"/><path d="m3 8 9 5 9-5M12 13v8"/></symbol>
+ <radialGradient id="pg" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ff9a4a"/><stop offset=".45" stop-color="#d4501c"/><stop offset=".8" stop-color="#7a220c"/><stop offset="1" stop-color="#3a0f06"/></radialGradient>
+</svg>
+
+<nav id="nav"><div class="wrap">
+ <a class="logo" href="#"><svg class="mk" viewBox="0 0 40 40"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc83d"/><stop offset=".5" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ff3b2f"/></linearGradient></defs><rect x="8" y="8" width="24" height="24" rx="6" fill="url(#lg)" transform="rotate(45 20 20)"/><path d="M20 11l2.6 6.4L29 20l-6.4 2.6L20 29l-2.6-6.4L11 20l6.4-2.6z" fill="#0d0605"/></svg><span><b>SQUARE</b><i>STAR</i></span></a>
+ <div class="links"><a href="#online">Online</a><a href="#zebricky">Žebříčky</a><a href="#funkce">Funkce</a><a href="#minihry">Minihry</a><a class="cta" href="#pripojit">Hrát</a></div>
+</div></nav>
+
+<header class="hero">
+ <div class="sky"></div><canvas id="stars"></canvas>
+ <svg class="scene" viewBox="0 0 1440 420" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+ <defs>
+  <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b3461c"/><stop offset=".5" stop-color="#7a2a10"/><stop offset="1" stop-color="#2a0d06"/></linearGradient>
+  <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e2410"/><stop offset="1" stop-color="#3a1208"/></linearGradient>
+  <radialGradient id="domeG" cx=".5" cy=".85" r=".8"><stop offset="0" stop-color="#ffd27a" stop-opacity=".55"/><stop offset=".5" stop-color="#5ee7ff" stop-opacity=".16"/><stop offset="1" stop-color="#5ee7ff" stop-opacity=".06"/></radialGradient>
+  <radialGradient id="plazaG" r=".5"><stop offset="0" stop-color="#ffc83d" stop-opacity=".7"/><stop offset="1" stop-color="#ffc83d" stop-opacity="0"/></radialGradient>
+  <linearGradient id="cry" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2b3ff"/><stop offset="1" stop-color="#7b3fd6"/></linearGradient>
+  <linearGradient id="rk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#cfd6e0"/><stop offset=".5" stop-color="#ffffff"/><stop offset="1" stop-color="#8e98a6"/></linearGradient>
+  <radialGradient id="flame" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".4" stop-color="#ff9a2a"/><stop offset="1" stop-color="#ff3b2f" stop-opacity="0"/></radialGradient>
+  <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7ee0ff" stop-opacity=".5"/><stop offset="1" stop-color="#7ee0ff" stop-opacity="0"/></linearGradient>
+  <radialGradient id="crack" r=".5"><stop offset="0" stop-color="#ff7a1f" stop-opacity=".9"/><stop offset="1" stop-color="#ff3b2f" stop-opacity="0"/></radialGradient>
+ </defs>
+ <!-- vzdálené kopce -->
+ <path d="M0 250 L90 225 L190 240 L300 200 L410 235 L520 215 L640 245 L780 205 L900 238 L1030 212 L1160 240 L1290 208 L1440 232 V420 H0Z" fill="url(#hill)" opacity=".8"/>
+ <!-- planina -->
+ <path d="M0 290 Q360 268 720 276 T1440 286 V420 H0Z" fill="url(#sand)"/>
+ <!-- krátery a žhnoucí praskliny -->
+ <ellipse cx="190" cy="350" rx="70" ry="12" fill="#00000040"/><ellipse cx="1250" cy="365" rx="90" ry="14" fill="#00000040"/><ellipse cx="560" cy="390" rx="50" ry="8" fill="#00000035"/>
+ <ellipse cx="380" cy="372" rx="40" ry="6" fill="url(#crack)"/><ellipse cx="1050" cy="390" rx="46" ry="7" fill="url(#crack)"/>
+ <path d="M360 372 l12 -3 l10 4 l14 -2" stroke="#ffb35c" stroke-width="1.5" fill="none" opacity=".8"/><path d="M1030 390 l14 -3 l10 4 l16 -3" stroke="#ffb35c" stroke-width="1.5" fill="none" opacity=".8"/>
+ <!-- solární pole -->
+ <g transform="translate(110 262)" fill="#1b2a4a" stroke="#5ee7ff" stroke-opacity=".5" stroke-width="1"><path d="M0 18 L34 6 L54 14 L20 26Z"/><path d="M60 18 L94 6 L114 14 L80 26Z"/><path d="M30 30 L64 18 L84 26 L50 38Z"/></g>
+ <!-- radar -->
+ <g transform="translate(300 214)"><path d="M10 64 V30" stroke="#8e98a6" stroke-width="4"/><path d="M-14 28 Q10 52 36 22 Z" fill="#cfd6e0"/><path d="M11 32 L22 14" stroke="#cfd6e0" stroke-width="2"/><circle cx="22" cy="13" r="3" fill="#ff3b2f"/></g>
+ <!-- moduly základny -->
+ <g transform="translate(420 262)"><path d="M0 22 A26 22 0 0 1 52 22Z" fill="#d9dee6"/><rect x="18" y="8" width="8" height="6" rx="2" fill="#5ee7ff"/><rect x="0" y="22" width="52" height="6" fill="#8e98a6"/></g>
+ <g transform="translate(905 266)"><path d="M0 20 A22 20 0 0 1 44 20Z" fill="#d9dee6"/><rect x="14" y="7" width="8" height="6" rx="2" fill="#5ee7ff"/><rect x="0" y="20" width="44" height="6" fill="#8e98a6"/></g>
+ <!-- krystalové věže -->
+ <g fill="url(#cry)" opacity=".95"><path d="M520 268 l10 -62 l10 62Z"/><path d="M534 270 l7 -38 l7 38Z"/><path d="M860 270 l9 -56 l9 56Z"/><path d="M846 272 l6 -30 l6 30Z"/><path d="M1110 272 l10 -66 l10 66Z"/><path d="M1300 276 l8 -44 l8 44Z"/><path d="M250 272 l8 -48 l8 48Z"/></g>
+ <!-- skleník -->
+ <g transform="translate(1010 230)"><path d="M0 48 A44 40 0 0 1 88 48Z" fill="#3ddc84" fill-opacity=".28" stroke="#3ddc84" stroke-opacity=".8" stroke-width="2"/><path d="M20 48 q6 -18 12 0 M44 48 q6 -24 12 0 M64 48 q5 -14 10 0" stroke="#3ddc84" stroke-width="3" fill="none"/><rect x="0" y="48" width="88" height="5" fill="#8e98a6"/></g>
+ <!-- velká kopule lobby -->
+ <ellipse cx="720" cy="292" rx="250" ry="22" fill="url(#plazaG)"/>
+ <g transform="translate(720 288)">
+  <path d="M-200 0 A200 170 0 0 1 200 0Z" fill="url(#domeG)"/>
+  <path d="M-200 0 A200 170 0 0 1 200 0" fill="none" stroke="#9ff1ff" stroke-opacity=".85" stroke-width="3"/>
+  <g stroke="#9ff1ff" stroke-opacity=".25" stroke-width="1.5" fill="none"><path d="M-100 0 A100 168 0 0 1 100 0"/><path d="M-168 -92 Q0 -120 168 -92"/><path d="M-196 -36 Q0 -54 196 -36"/><path d="M0 -170 V0"/></g>
+  <!-- vánoční/stromová záře uvnitř + hvězdná mozaika -->
+  <ellipse cx="0" cy="-4" rx="150" ry="10" fill="#ffc83d" opacity=".35"/>
+  <path d="M0 -14 l4 9 l10 1 l-8 6 l3 10 l-9 -6 l-9 6 l3 -10 l-8 -6 l10 -1z" fill="#ffc83d" transform="translate(0 4) scale(.9)"/>
+  <!-- 3D nápis SQUARESTAR nad náměstím -->
+  <text x="0" y="-92" text-anchor="middle" font-family="Unbounded,Inter,sans-serif" font-weight="900" font-size="30" fill="#ff8a1f" stroke="#3a1208" stroke-width="1" letter-spacing="2">SQUARESTAR</text>
+  <!-- vchody -->
+  <path d="M-30 0 V-30 H30 V0" fill="#0d060599" stroke="#9ff1ff" stroke-opacity=".6" stroke-width="2"/>
+  <path d="M-176 0 V-22 H-150 V0" fill="#0d060566" stroke="#9ff1ff" stroke-opacity=".4"/><path d="M150 0 V-22 H176 V0" fill="#0d060566" stroke="#9ff1ff" stroke-opacity=".4"/>
+  <!-- lampy na cestě -->
+  <g fill="#ffd27a"><circle cx="-60" cy="14" r="3"/><circle cx="60" cy="14" r="3"/><circle cx="-90" cy="34" r="3.5"/><circle cx="90" cy="34" r="3.5"/><circle cx="-125" cy="62" r="4"/><circle cx="125" cy="62" r="4"/></g>
+  <path d="M-30 4 L-110 110 H110 L30 4Z" fill="#2a1007" opacity=".55"/>
+ </g>
+ <!-- vlajky -->
+ <g><path d="M470 292 V244" stroke="#cfd6e0" stroke-width="2"/><path d="M470 244 h24 l-6 7 l6 7 h-24z" fill="#ff8a1f"/><path d="M970 294 V246" stroke="#cfd6e0" stroke-width="2"/><path d="M970 246 h24 l-6 7 l6 7 h-24z" fill="#ff3b2f"/></g>
+ <!-- raketa -->
+ <g transform="translate(1185 112)">
+  <ellipse cx="20" cy="180" rx="44" ry="8" fill="#00000050"/>
+  <path d="M20 0 C36 18 40 46 40 70 V150 H0 V70 C0 46 4 18 20 0Z" fill="url(#rk)"/>
+  <path d="M20 0 C28 9 33 20 36 32 H4 C7 20 12 9 20 0Z" fill="#ff3b2f"/>
+  <circle cx="20" cy="70" r="9" fill="#5ee7ff" stroke="#8e98a6" stroke-width="3"/>
+  <path d="M0 120 L-18 160 V172 L0 160Z M40 120 L58 160 V172 L40 160Z" fill="#ff3b2f"/>
+  <rect x="6" y="150" width="28" height="10" fill="#8e98a6"/>
+  <path d="M8 160 V178 M32 160 V178 M20 160 V180" stroke="#8e98a6" stroke-width="3"/>
+ </g>
+ <!-- UFO -->
+ <g class="ufo"><g transform="translate(380 70)"><ellipse cx="0" cy="10" rx="46" ry="11" fill="#8e98a6"/><ellipse cx="0" cy="6" rx="46" ry="8" fill="#cfd6e0"/><path d="M-20 4 A20 18 0 0 1 20 4Z" fill="#5ee7ff" fill-opacity=".7"/><g fill="#ffc83d"><circle cx="-30" cy="11" r="2.5"/><circle cx="0" cy="13" r="2.5"/><circle cx="30" cy="11" r="2.5"/></g><path d="M-14 20 L-40 120 H40 L14 20Z" fill="url(#beam)"/></g></g>
+ <!-- měsíce -->
+ <circle cx="1120" cy="70" r="16" fill="#c9b7a8"/><circle cx="1114" cy="66" r="4" fill="#00000022"/><circle cx="1180" cy="40" r="7" fill="#a6948a"/>
+</svg>
+ <div class="wrap">
+  <div>
+   <span class="pill"><span class="dot" id="dot"></span><span id="livetxt">Načítám stav serveru…</span></span>
+   <h1>Minihry na <span class="grad">Marsu</span></h1>
+   <p class="sub">Nízká gravitace, přes 20 miniher a vlastní pluginy na míru. Skákej výš, bojuj s partou a sbírej odměny každý den.</p>
+   <div class="join">
+    <div class="ipbox"><code id="ip">IP_ADRESA_SERVERU</code><button class="btn" data-action="copy-ip"><svg class="ic"><use href="#i-copy"/></svg>Kopírovat IP</button></div>
+    <a class="btn ghost" href="#online"><svg class="ic"><use href="#i-users"/></svg>Kdo hraje</a>
+   </div>
+   <div class="meta"><span><svg class="ic"><use href="#i-game"/></svg>Java 1.21.11</span><span><svg class="ic"><use href="#i-pack"/></svg>3D modely a vlastní grafika</span><span><svg class="ic"><use href="#i-rocket"/></svg>Nízká gravitace</span></div>
+  </div>
+ </div>
+</header>
+
+<section id="online"><div class="wrap">
+ <div class="reveal"><div class="kicker">Živě ze serveru</div><h2>Právě online</h2><p class="lead">Data přímo z pluginu, obnovují se samy a hned. Klikni na hráče a uvidíš jeho statistiky. <span class="upd" id="upd"></span></p></div>
+ <div class="stats reveal">
+  <div class="stat"><div class="si"><svg class="ic"><use href="#i-users"/></svg></div><div><b id="sOnline">–</b><span>hráčů online</span></div></div>
+  <div class="stat"><div class="si"><svg class="ic"><use href="#i-play"/></svg></div><div><b id="sGames">–</b><span>běžících her</span></div></div>
+  <div class="stat"><div class="si"><svg class="ic"><use href="#i-globe"/></svg></div><div><b id="sReg">–</b><span>hráčů celkem</span></div></div>
+  <div class="stat"><div class="si"><svg class="ic"><use href="#i-cpu"/></svg></div><div><b id="sTps">–</b><span>TPS · výkon (max 20)</span></div></div>
+ </div>
+ <div class="players reveal" id="players" aria-live="polite"><div class="empty">Načítám…</div></div>
+</div></section>
+
+<section id="zebricky" class="alt"><div class="wrap">
+ <div class="reveal"><div class="kicker">Síň slávy</div><h2>Žebříčky</h2><p class="lead" style="margin-bottom:28px">Nejlepší hráči SquareStaru. Dostaneš se mezi ně i ty?</p></div>
+ <div class="tabs reveal" id="tabs">
+  <button data-k="xpTotal" class="act"><svg class="ic"><use href="#i-star"/></svg>Level</button>
+  <button data-k="wins"><svg class="ic"><use href="#i-crown"/></svg>Výhry</button>
+  <button data-k="kills"><svg class="ic"><use href="#i-sword"/></svg>Zabití</button>
+  <button data-k="minutes"><svg class="ic"><use href="#i-clock"/></svg>Čas</button>
+  <button data-k="gamesPlayed"><svg class="ic"><use href="#i-game"/></svg>Hry</button>
+ </div>
+ <div class="lbw reveal"><div class="podium" id="podium"></div><div class="list" id="lb"><div class="empty">Načítám…</div></div></div>
+</div></section>
+
+<section id="funkce"><div class="wrap">
+ <div class="reveal"><div class="kicker">Proč SquareStar</div><h2>Server, který je jiný</h2><p class="lead">Všechno je napsané na míru od AdrrexStudio. Žádné stažené pluginy, žádné kopie.</p></div>
+ <div class="feat">
+  <div class="fc big reveal">
+   <div><div class="fi"><svg class="ic"><use href="#i-rocket"/></svg></div><h3>Nízká gravitace Marsu</h3><p>Skáčeš dál a výš, padáš pomaleji. Každá minihra se díky tomu hraje úplně jinak než kdekoli jinde.</p></div>
+   <svg class="ill" viewBox="0 0 300 160" aria-hidden="true"><defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2c12"/><stop offset="1" stop-color="#3a1208"/></linearGradient></defs><rect x="0" y="122" width="300" height="38" rx="6" fill="url(#gr)"/><path d="M30 122 Q150 -40 270 122" fill="none" stroke="#ff8a1f" stroke-width="2.5" stroke-dasharray="6 7"/><path d="M30 122 Q150 52 270 122" fill="none" stroke="#a88d83" stroke-opacity=".55" stroke-width="2" stroke-dasharray="3 6"/><g transform="translate(140 24)"><rect width="20" height="20" rx="3" fill="#ffc83d"/><rect x="2" y="20" width="16" height="22" rx="2" fill="#ff8a1f"/></g><text x="200" y="38" fill="#ff8a1f" font-family="Inter" font-size="12" font-weight="700">Mars</text><text x="208" y="96" fill="#a88d83" font-family="Inter" font-size="12" font-weight="600">Země</text></svg>
+  </div>
+  <div class="fc reveal"><div class="fi"><svg class="ic"><use href="#i-gift"/></svg></div><h3>Denní odměny a úkoly</h3><p>Každý den odměna se sérií, 3 nové úkoly a 7. den vzácný klíč.</p></div>
+  <div class="fc reveal"><div class="fi"><svg class="ic"><use href="#i-party"/></svg></div><h3>Parta</h3><p>Pozvi kamarády přes /parta. Vůdce vybere hru a jdete do ní všichni spolu.</p></div>
+  <div class="fc reveal"><div class="fi"><svg class="ic"><use href="#i-trophy"/></svg></div><h3>Levely a 13 úspěchů</h3><p>XP za hry, výhry a zabití. Série zabití, první krev a žebříčky.</p></div>
+  <div class="fc reveal"><div class="fi"><svg class="ic"><use href="#i-spark"/></svg></div><h3>Věci, které jinde nenajdeš</h3><p>3D modely, animované emoty, ranky jako obrázky, padající meteory, UFO a vlastní hudba.</p></div>
+  <div class="fc wide reveal"><div class="fi"><svg class="ic"><use href="#i-bot"/></svg></div><div><h3>AdrrexAI</h3><p>Vlastní AI pomocník přímo ve hře. Zeptej se na pravidla, hry nebo cokoli jiného.</p></div></div>
+ </div>
+</div></section>
+
+<section id="minihry" class="alt"><div class="wrap">
+ <div class="reveal"><div class="kicker">Přes 20 miniher</div><h2>Na co máš chuť?</h2><p class="lead">Minihry jsou rozdělené do kategorií stejně jako ve hře.</p></div>
+ <div class="gcat" id="gcat"></div>
+</div></section>
+
+<section id="pripojit"><div class="wrap">
+ <div class="reveal"><div class="kicker">Za minutu na Marsu</div><h2>Jak se připojit</h2><p class="lead">Čtyři kroky a můžeš hrát.</p></div>
+ <div class="steps">
+  <div class="st reveal"><div class="fi"><svg class="ic"><use href="#i-game"/></svg></div><h3>Spusť Minecraft</h3><p>Java Edition 1.21.11 → Multiplayer → Přidat server.</p></div>
+  <div class="st reveal"><div class="fi"><svg class="ic"><use href="#i-copy"/></svg></div><h3>Vlož IP adresu</h3><p>Zkopíruj IP tlačítkem nahoře a vlož ji do „Adresa serveru".</p></div>
+  <div class="st reveal"><div class="fi"><svg class="ic"><use href="#i-download"/></svg></div><h3>Potvrď „Ano"</h3><p>Server ti nabídne svůj vzhled. Klikni Ano a uvidíš 3D modely, emoty a vlastní menu.</p></div>
+  <div class="st reveal"><div class="fi"><svg class="ic"><use href="#i-play"/></svg></div><h3>Hraj!</h3><p>Kompas v lobby otevře minihry. Nezapomeň na /odmena.</p></div>
+ </div>
+ <div class="cta-box reveal">
+  <svg class="planet" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="96" fill="url(#pg)"/></svg>
+  <div><h2>Připraven na start?</h2><p style="color:var(--muted);margin-top:8px">Zkopíruj IP a přistaň na Marsu.</p></div>
+  <button class="btn" data-action="copy-ip" style="font-size:16px;padding:15px 26px"><svg class="ic"><use href="#i-copy"/></svg>Kopírovat IP</button>
+ </div>
+</div></section>
+
+<footer><div class="wrap"><span>© <span id="y"></span> SquareStar · vytvořilo AdrrexStudio</span><span>Nejsme spojeni s Mojang Studios ani Microsoft.</span></div></footer>
+
+<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+
+<noscript><p style="text-align:center;padding:20px">Pro živé zobrazení hráčů zapni JavaScript.</p></noscript>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

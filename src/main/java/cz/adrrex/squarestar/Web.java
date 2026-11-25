@@ -48,7 +48,7 @@ public final class Web {
             pl.getLogger().warning("Web se nepodarilo spustit na portu " + port + ": " + e.getMessage() + " - zmen web.port v config.yml");
             http = null;
         }
-        Bukkit.getScheduler().runTaskTimer(pl, this::snapshot, 40, 100);
+        Bukkit.getScheduler().runTaskTimer(pl, this::snapshot, 40, 60);
         // odehraný čas do statistik (aby byl vidět i u hráčů, kteří zrovna nejsou online)
         Bukkit.getScheduler().runTaskTimer(pl, () -> { for (Player p : Bukkit.getOnlinePlayers()) saveProfile(p); }, 200, 1200);
     }
