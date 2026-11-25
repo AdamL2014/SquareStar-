@@ -10,13 +10,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import java.util.List;
-
 /** Hezká zpráva v seznamu serverů (MOTD) + režim údržby (připojí se jen tým: builder, helper, mod, admin, owner). */
 public final class Motd implements Listener {
     private final SquareStar pl;
     private static final MiniMessage MM = MiniMessage.miniMessage();
-    private int tip = 0;
     public Motd(SquareStar pl) { this.pl = pl; }
 
     public boolean maintenance() { return pl.getConfig().getBoolean("maintenance.enabled", false); }
@@ -43,13 +40,9 @@ public final class Motd implements Listener {
             e.setVersion("§c⚠ Údržba");
             e.setProtocolVersion(-1); // místo počtu hráčů ukáže červeně „Údržba"
         } else {
-            List<String> tips = pl.getConfig().getStringList("motd.tips");
-            if (tips.isEmpty()) tips = List.of(
-                    "  <aqua>✦ 18 miniher</aqua> <dark_gray>•</dark_gray> <gold>nízká gravitace</gold> <dark_gray>•</dark_gray> <light_purple>bedny</light_purple>",
-                    "  <yellow>NOVÉ:</yellow> <white>mince, obchod, eventy a přátelé</white> <dark_gray>•</dark_gray> <green>připoj se!</green>",
-                    "  <gold>Bed Wars</gold> <dark_gray>•</dark_gray> <aqua>SkyWars</aqua> <dark_gray>•</dark_gray> <red>Murder</red> <dark_gray>•</dark_gray> <green>Build Battle</green>");
-            if (pl.xmas != null && pl.xmas.active() && tip % 2 == 0) { tip++; bottom = "  <red><bold>❄ VESELÉ VÁNOCE ❄</bold></red> <white>adventní kalendář</white> <dark_gray>•</dark_gray> <green>dárky každý den!</green>"; }
-            else bottom = tips.get(tip++ % tips.size());
+            int n = e.getNumPlayers();
+            String w = n == 1 ? "hráč" : (n >= 2 && n <= 4) ? "hráči" : "hráčů";
+            bottom = "      <green>●</green> <white><bold>" + n + "</bold></white> <gray>" + w + " online</gray> <dark_gray>•</dark_gray> <aqua>18 miniher</aqua>";
         }
         e.motd(MM.deserialize(top + "\n" + bottom));
     }

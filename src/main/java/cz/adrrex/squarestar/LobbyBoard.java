@@ -47,6 +47,10 @@ public final class LobbyBoard implements Listener {
         o.numberFormat(io.papermc.paper.scoreboard.numbers.NumberFormat.blank());
         List<String> l = new ArrayList<>();
         Ranks.Rank r = pl.ranks.of(p);
+        int on = Bukkit.getOnlinePlayers().size();
+        boolean en = Lang.en(p);
+        String w = en ? (on == 1 ? "player" : "players") : (on == 1 ? "hráč" : (on >= 2 && on <= 4) ? "hráči" : "hráčů");
+        l.add("&a● &f&l" + on + " &7" + w + " online");
         l.add("&7" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")) + " &8Lobby");
         l.add(" ");
         l.add("&fRank: " + r.color + cap(r.name()));
@@ -60,7 +64,6 @@ public final class LobbyBoard implements Listener {
         }
         l.add("   ");
         if (pl.party != null && pl.party.of(p) != null && pl.party.of(p).members.size() > 1) l.add("&fParta: &9" + pl.party.of(p).members.size() + " hráčů");
-        l.add("&fOnline: &a" + Bukkit.getOnlinePlayers().size());
         l.add("&fVe hrách: &e" + pl.games.activePlayers());
         l.add("    ");
         l.add("&e&lSQUARESTAR &7na Marsu");
