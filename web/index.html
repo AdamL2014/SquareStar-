@@ -3,172 +3,300 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SquareStar – Minihry na Marsu</title>
-<meta name="description" content="SquareStar – Minecraft minihry na Marsu s nízkou gravitací. Java 1.21.11.">
+<title>SquareStar – Minecraft minihry na Marsu</title>
+<meta name="description" content="SquareStar – Minecraft minihry na Marsu s nízkou gravitací. Přes 20 miniher, denní odměny, party a žebříčky. Java 1.21.11.">
+<meta name="theme-color" content="#0d0605">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#120806;--bg2:#1d0d09;--card:#24110c;--line:#3a1d14;--text:#f6e9e3;--muted:#b99a8e;--orange:#ff8a1f;--red:#ff2d2d;--gold:#ffc83d}
+:root{--bg:#0d0605;--bg2:#150a08;--card:#1b0e0b;--card2:#221310;--line:#2f1912;--line2:#46251a;--text:#f7ece7;--muted:#a88d83;--dim:#6f5850;--o:#ff8a1f;--r:#ff3b2f;--g:#ffc83d;--cy:#5ee7ff;--ok:#3ddc84;--rad:18px}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,.logo{font-family:Unbounded,Inter,sans-serif}
 a{color:inherit;text-decoration:none}
-.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
-nav{position:sticky;top:0;z-index:10;background:rgba(18,8,6,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
-.logo{font-weight:900;letter-spacing:2px;font-size:20px}
-.logo b{color:var(--orange)} .logo i{font-style:normal;color:var(--red)}
-nav ul{display:flex;gap:24px;list-style:none}
-nav ul a{color:var(--muted);font-weight:600;font-size:15px;transition:color .2s}
-nav ul a:hover{color:var(--text)}
-.hero{position:relative;min-height:min(88vh,820px);display:flex;align-items:center;text-align:center;overflow:hidden}
-.stars,.stars:after{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,#fff8,transparent),radial-gradient(1px 1px at 70% 20%,#fff6,transparent),radial-gradient(2px 2px at 40% 70%,#fff5,transparent),radial-gradient(1px 1px at 85% 60%,#fff7,transparent),radial-gradient(1px 1px at 10% 80%,#fff6,transparent),radial-gradient(1px 1px at 55% 45%,#fff4,transparent)}
-.stars:after{content:"";transform:translate(13%,9%) scale(1.3);opacity:.6}
-.planet{position:absolute;width:900px;height:900px;border-radius:50%;left:50%;bottom:-640px;transform:translateX(-50%);background:radial-gradient(circle at 50% 20%,#d2551f,#8e2a10 45%,#3a0f06 75%);box-shadow:0 -30px 140px #ff5a1f55,inset 0 30px 80px #ffb36b44}
-.planet:before,.planet:after{content:"";position:absolute;border-radius:50%;background:#00000030}
-.planet:before{width:120px;height:50px;left:30%;top:12%}
-.planet:after{width:70px;height:30px;left:62%;top:8%}
-.hero .wrap{position:relative;z-index:2;padding-bottom:120px}
-.tag{display:inline-block;border:1px solid var(--line);background:#ffffff08;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--muted);margin-bottom:22px}
-h1{font-size:clamp(52px,11vw,120px);font-weight:900;letter-spacing:4px;line-height:1;background:linear-gradient(90deg,var(--orange),var(--red));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 30px #ff4d1f55)}
-.sub{font-size:clamp(17px,2.4vw,22px);color:var(--muted);margin:18px auto 34px;max-width:620px}
-.ipbox{display:inline-flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 20px}
-.ipbox code{font-size:18px;font-weight:700;color:var(--gold)}
-.btn{border:0;cursor:pointer;font-weight:800;font-size:15px;padding:12px 22px;border-radius:10px;background:linear-gradient(90deg,var(--orange),var(--red));color:#fff;transition:transform .15s,box-shadow .2s}
-.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px #ff4d1f55}
-.ver{margin-top:14px;font-size:14px;color:var(--muted)}
-section{padding:90px 0}
-h2{font-size:clamp(30px,5vw,44px);font-weight:900;margin-bottom:10px}
-h2 span{color:var(--orange)}
-.lead{color:var(--muted);margin-bottom:40px;max-width:640px}
-.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;transition:transform .2s,border-color .2s}
-.card:hover{transform:translateY(-4px);border-color:var(--orange)}
-.card .ico{font-size:32px;margin-bottom:10px}
-.card h3{font-size:19px;margin-bottom:6px}
-.card p{color:var(--muted);font-size:15px}
-.games{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.cat h3{color:var(--gold);font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:#ffffff0a;border:1px solid var(--line);padding:6px 12px;border-radius:8px;font-size:14px;font-weight:600}
-.steps{counter-reset:s}
-.step{position:relative;padding-left:64px;margin-bottom:26px}
-.step:before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:900;background:linear-gradient(135deg,var(--orange),var(--red))}
-.step h3{font-size:18px} .step p{color:var(--muted)}
-footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:14px;text-align:center}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--orange);padding:12px 20px;border-radius:10px;transition:transform .3s;z-index:20}
-.toast.on{transform:translateX(-50%) translateY(0)}
-
-.live{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-weight:700;color:var(--muted)}
-.dot{width:10px;height:10px;border-radius:50%;background:#666}
-.dot.on{background:#3ddc6b;box-shadow:0 0 0 0 #3ddc6b99;animation:pulse 1.8s infinite}
-@keyframes pulse{70%{box-shadow:0 0 0 10px #3ddc6b00}100%{box-shadow:0 0 0 0 #3ddc6b00}}
-.statrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:34px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
-.stat b{display:block;font-size:34px;font-weight:900;color:var(--orange)}
-.stat span{color:var(--muted);font-size:14px}
-.players{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
-.pl{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .2s,transform .2s}
-.pl:hover{border-color:var(--orange);transform:translateY(-2px)}
-.face{position:relative;flex:none;border-radius:8px;overflow:hidden;image-rendering:pixelated;background-repeat:no-repeat;background-color:#3a1d14}
+svg{display:block}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav{position:fixed;inset:0 0 auto;z-index:50;transition:background .3s,border-color .3s;border-bottom:1px solid transparent}
+nav.sc{background:rgba(13,6,5,.82);backdrop-filter:blur(14px);border-color:var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;letter-spacing:.5px}
+.logo .mk{width:34px;height:34px}
+.logo b{color:var(--o)}.logo i{font-style:normal;color:var(--r)}
+.links{display:flex;gap:6px;align-items:center}
+.links a{color:var(--muted);font-weight:600;font-size:14px;padding:8px 14px;border-radius:10px;transition:color .2s,background .2s}
+.links a:hover{color:var(--text);background:#ffffff0a}
+.links .cta{color:#fff;background:linear-gradient(135deg,var(--o),var(--r));margin-left:8px}
+.hero{position:relative;min-height:min(100vh,900px);display:flex;align-items:center;overflow:hidden;padding:120px 0 120px}
+.sky{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 110%,#5a1a0c 0%,#260b06 40%,var(--bg) 75%)}
+#stars{position:absolute;inset:0;width:100%;height:100%}
+.land{position:absolute;left:0;right:0;bottom:0;width:100%;height:200px}
+.hero .wrap{position:relative;z-index:3;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center;width:100%}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line2);background:#ffffff08;padding:7px 14px 7px 12px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted)}
+.pill .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.pill .dot.on{background:var(--ok);box-shadow:0 0 0 0 #3ddc8499;animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 9px #3ddc8400}100%{box-shadow:0 0 0 0 #3ddc8400}}
+h1{font-size:clamp(44px,7vw,88px);line-height:.98;font-weight:900;letter-spacing:-1px;margin:22px 0 20px}
+h1 .grad{background:linear-gradient(100deg,var(--g) 0%,var(--o) 35%,var(--r) 80%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:clamp(16px,2vw,19px);color:var(--muted);max-width:520px;margin-bottom:32px}
+.join{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.ipbox{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line2);border-radius:14px;padding:6px 6px 6px 18px}
+.ipbox code{font-family:ui-monospace,Consolas,monospace;font-size:16px;font-weight:700;color:var(--g);margin-right:8px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;cursor:pointer;font:700 15px Inter,sans-serif;padding:12px 20px;border-radius:11px;background:linear-gradient(135deg,var(--o),var(--r));color:#fff;transition:transform .15s,box-shadow .25s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px -6px #ff4d1f88}
+.btn.ghost{background:transparent;border:1px solid var(--line2);color:var(--text)}
+.btn.ghost:hover{box-shadow:none;border-color:var(--o)}
+.meta{display:flex;gap:22px;margin-top:30px;color:var(--muted);font-size:14px;font-weight:600}
+.meta span{display:flex;align-items:center;gap:8px}
+.meta .ic{width:18px;height:18px;color:var(--o)}
+.art{position:relative;max-width:470px;justify-self:center;width:100%}
+.art svg{width:100%;height:auto;overflow:visible}
+.float{animation:fl 6s ease-in-out infinite}
+.float.b{animation-delay:-2s;animation-duration:7s}.float.c{animation-delay:-4s;animation-duration:8s}
+@keyframes fl{50%{transform:translateY(-14px)}}
+.spin{transform-origin:240px 240px;animation:sp 60s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+section{padding:110px 0;position:relative}
+.kicker{display:inline-flex;align-items:center;gap:10px;color:var(--o);font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
+.kicker:before{content:"";width:22px;height:2px;background:var(--o)}
+h2{font-size:clamp(30px,4.2vw,48px);font-weight:800;line-height:1.08;letter-spacing:-.5px;margin-bottom:14px}
+.lead{color:var(--muted);font-size:17px;max-width:600px;margin-bottom:44px}
+.alt{background:var(--bg2);border-block:1px solid var(--line)}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:20px 22px;display:flex;gap:14px;align-items:center}
+.stat .si{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;background:#ff8a1f18;color:var(--o);flex:none}
+.stat b{display:block;font:800 26px Unbounded,sans-serif;line-height:1.15}
+.stat span{color:var(--muted);font-size:13px;font-weight:600}
+.players{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.pl{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;transition:border-color .2s,transform .2s,background .2s}
+.pl:hover{border-color:var(--line2);background:var(--card2);transform:translateY(-2px)}
+.face{position:relative;flex:none;border-radius:10px;overflow:hidden;image-rendering:pixelated;background-repeat:no-repeat;background-color:#2a1510;box-shadow:0 0 0 2px #ffffff10}
 .face i{position:absolute;inset:0;background-repeat:no-repeat;image-rendering:pixelated}
-.face.ph{display:grid;place-items:center;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--orange),var(--red))}
-.pl .nm{font-weight:800;font-size:17px}
-.rk{font-size:12px;font-weight:800;padding:2px 8px;border-radius:6px;background:#ffffff10;margin-left:6px}
-.meta{color:var(--muted);font-size:13px;margin-top:2px}
-.xpbar{height:6px;background:#ffffff12;border-radius:6px;margin-top:8px;overflow:hidden}
-.xpbar div{height:100%;background:linear-gradient(90deg,#55ffff,#3a8bff)}
-.empty{color:var(--muted);padding:30px;text-align:center;border:1px dashed var(--line);border-radius:14px}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.tabs button{border:1px solid var(--line);background:var(--card);color:var(--muted);padding:9px 16px;border-radius:10px;font-weight:700;cursor:pointer}
-.tabs button.act{color:#fff;border-color:var(--orange);background:#ff8a1f22}
-.lb{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.row{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line)}
-.row:last-child{border-bottom:0}
-.pos{width:30px;font-weight:900;font-size:18px;color:var(--muted)}
-.row:nth-child(1) .pos{color:#ffc83d}.row:nth-child(2) .pos{color:#d6d6d6}.row:nth-child(3) .pos{color:#e08a4a}
-.row .v{margin-left:auto;font-weight:900;color:var(--orange)}
-.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:30;padding:20px}
-.modal.on{display:flex}
-.mbox{background:var(--bg2);border:1px solid var(--orange);border-radius:18px;padding:26px;max-width:420px;width:100%;text-align:center;position:relative}
-.mbox .face{margin:0 auto 12px}
-.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-.mgrid div{background:var(--card);border-radius:10px;padding:10px}
-.mgrid b{display:block;font-size:20px;color:var(--orange)}
+.face.ph{display:grid;place-items:center;font-family:Unbounded;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--o),var(--r))}
+.nm{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;min-width:0}
+.nm em{font-style:normal;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rk{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:.5px;text-transform:uppercase;flex:none}
+.sm{color:var(--muted);font-size:13px;margin-top:2px;display:flex;gap:6px;flex-wrap:wrap}
+.sm span+span:before{content:"·";margin-right:6px;color:var(--dim)}
+.xpbar{height:5px;background:#ffffff10;border-radius:5px;margin-top:9px;overflow:hidden}
+.xpbar div{height:100%;background:linear-gradient(90deg,#5ee7ff,#3a8bff);border-radius:5px}
+.empty{color:var(--muted);padding:36px;text-align:center;border:1px dashed var(--line2);border-radius:var(--rad);grid-column:1/-1}
+.tabs{display:inline-flex;gap:4px;padding:4px;background:var(--card);border:1px solid var(--line);border-radius:13px;margin-bottom:20px;flex-wrap:wrap}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:9px 16px;border-radius:10px;font:700 14px Inter;cursor:pointer;display:flex;gap:7px;align-items:center;transition:color .2s,background .2s}
+.tabs button .ic{width:16px;height:16px}
+.tabs button.act{color:#fff;background:linear-gradient(135deg,var(--o),var(--r))}
+.lbw{display:grid;grid-template-columns:.95fr 1.05fr;gap:18px;align-items:start}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:10px;align-items:end}
+.pod{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:20px 10px;text-align:center;cursor:pointer;transition:transform .2s;min-width:0}
+.pod:hover{transform:translateY(-3px)}
+.pod .face{margin:0 auto 10px}
+.pod .n{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod .v{font:800 17px Unbounded;margin-top:4px}
+.pod .medal{font:900 13px Unbounded;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;margin:0 auto 10px;color:#1b0e0b}
+.pod.p1{padding-top:34px;border-color:#ffc83d66;background:linear-gradient(180deg,#ffc83d1a,var(--card))}
+.pod.p1 .v{color:var(--g)}
+.pod.p1 .medal{background:var(--g)}.pod.p2 .medal{background:#d9d9d9}.pod.p3 .medal{background:#e08a4a}
+.list{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);overflow:hidden}
+.row{display:flex;align-items:center;gap:14px;padding:11px 18px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .2s}
+.row:hover{background:var(--card2)}.row:last-child{border-bottom:0}
+.row .pos{width:24px;font:800 14px Unbounded;color:var(--dim)}
+.row .v{margin-left:auto;font:800 14px Unbounded;color:var(--o);white-space:nowrap}
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.fc{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:28px;position:relative;overflow:hidden;transition:border-color .25s,transform .25s}
+.fc:hover{border-color:var(--line2);transform:translateY(-4px)}
+.fc:after{content:"";position:absolute;width:180px;height:180px;right:-70px;top:-70px;background:radial-gradient(circle,#ff8a1f1f,transparent 70%);pointer-events:none}
+.fi{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#ff8a1f26,#ff3b2f1a);border:1px solid #ff8a1f33;color:var(--o);margin-bottom:18px}
+.fi .ic{width:26px;height:26px}
+.fc h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.fc p{color:var(--muted);font-size:15px}
+.fc.big{grid-column:span 2;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center}
+.fc.wide{grid-column:1/-1;display:flex;gap:22px;align-items:center}.fc.wide .fi{margin:0;flex:none}
+.fc.big svg.ill{width:100%;height:auto}
+.gcat{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.gc{border-radius:var(--rad);overflow:hidden;background:var(--card);border:1px solid var(--line);transition:transform .25s,border-color .25s}
+.gc:hover{transform:translateY(-5px);border-color:var(--line2)}
+.gc .top{height:130px;position:relative;display:grid;place-items:center;overflow:hidden}
+.gc .top svg.bgp{position:absolute;inset:0;width:100%;height:100%}
+.gc .top .gi{position:relative;width:62px;height:62px;border-radius:18px;display:grid;place-items:center;background:#0d060566;backdrop-filter:blur(6px);border:1px solid #ffffff2a;color:#fff}
+.gc .top .gi .ic{width:30px;height:30px}
+.gc .bd{padding:18px}
+.gc h3{font-size:16px;font-weight:700;margin-bottom:2px}
+.gc .cnt{color:var(--muted);font-size:13px;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:#ffffff08;border:1px solid var(--line);padding:4px 9px;border-radius:7px;font-size:12px;font-weight:600;color:#e5d6cf}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;counter-reset:s}
+.st{background:var(--card);border:1px solid var(--line);border-radius:var(--rad);padding:24px;position:relative}
+.st:before{counter-increment:s;content:"0" counter(s);font:900 40px Unbounded;color:transparent;-webkit-text-stroke:1px var(--line2);position:absolute;right:18px;top:12px}
+.st .fi{width:44px;height:44px}
+.st h3{font-size:16px;font-weight:700;margin-bottom:6px}
+.st p{color:var(--muted);font-size:14px}
+.cta-box{position:relative;overflow:hidden;border-radius:26px;padding:60px 48px;background:linear-gradient(120deg,#3a1209,#1d0a07 55%);border:1px solid var(--line2);display:flex;justify-content:space-between;align-items:center;gap:30px;flex-wrap:wrap;margin-top:56px}
+.cta-box h2{margin:0}
+.cta-box svg.planet{position:absolute;right:-80px;bottom:-160px;width:420px;opacity:.5;pointer-events:none}
+.cta-box>*{position:relative}
+footer{padding:40px 0;border-top:1px solid var(--line);color:var(--dim);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+.modal{position:fixed;inset:0;background:#000b;backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:80;padding:20px}
+.modal.on{display:flex;animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.mbox{background:var(--bg2);border:1px solid var(--line2);border-radius:22px;padding:30px;max-width:440px;width:100%;text-align:center;position:relative;box-shadow:0 30px 80px -20px #000}
+.mbox .face{margin:0 auto 14px}
+.mbox h3{font-size:22px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.mgrid div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px}
+.mgrid b{display:block;font:800 17px Unbounded;color:var(--o)}
 .mgrid span{font-size:12px;color:var(--muted)}
-.x{position:absolute;right:14px;top:10px;background:none;border:0;color:var(--muted);font-size:24px;cursor:pointer}
-@media(max-width:640px){nav ul{display:none}.planet{width:600px;height:600px;bottom:-430px}}
+.x{position:absolute;right:14px;top:12px;background:#ffffff0a;border:0;color:var(--muted);width:34px;height:34px;border-radius:10px;cursor:pointer;display:grid;place-items:center}
+.toast{position:fixed;bottom:26px;left:50%;transform:translate(-50%,120px);background:var(--card2);border:1px solid var(--ok);padding:12px 20px;border-radius:12px;font-weight:600;display:flex;gap:8px;align-items:center;transition:transform .35s cubic-bezier(.2,.9,.3,1.2);z-index:90}
+.toast.on{transform:translate(-50%,0)}
+.toast .ic{color:var(--ok)}
+@media(max-width:980px){.hero .wrap{grid-template-columns:1fr}.art{max-width:320px;order:-1}.feat,.steps{grid-template-columns:1fr 1fr}.fc.big{grid-column:span 2;grid-template-columns:1fr}.gcat{grid-template-columns:repeat(2,1fr)}.lbw{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.links a:not(.cta){display:none}.feat,.steps,.gcat{grid-template-columns:1fr}.fc.big{grid-column:auto}.cta-box{padding:40px 24px}.meta{flex-wrap:wrap;gap:12px}.art{max-width:240px}.stats{grid-template-columns:1fr 1fr}.stat{padding:16px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
 </style>
 </head>
 <body>
-<nav><div class="wrap"><a class="logo" href="#"><b>SQUARE</b><i>STAR</i></a>
-<ul><li><a href="#online">Online</a></li><li><a href="#zebricky">Žebříčky</a></li><li><a href="#o-serveru">O serveru</a></li><li><a href="#minihry">Minihry</a></li><li><a href="#jak-hrat">Jak hrát</a></li></ul></div></nav>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+ <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+ <symbol id="i-cpu" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+ <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></symbol>
+ <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+ <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/></symbol>
+ <symbol id="i-party" viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5M14 15.5c.6-.3 1.3-.5 2-.5 3 0 6 2 6 5"/></symbol>
+ <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2z"/></symbol>
+ <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/><path d="M19 3v4M17 5h4"/></symbol>
+ <symbol id="i-bot" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M12 8V4M8 4h8"/><circle cx="9" cy="14" r="1.2"/><circle cx="15" cy="14" r="1.2"/></symbol>
+ <symbol id="i-sword" viewBox="0 0 24 24"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+ <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+ <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></symbol>
+ <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></symbol>
+ <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+ <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+ <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+ <symbol id="i-star" viewBox="0 0 24 24"><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3 12 2"/></symbol>
+ <symbol id="i-crown" viewBox="0 0 24 24"><path d="m2 7 5 4 5-7 5 7 5-4-2 12H4z"/></symbol>
+ <symbol id="i-game" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="4"/><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/></symbol>
+ <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+ <symbol id="i-pack" viewBox="0 0 24 24"><path d="m21 16-9 5-9-5V8l9-5 9 5z"/><path d="m3 8 9 5 9-5M12 13v8"/></symbol>
+ <radialGradient id="pg" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="#ff9a4a"/><stop offset=".45" stop-color="#d4501c"/><stop offset=".8" stop-color="#7a220c"/><stop offset="1" stop-color="#3a0f06"/></radialGradient>
+</svg>
 
-<header class="hero"><div class="stars"></div><div class="planet"></div>
-<div class="wrap">
-<div class="tag">🪐 Minecraft server · Java 1.21.11</div>
-<h1>SQUARESTAR</h1>
-<p class="sub">Minihry na Marsu s nízkou gravitací. Skákej výš, bojuj s kamarády a sbírej odměny každý den.</p>
-<div class="ipbox"><code id="ip">IP_ADRESA_SERVERU</code><button class="btn" onclick="copyIp()">Kopírovat IP</button></div>
-<p class="ver">Verze: Java 1.21.11</p>
-<div class="live"><span class="dot" id="dot"></span><span id="livetxt">Načítám stav serveru…</span></div>
-</div></header>
+<nav id="nav"><div class="wrap">
+ <a class="logo" href="#"><svg class="mk" viewBox="0 0 40 40"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc83d"/><stop offset=".5" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ff3b2f"/></linearGradient></defs><rect x="8" y="8" width="24" height="24" rx="6" fill="url(#lg)" transform="rotate(45 20 20)"/><path d="M20 11l2.6 6.4L29 20l-6.4 2.6L20 29l-2.6-6.4L11 20l6.4-2.6z" fill="#0d0605"/></svg><span><b>SQUARE</b><i>STAR</i></span></a>
+ <div class="links"><a href="#online">Online</a><a href="#zebricky">Žebříčky</a><a href="#funkce">Funkce</a><a href="#minihry">Minihry</a><a class="cta" href="#pripojit">Hrát</a></div>
+</div></nav>
+
+<header class="hero">
+ <div class="sky"></div><canvas id="stars"></canvas>
+ <svg class="land" viewBox="0 0 1440 200" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="m1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2c12"/><stop offset="1" stop-color="#3a1208"/></linearGradient><linearGradient id="m2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a1a0b"/><stop offset="1" stop-color="#0d0605"/></linearGradient></defs>
+  <path d="M0 110 L120 70 L210 100 L330 30 L430 90 L560 55 L660 100 L780 40 L900 90 L1010 60 L1130 105 L1250 45 L1360 85 L1440 65 V200 H0Z" fill="url(#m1)" opacity=".7"/>
+  <path d="M0 150 L160 115 L290 145 L420 100 L560 140 L720 110 L880 150 L1030 115 L1190 150 L1330 120 L1440 140 V200 H0Z" fill="url(#m2)"/>
+ </svg>
+ <div class="wrap">
+  <div>
+   <span class="pill"><span class="dot" id="dot"></span><span id="livetxt">Načítám stav serveru…</span></span>
+   <h1>Minihry<br>na <span class="grad">Marsu</span></h1>
+   <p class="sub">Nízká gravitace, přes 20 miniher a vlastní pluginy na míru. Skákej výš, bojuj s partou a sbírej odměny každý den.</p>
+   <div class="join">
+    <div class="ipbox"><code id="ip">IP_ADRESA_SERVERU</code><button class="btn" onclick="copyIp()"><svg class="ic"><use href="#i-copy"/></svg>Kopírovat IP</button></div>
+    <a class="btn ghost" href="#online"><svg class="ic"><use href="#i-users"/></svg>Kdo hraje</a>
+   </div>
+   <div class="meta"><span><svg class="ic"><use href="#i-game"/></svg>Java 1.21.11</span><span><svg class="ic"><use href="#i-pack"/></svg>Vlastní resource pack</span><span><svg class="ic"><use href="#i-rocket"/></svg>Nízká gravitace</span></div>
+  </div>
+  <div class="art" aria-hidden="true">
+   <svg viewBox="0 0 480 480">
+    <defs>
+     <radialGradient id="glow" r=".5"><stop offset=".6" stop-color="#ff6a1f" stop-opacity=".45"/><stop offset="1" stop-color="#ff6a1f" stop-opacity="0"/></radialGradient>
+     <clipPath id="pc"><circle cx="240" cy="250" r="150"/></clipPath>
+     <linearGradient id="cubeT" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb35c"/><stop offset="1" stop-color="#ff8a1f"/></linearGradient>
+    </defs>
+    <circle cx="240" cy="250" r="215" fill="url(#glow)"/>
+    <g class="spin"><ellipse cx="240" cy="250" rx="225" ry="62" fill="none" stroke="#ff8a1f" stroke-opacity=".3" stroke-width="2" stroke-dasharray="4 10" transform="rotate(-18 240 250)"/></g>
+    <circle cx="240" cy="250" r="150" fill="url(#pg)"/>
+    <g clip-path="url(#pc)">
+     <ellipse cx="190" cy="200" rx="26" ry="18" fill="#00000030"/><ellipse cx="290" cy="300" rx="40" ry="24" fill="#00000028"/><ellipse cx="300" cy="180" rx="14" ry="10" fill="#00000030"/><ellipse cx="170" cy="310" rx="18" ry="12" fill="#00000026"/>
+     <path d="M90 260 Q240 235 390 272" stroke="#ffffff14" stroke-width="16" fill="none"/>
+     <circle cx="270" cy="280" r="150" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="60"/>
+    </g>
+    <g transform="translate(240 102)"><path d="M-48 0 A48 42 0 0 1 48 0Z" fill="#5ee7ff" fill-opacity=".16" stroke="#5ee7ff" stroke-opacity=".75" stroke-width="2"/><path d="M-52 0 H52" stroke="#5ee7ff" stroke-opacity=".75" stroke-width="2.5"/><path d="M-22 0 V-34 M22 0 V-34 M-42 -18 H42" stroke="#5ee7ff" stroke-opacity=".25" stroke-width="1.5"/><rect x="-8" y="-22" width="16" height="22" rx="2" fill="#ffc83d"/><path d="M0 -42 V-60" stroke="#ff8a1f" stroke-width="2"/><circle cy="-64" r="4" fill="#ff3b2f"/></g>
+    <g class="float"><g transform="translate(70 100)"><path d="M0 14 L24 0 L48 14 L24 28Z" fill="url(#cubeT)"/><path d="M0 14 L24 28 V56 L0 42Z" fill="#c4521a"/><path d="M48 14 L24 28 V56 L48 42Z" fill="#8f3410"/></g></g>
+    <g class="float b"><g transform="translate(375 130) scale(.7)"><path d="M0 14 L24 0 L48 14 L24 28Z" fill="#7ee0ff"/><path d="M0 14 L24 28 V56 L0 42Z" fill="#3aa8d0"/><path d="M48 14 L24 28 V56 L48 42Z" fill="#1d6f8f"/></g></g>
+    <g class="float c"><g transform="translate(360 375) scale(.85)"><path d="M0 14 L24 0 L48 14 L24 28Z" fill="#ffd66b"/><path d="M0 14 L24 28 V56 L0 42Z" fill="#d9a12a"/><path d="M48 14 L24 28 V56 L48 42Z" fill="#9c6f12"/></g></g>
+    <g class="float b"><g transform="translate(60 350) scale(.55)"><path d="M0 14 L24 0 L48 14 L24 28Z" fill="#9dff9d"/><path d="M0 14 L24 28 V56 L0 42Z" fill="#4dc44d"/><path d="M48 14 L24 28 V56 L48 42Z" fill="#2b862b"/></g></g>
+   </svg>
+  </div>
+ </div>
+</header>
 
 <section id="online"><div class="wrap">
-<h2>Právě <span>online</span></h2>
-<p class="lead">Živá data přímo ze serveru. Obnovuje se samo každých 10 sekund. Klikni na hráče pro detail.</p>
-<div class="statrow">
-<div class="stat"><b id="sOnline">–</b><span>hráčů online</span></div>
-<div class="stat"><b id="sGames">–</b><span>běžících her</span></div>
-<div class="stat"><b id="sReg">–</b><span>hráčů celkem</span></div>
-<div class="stat"><b id="sTps">–</b><span>TPS (výkon, max 20)</span></div>
-</div>
-<div class="players" id="players"><div class="empty">Načítám…</div></div>
+ <div class="reveal"><div class="kicker">Živě ze serveru</div><h2>Právě online</h2><p class="lead">Data přímo z pluginu, obnovují se samy každých 10 sekund. Klikni na hráče a uvidíš jeho statistiky.</p></div>
+ <div class="stats reveal">
+  <div class="stat"><div class="si"><svg class="ic"><use href="#i-users"/></svg></div><div><b id="sOnline">–</b><span>hráčů online</span></div></div>
+  <div class="stat"><div class="si"><svg class="ic"><use href="#i-play"/></svg></div><div><b id="sGames">–</b><span>běžících her</span></div></div>
+  <div class="stat"><div class="si"><svg class="ic"><use href="#i-globe"/></svg></div><div><b id="sReg">–</b><span>hráčů celkem</span></div></div>
+  <div class="stat"><div class="si"><svg class="ic"><use href="#i-cpu"/></svg></div><div><b id="sTps">–</b><span>TPS · výkon (max 20)</span></div></div>
+ </div>
+ <div class="players reveal" id="players"><div class="empty">Načítám…</div></div>
 </div></section>
 
-<section id="zebricky" class="games"><div class="wrap">
-<h2>🏆 <span>Žebříčky</span></h2>
-<p class="lead">Nejlepší hráči SquareStaru. Dostaneš se sem i ty?</p>
-<div class="tabs" id="tabs">
-<button data-k="xpTotal" class="act">★ Level</button><button data-k="wins">♛ Výhry</button><button data-k="kills">⚔ Zabití</button><button data-k="minutes">⏱ Odehraný čas</button><button data-k="gamesPlayed">✪ Hry</button>
-</div>
-<div class="lb" id="lb"><div class="empty">Načítám…</div></div>
+<section id="zebricky" class="alt"><div class="wrap">
+ <div class="reveal"><div class="kicker">Síň slávy</div><h2>Žebříčky</h2><p class="lead" style="margin-bottom:28px">Nejlepší hráči SquareStaru. Dostaneš se mezi ně i ty?</p></div>
+ <div class="tabs reveal" id="tabs">
+  <button data-k="xpTotal" class="act"><svg class="ic"><use href="#i-star"/></svg>Level</button>
+  <button data-k="wins"><svg class="ic"><use href="#i-crown"/></svg>Výhry</button>
+  <button data-k="kills"><svg class="ic"><use href="#i-sword"/></svg>Zabití</button>
+  <button data-k="minutes"><svg class="ic"><use href="#i-clock"/></svg>Čas</button>
+  <button data-k="gamesPlayed"><svg class="ic"><use href="#i-game"/></svg>Hry</button>
+ </div>
+ <div class="lbw reveal"><div class="podium" id="podium"></div><div class="list" id="lb"><div class="empty">Načítám…</div></div></div>
 </div></section>
 
-<section id="o-serveru"><div class="wrap">
-<h2>Proč <span>SquareStar</span>?</h2>
-<p class="lead">Vlastní pluginy na míru od AdrrexStudio. Žádné kopie, všechno je udělané pro Mars.</p>
-<div class="grid">
-<div class="card"><div class="ico">🚀</div><h3>Nízká gravitace</h3><p>Na Marsu skáčeš dál a výš. Každá minihra se díky tomu hraje jinak.</p></div>
-<div class="card"><div class="ico">🎁</div><h3>Denní odměny a úkoly</h3><p>Každý den nová odměna, 3 úkoly a sérii odměníme vzácným klíčem.</p></div>
-<div class="card"><div class="ico">👥</div><h3>Parta</h3><p>Pozvi kamarády přes /parta a jděte do hry všichni spolu.</p></div>
-<div class="card"><div class="ico">🏆</div><h3>Levely a úspěchy</h3><p>XP za hry a výhry, 13 úspěchů, žebříčky nejlepších hráčů.</p></div>
-<div class="card"><div class="ico">✨</div><h3>Kosmetika</h3><p>Stopy, čepice, balónky, emoty a bedny s odměnami za mince.</p></div>
-<div class="card"><div class="ico">🤖</div><h3>AdrrexAI</h3><p>Vlastní AI pomocník přímo ve hře. Zeptej se ho na cokoli.</p></div>
-</div></div></section>
+<section id="funkce"><div class="wrap">
+ <div class="reveal"><div class="kicker">Proč SquareStar</div><h2>Server, který je jiný</h2><p class="lead">Všechno je napsané na míru od AdrrexStudio. Žádné stažené pluginy, žádné kopie.</p></div>
+ <div class="feat">
+  <div class="fc big reveal">
+   <div><div class="fi"><svg class="ic"><use href="#i-rocket"/></svg></div><h3>Nízká gravitace Marsu</h3><p>Skáčeš dál a výš, padáš pomaleji. Každá minihra se díky tomu hraje úplně jinak než kdekoli jinde.</p></div>
+   <svg class="ill" viewBox="0 0 300 160" aria-hidden="true"><defs><linearGradient id="gr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a2c12"/><stop offset="1" stop-color="#3a1208"/></linearGradient></defs><rect x="0" y="122" width="300" height="38" rx="6" fill="url(#gr)"/><path d="M30 122 Q150 -40 270 122" fill="none" stroke="#ff8a1f" stroke-width="2.5" stroke-dasharray="6 7"/><path d="M30 122 Q150 52 270 122" fill="none" stroke="#a88d83" stroke-opacity=".55" stroke-width="2" stroke-dasharray="3 6"/><g transform="translate(140 24)"><rect width="20" height="20" rx="3" fill="#ffc83d"/><rect x="2" y="20" width="16" height="22" rx="2" fill="#ff8a1f"/></g><text x="200" y="38" fill="#ff8a1f" font-family="Inter" font-size="12" font-weight="700">Mars</text><text x="208" y="96" fill="#a88d83" font-family="Inter" font-size="12" font-weight="600">Země</text></svg>
+  </div>
+  <div class="fc reveal"><div class="fi"><svg class="ic"><use href="#i-gift"/></svg></div><h3>Denní odměny a úkoly</h3><p>Každý den odměna se sérií, 3 nové úkoly a 7. den vzácný klíč.</p></div>
+  <div class="fc reveal"><div class="fi"><svg class="ic"><use href="#i-party"/></svg></div><h3>Parta</h3><p>Pozvi kamarády přes /parta. Vůdce vybere hru a jdete do ní všichni spolu.</p></div>
+  <div class="fc reveal"><div class="fi"><svg class="ic"><use href="#i-trophy"/></svg></div><h3>Levely a 13 úspěchů</h3><p>XP za hry, výhry a zabití. Série zabití, první krev a žebříčky.</p></div>
+  <div class="fc reveal"><div class="fi"><svg class="ic"><use href="#i-spark"/></svg></div><h3>Kosmetika a bedny</h3><p>Stopy, čepice, balónky, mazlíčci a emoty. Klíče k bednám za mince.</p></div>
+  <div class="fc wide reveal"><div class="fi"><svg class="ic"><use href="#i-bot"/></svg></div><div><h3>AdrrexAI</h3><p>Vlastní AI pomocník přímo ve hře. Zeptej se na pravidla, hry nebo cokoli jiného.</p></div></div>
+ </div>
+</div></section>
 
-<section id="minihry" class="games"><div class="wrap">
-<h2>Přes <span>20 miniher</span></h2>
-<p class="lead">Rozdělené do kategorií, ať hned najdeš, na co máš chuť.</p>
-<div class="grid">
-<div class="card cat"><h3>⚔ PvP</h3><div class="chips"><span class="chip">1v1</span><span class="chip">Všichni proti všem</span><span class="chip">5v5</span><span class="chip">10v10</span><span class="chip">Sumo</span></div></div>
-<div class="card cat"><h3>🛡 Bojové</h3><div class="chips"><span class="chip">BedWars</span><span class="chip">EggWars</span><span class="chip">The Bridge</span><span class="chip">AnniRun</span><span class="chip">Duels</span><span class="chip">SkyWars</span><span class="chip">UHC Run</span><span class="chip">Zombies</span></div></div>
-<div class="card cat"><h3>🕵 Schovávací</h3><div class="chips"><span class="chip">Schovka</span><span class="chip">Vrah mezi námi</span><span class="chip">Stavitelská bitva</span></div></div>
-<div class="card cat"><h3>🏁 Závodní</h3><div class="chips"><span class="chip">Parkour</span><span class="chip">Only Up</span><span class="chip">Dropper</span><span class="chip">Rover závod</span><span class="chip">Speedrun</span><span class="chip">Beat</span></div></div>
-<div class="card cat"><h3>🎉 Zábavné</h3><div class="chips"><span class="chip">Spleef</span><span class="chip">Útěk před TNT</span><span class="chip">Lucky Tower</span></div></div>
-</div></div></section>
+<section id="minihry" class="alt"><div class="wrap">
+ <div class="reveal"><div class="kicker">Přes 20 miniher</div><h2>Na co máš chuť?</h2><p class="lead">Minihry jsou rozdělené do kategorií stejně jako ve hře.</p></div>
+ <div class="gcat" id="gcat"></div>
+</div></section>
 
-<section id="jak-hrat"><div class="wrap">
-<h2>Jak se <span>připojit</span></h2>
-<p class="lead">Za minutu jsi na Marsu.</p>
-<div class="steps">
-<div class="step"><h3>Spusť Minecraft Java 1.21.11</h3><p>Jdi do Multiplayer → Přidat server.</p></div>
-<div class="step"><h3>Vlož IP adresu</h3><p>Zkopíruj IP nahoře tlačítkem a vlož ji do pole „Adresa serveru".</p></div>
-<div class="step"><h3>Povol resource pack</h3><p>Díky němu uvidíš ikonky, 3D modely a ranky.</p></div>
-<div class="step"><h3>Hraj!</h3><p>Klikni na kompas v lobby a vyber minihru. Nezapomeň na /odmena 🎁</p></div>
-</div></div></section>
+<section id="pripojit"><div class="wrap">
+ <div class="reveal"><div class="kicker">Za minutu na Marsu</div><h2>Jak se připojit</h2><p class="lead">Čtyři kroky a můžeš hrát.</p></div>
+ <div class="steps">
+  <div class="st reveal"><div class="fi"><svg class="ic"><use href="#i-game"/></svg></div><h3>Spusť Minecraft</h3><p>Java Edition 1.21.11 → Multiplayer → Přidat server.</p></div>
+  <div class="st reveal"><div class="fi"><svg class="ic"><use href="#i-copy"/></svg></div><h3>Vlož IP adresu</h3><p>Zkopíruj IP tlačítkem nahoře a vlož ji do „Adresa serveru".</p></div>
+  <div class="st reveal"><div class="fi"><svg class="ic"><use href="#i-download"/></svg></div><h3>Povol resource pack</h3><p>Uvidíš vlastní ikonky, 3D modely a ranky.</p></div>
+  <div class="st reveal"><div class="fi"><svg class="ic"><use href="#i-play"/></svg></div><h3>Hraj!</h3><p>Kompas v lobby otevře minihry. Nezapomeň na /odmena.</p></div>
+ </div>
+ <div class="cta-box reveal">
+  <svg class="planet" viewBox="0 0 200 200" aria-hidden="true"><circle cx="100" cy="100" r="96" fill="url(#pg)"/></svg>
+  <div><h2>Připraven na start?</h2><p style="color:var(--muted);margin-top:8px">Zkopíruj IP a přistaň na Marsu.</p></div>
+  <button class="btn" onclick="copyIp()" style="font-size:16px;padding:15px 26px"><svg class="ic"><use href="#i-copy"/></svg>Kopírovat IP</button>
+ </div>
+</div></section>
 
-<footer><div class="wrap">© <span id="y"></span> SquareStar · AdrrexStudio · Nejsme spojeni s Mojang ani Microsoft.</div></footer>
-<div class="modal" id="modal" onclick="if(event.target===this)this.classList.remove('on')"><div class="mbox" id="mbox"></div></div>
-<div class="toast" id="toast">IP zkopírována ✔</div>
+<footer><div class="wrap"><span>© <span id="y"></span> SquareStar · vytvořilo AdrrexStudio</span><span>Nejsme spojeni s Mojang Studios ani Microsoft.</span></div></footer>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeM()"><div class="mbox" id="mbox"></div></div>
+<div class="toast" id="toast"><svg class="ic"><use href="#i-check"/></svg>IP zkopírována</div>
+
 <script>
 /* ====== NASTAVENÍ ======
    API_URL: když web běží přímo z pluginu (http://ip:8123), nech prázdné "".
@@ -184,48 +312,66 @@ let data=null,tab="xpTotal";
 $('y').textContent=new Date().getFullYear();
 (function(){const ip=SERVER_IP||(location.protocol.startsWith("http")&&location.hostname?location.hostname:"");if(ip)$('ip').textContent=ip})();
 
+const CATS=[
+ {t:"PvP",i:"sword",c:["#ff3b2f","#5a0c08"],g:["1v1","Všichni proti všem","5v5","10v10","Sumo"]},
+ {t:"Bojové",i:"shield",c:["#ff8a1f","#5e2706"],g:["BedWars","EggWars","The Bridge","AnniRun","Duels","SkyWars","UHC Run","Zombies"]},
+ {t:"Schovávací",i:"eye",c:["#a66bff","#2e1258"],g:["Schovka","Vrah mezi námi","Stavitelská bitva"]},
+ {t:"Závodní",i:"flag",c:["#3ddc84","#0b4a2a"],g:["Parkour","Only Up","Dropper","Rover závod","Speedrun","Beat"]},
+ {t:"Zábavné",i:"smile",c:["#5ee7ff","#0b3f52"],g:["Spleef","Útěk před TNT","Lucky Tower"]}];
+const word=n=>n===1?"hra":n<5?"hry":"her";
+$('gcat').innerHTML=CATS.map((k,n)=>`<div class="gc reveal"><div class="top"><svg class="bgp" viewBox="0 0 200 130" preserveAspectRatio="none"><defs><linearGradient id="cg${n}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${k.c[0]}"/><stop offset="1" stop-color="${k.c[1]}"/></linearGradient></defs><rect width="200" height="130" fill="url(#cg${n})"/>${Array.from({length:7},(_,j)=>{const x=(j*41+n*23)%185,y=(j*29+n*37)%100,s=8+(j%3)*7;return `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="2" fill="#fff" opacity="0.${1+j%2}" transform="rotate(${j*23} ${x} ${y})"/>`}).join("")}<path d="M0 108 Q50 92 100 104 T200 98 V130 H0Z" fill="#0d060566"/></svg><div class="gi"><svg class="ic"><use href="#i-${k.i}"/></svg></div></div><div class="bd"><h3>${k.t}</h3><div class="cnt">${k.g.length} ${word(k.g.length)}</div><div class="chips">${k.g.map(x=>`<span class="chip">${x}</span>`).join("")}</div></div></div>`).join("");
+
 function face(p,size){
-  if(!p.skin)return `<div class="face ph" style="width:${size}px;height:${size}px;font-size:${size/2}px">${esc((p.name||"?")[0].toUpperCase())}</div>`;
+  if(!p.skin)return `<div class="face ph" style="width:${size}px;height:${size}px;font-size:${Math.round(size/2.4)}px">${esc((p.name||"?")[0].toUpperCase())}</div>`;
   const u=esc(p.skin),bs=size*8;
   return `<div class="face" style="width:${size}px;height:${size}px;background-image:url('${u}');background-size:${bs}px ${bs}px;background-position:-${size}px -${size}px"><i style="background-image:url('${u}');background-size:${bs}px ${bs}px;background-position:-${size*5}px -${size}px"></i></div>`;
 }
-function rank(p){return `<span class="rk" style="color:${esc(p.rankColor)}">${esc(p.rank)}</span>`}
-
+function rank(p){return `<span class="rk" style="color:${esc(p.rankColor)};background:${esc(p.rankColor)}1f">${esc(p.rank)}</span>`}
 function renderPlayers(){
   const box=$('players');
   if(!data){box.innerHTML='<div class="empty">Server je teď offline nebo web není napojený na plugin.</div>';return}
-  if(!data.players.length){box.innerHTML='<div class="empty">Zrovna nikdo nehraje. Buď první! 🚀</div>';return}
-  box.innerHTML=data.players.map((p,i)=>`<div class="pl" onclick="show('on',${i})">${face(p,52)}<div style="flex:1;min-width:0">
-   <div class="nm">${esc(p.name)}${rank(p)}</div>
-   <div class="meta">✦ Level ${p.level} · ⏱ ${time(p.minutes)} · 🎮 ${esc(p.playing)}</div>
+  if(!data.players.length){box.innerHTML='<div class="empty">Zrovna nikdo nehraje. Buď první, kdo přistane!</div>';return}
+  box.innerHTML=data.players.map((p,i)=>`<div class="pl" onclick="show('on',${i})">${face(p,54)}<div style="flex:1;min-width:0">
+   <div class="nm"><em>${esc(p.name)}</em>${rank(p)}</div>
+   <div class="sm"><span>Level ${p.level}</span><span>${time(p.minutes)}</span><span>${esc(p.playing)}</span></div>
    <div class="xpbar"><div style="width:${Math.min(100,p.xp/p.xpNeed*100)}%"></div></div></div></div>`).join("");
 }
-function val(p,k){return k==="xpTotal"?"✦ "+p.level:k==="minutes"?time(p.minutes):p[k]}
+function val(p,k){return k==="xpTotal"?"Lv "+p.level:k==="minutes"?time(p.minutes):p[k]}
 function renderTop(){
-  const box=$('lb'),l=data&&data.top?data.top[tab]:null;
-  if(!l||!l.length){box.innerHTML='<div class="empty">Zatím tu nikdo není.</div>';return}
-  box.innerHTML=l.map((p,i)=>`<div class="row" style="cursor:pointer" onclick="show('top',${i})"><div class="pos">${i+1}.</div>${face(p,36)}<div><b>${esc(p.name)}</b>${rank(p)}</div><div class="v">${val(p,tab)}</div></div>`).join("");
+  const l=data&&data.top?data.top[tab]:null;
+  if(!l||!l.length){$('podium').innerHTML='';$('lb').innerHTML='<div class="empty">Zatím tu nikdo není.</div>';return}
+  $('podium').innerHTML=[1,0,2].filter(i=>l[i]).map(i=>`<div class="pod p${i+1}" onclick="show('top',${i})"><div class="medal">${i+1}</div>${face(l[i],i===0?72:56)}<div class="n">${esc(l[i].name)}</div><div class="v">${val(l[i],tab)}</div></div>`).join("");
+  const rest=l.slice(3);
+  $('lb').innerHTML=rest.length?rest.map((p,j)=>`<div class="row" onclick="show('top',${j+3})"><div class="pos">${j+4}</div>${face(p,34)}<div class="nm"><em>${esc(p.name)}</em>${rank(p)}</div><div class="v">${val(p,tab)}</div></div>`).join(""):'<div class="empty">Další místa jsou volná – můžou být tvoje!</div>';
 }
 function show(src,i){
   const p=src==="on"?data.players[i]:data.top[tab][i];if(!p)return;
-  $('mbox').innerHTML=`<button class="x" onclick="$('modal').classList.remove('on')">×</button>${face(p,96)}
-   <h3 style="font-size:24px">${esc(p.name)}</h3><div style="margin-top:6px">${rank(p)}</div>
-   <div class="mgrid"><div><b>✦ ${p.level}</b><span>level</span></div><div><b>${time(p.minutes)}</b><span>odehraný čas</span></div>
+  $('mbox').innerHTML=`<button class="x" onclick="closeM()" aria-label="Zavřít"><svg class="ic" style="width:18px;height:18px"><use href="#i-x"/></svg></button>${face(p,96)}
+   <h3>${esc(p.name)}</h3><div style="margin-top:8px">${rank(p)}</div>
+   <div class="mgrid"><div><b>${p.level}</b><span>level</span></div><div><b>${time(p.minutes)}</b><span>odehraný čas</span></div>
    <div><b>${p.wins??0}</b><span>výhry</span></div><div><b>${p.kills??0}</b><span>zabití</span></div>
-   <div><b>${p.gamesPlayed??0}</b><span>odehrané hry</span></div><div><b>${p.playing?esc(p.playing):"offline"}</b><span>právě</span></div></div>`;
+   <div><b>${p.gamesPlayed??0}</b><span>odehrané hry</span></div><div><b style="font-size:14px">${p.playing?esc(p.playing):"offline"}</b><span>právě</span></div></div>`;
   $('modal').classList.add('on');
 }
+function closeM(){$('modal').classList.remove('on')}
+document.addEventListener('keydown',e=>{if(e.key==="Escape")closeM()});
 async function load(){
   try{
     const r=await fetch((API_URL||"")+"/api/status",{cache:"no-store"});
     if(!r.ok)throw 0;data=await r.json();
-    $('dot').classList.add('on');$('livetxt').textContent=`Online · ${data.online}/${data.max} hráčů`;
+    $('dot').classList.add('on');$('livetxt').textContent=`Server online · ${data.online}/${data.max} hráčů`;
     $('sOnline').textContent=data.online;$('sGames').textContent=data.games;$('sReg').textContent=data.registered??"–";$('sTps').textContent=data.tps;
   }catch(e){data=null;$('dot').classList.remove('on');$('livetxt').textContent="Server je offline";["sOnline","sGames","sReg","sTps"].forEach(k=>$(k).textContent="–")}
   renderPlayers();renderTop();
 }
 $('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.k;document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('act',x===b));renderTop()});
 function copyIp(){const t=$('ip').textContent;const done=()=>{const x=$('toast');x.classList.add('on');setTimeout(()=>x.classList.remove('on'),1800)};try{navigator.clipboard.writeText(t).then(done,done)}catch(e){done()}}
+(function(){const c=$('stars'),x=c.getContext('2d');let s=[];function rs(){c.width=c.offsetWidth*devicePixelRatio;c.height=c.offsetHeight*devicePixelRatio;s=Array.from({length:160},()=>({x:Math.random()*c.width,y:Math.random()*c.height*.8,r:Math.random()*1.3*devicePixelRatio+.3,p:Math.random()*6}))}
+ rs();addEventListener('resize',rs);const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+ (function f(t){x.clearRect(0,0,c.width,c.height);for(const a of s){x.globalAlpha=.3+.7*Math.abs(Math.sin(a.p+(still?0:t/1400)));x.fillStyle="#fff";x.beginPath();x.arc(a.x,a.y,a.r,0,7);x.fill()}if(!still)requestAnimationFrame(f)})(0)})();
+addEventListener('scroll',()=>$('nav').classList.toggle('sc',scrollY>20),{passive:true});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 load();setInterval(load,10000);
 </script>
 </body>

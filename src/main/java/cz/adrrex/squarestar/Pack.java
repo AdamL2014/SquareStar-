@@ -38,9 +38,17 @@ public final class Pack implements Listener {
         return u.equals(HUD_DEFAULT) ? u + "?v=" + pl.getPluginMeta().getVersion() : u;
     }
 
+    private final java.util.Map<UUID, Integer> differ = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<UUID, Long> joined = new java.util.concurrent.ConcurrentHashMap<>();
+
     public void lobbyHud(Player p, boolean lobby) {
         if (!pl.getConfig().getBoolean("resource-pack.enabled", true) || Ranks.bedrock(p)) return;
+        if (System.currentTimeMillis() - joined.getOrDefault(p.getUniqueId(), 0L) < 20_000) return;   // po připojení nic nepřepínat (pack se teprve načítá)
         boolean on = hudOn.contains(p.getUniqueId());
+        // přepnout až když stav vydrží 3 s – krátké teleporty (lobby -> čekárna -> ...) nespustí zbytečné načítání
+        if (lobby == on) { differ.remove(p.getUniqueId()); return; }
+        if (differ.merge(p.getUniqueId(), 1, Integer::sum) < 3) return;
+        differ.remove(p.getUniqueId());
         if (lobby && !on) {
             hudOn.add(p.getUniqueId());
             p.addResourcePack(HUD_ID, hudUrl(), hudHash, null, false);
@@ -50,7 +58,7 @@ public final class Pack implements Listener {
         }
     }
 
-    @EventHandler public void quit(org.bukkit.event.player.PlayerQuitEvent e) { hudOn.remove(e.getPlayer().getUniqueId()); }
+    @EventHandler public void quit(org.bukkit.event.player.PlayerQuitEvent e) { hudOn.remove(e.getPlayer().getUniqueId()); differ.remove(e.getPlayer().getUniqueId()); joined.remove(e.getPlayer().getUniqueId()); }
 
     /** stáhne pack a spočítá SHA-1 (na pozadí, neblokuje server) */
     public void refresh() {
@@ -74,7 +82,20 @@ public final class Pack implements Listener {
 
     public void send(Player p) {
         if (!pl.getConfig().getBoolean("resource-pack.enabled", true) || Ranks.bedrock(p)) return;
-        p.setResourcePack(ID, url(), hash, Component.text("SquareStar potřebuje resource pack (ranky, 3D modely, Země)"), pl.getConfig().getBoolean("resource-pack.required", true));
+        joined.put(p.getUniqueId(), System.currentTimeMillis());
+        // hlavní pack + lobby HUD pack NAJEDNOU = jen jedno načítací okno při připojení
+        try {
+            var main = net.kyori.adventure.resource.ResourcePackInfo.resourcePackInfo(ID, URI.create(url()), hash == null ? "" : hex(hash));
+            var hud = net.kyori.adventure.resource.ResourcePackInfo.resourcePackInfo(HUD_ID, URI.create(hudUrl()), hudHash == null ? "" : hex(hudHash));
+            p.sendResourcePacks(net.kyori.adventure.resource.ResourcePackRequest.resourcePackRequest()
+                    .packs(main, hud).replace(true)
+                    .required(pl.getConfig().getBoolean("resource-pack.required", true))
+                    .prompt(Component.text("SquareStar potřebuje resource pack (ranky, 3D modely, Země)")).build());
+            hudOn.add(p.getUniqueId());
+        } catch (Exception ex) {
+            pl.getLogger().warning("Resource packy nejdou poslat spolu (" + ex.getMessage() + "), posilam jen hlavni.");
+            p.setResourcePack(ID, url(), hash, Component.text("SquareStar potřebuje resource pack (ranky, 3D modely, Země)"), pl.getConfig().getBoolean("resource-pack.required", true));
+        }
     }
 
     @EventHandler public void join(PlayerJoinEvent e) { send(e.getPlayer()); }
