@@ -18,12 +18,13 @@ public final class Levels {
     public int level(Player p) { int x = xp(p), l = 1; while (x >= need(l)) { x -= need(l); l++; } return l; }
     private int rest(Player p) { int x = xp(p), l = 1; while (x >= need(l)) { x -= need(l); l++; } return x; }
 
-    public void add(Player p, int amount, String why) {
+    public void add(Player p, int amount, String why) { add(p, amount, why, false); }
+    public void add(Player p, int amount, String why, boolean quiet) {
         int before = level(p);
         p.getPersistentDataContainer().set(XP, PersistentDataType.INTEGER, xp(p) + amount);
         int after = level(p);
         if (pl.stats != null) pl.stats.setXp(p, xp(p));
-        U.msg(p, "&b+" + amount + " XP &7(" + why + ") &8| &7Level &e" + after + " &8(" + rest(p) + "/" + need(after) + ")");
+        if (!quiet) U.msg(p, "&b+" + amount + " XP &7(" + why + ") &8| &7Level &e" + after + " &8(" + rest(p) + "/" + need(after) + ")");
         if (after > before) {
             U.title(p, "&6&l✦ LEVEL " + after + " ✦", "&eNový level! Jen tak dál!");
             p.playSound(p.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1, 1.4f);

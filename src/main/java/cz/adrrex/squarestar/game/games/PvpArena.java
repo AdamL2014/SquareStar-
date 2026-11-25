@@ -223,6 +223,7 @@ public final class PvpArena extends Game {
         int left = lives.getOrDefault(p, 1) - 1;
         lives.put(p, left);
         if (left <= 0) { reward(killer, p); eliminate(p, killer); return; }
+        creditKill(killer, p);
         broadcast("&c⚔ " + p.getName() + " &7padl" + (killer != null && killer != p ? " &8(" + killer.getName() + ")" : "") + " &7- zbývá &c" + left + " ❤");
         U.reset(p, GameMode.ADVENTURE);
         p.teleport(spot(rnd.nextInt(8), 8));

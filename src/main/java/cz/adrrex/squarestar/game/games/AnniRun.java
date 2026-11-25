@@ -201,7 +201,7 @@ public final class AnniRun extends Game implements org.bukkit.event.Listener {
 
     @Override public void onDeath(Player p, Player killer) {
         if (!alive.contains(p)) return;
-        if (killer != null && killer != p && pl.stats != null) pl.stats.add(killer, "kills", 1);
+        creditKill(killer, p);
         broadcast("&c☠ " + p.getName() + (killer != null && killer != p ? " &7byl zabit hráčem &c" + killer.getName() : " &7spadl"));
         U.reset(p, GameMode.SURVIVAL);
         pl.applyGravity(p);

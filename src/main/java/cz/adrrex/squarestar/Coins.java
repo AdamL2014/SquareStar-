@@ -26,8 +26,10 @@ public final class Coins implements CommandExecutor, Listener {
 
     public int get(Player p) { return p.getPersistentDataContainer().getOrDefault(KEY, PersistentDataType.INTEGER, 0); }
     public void set(Player p, int n) { p.getPersistentDataContainer().set(KEY, PersistentDataType.INTEGER, Math.max(0, n)); if (pl.stats != null) pl.stats.setCoins(p, Math.max(0, n)); }
-    public void add(Player p, int n, String why) {
+    public void add(Player p, int n, String why) { add(p, n, why, false); }
+    public void add(Player p, int n, String why, boolean quiet) {
         set(p, get(p) + n);
+        if (quiet) return;
         U.msg(p, "&6+" + n + " " + ICON + " mincí &7(" + why + ") &8| &7Máš: &6" + get(p));
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.7f);
     }

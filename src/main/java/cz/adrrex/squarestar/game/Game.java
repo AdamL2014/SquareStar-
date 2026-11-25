@@ -2,6 +2,7 @@ package cz.adrrex.squarestar.game;
 
 import cz.adrrex.squarestar.SquareStar;
 import cz.adrrex.squarestar.U;
+import cz.adrrex.squarestar.Lang;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -38,6 +39,7 @@ public abstract class Game {
     public int map;
     final Map<Player, Integer> votes = new HashMap<>();
     private BukkitTask ticker;
+    private int stuck;   // hlídač: hra zaseknutá při stavbě se po čase sama zruší
     private boolean destroyed;
 
     protected Game(GameManager gm, GameType type, int slot) {
@@ -246,6 +248,8 @@ public abstract class Game {
         players.remove(p);
         votes.remove(p);
         teamPick.remove(p);
+        kit.remove(p);
+        lastHit.remove(p);
         boolean wasAlive = alive.remove(p);
         gm.map.remove(p);
         gm.hideName(p, false);
@@ -307,7 +311,7 @@ public abstract class Game {
         for (String s : lines) o.getScore(cz.adrrex.squarestar.Lang.t(p, s).replace('&', '§')).setScore(sc--);
     }
     /** obrázky ranků nad hlavami i během hry */
-    private static void copyRankTeams(org.bukkit.scoreboard.Scoreboard sb) {
+    public static void copyRankTeams(org.bukkit.scoreboard.Scoreboard sb) {
         var main = Bukkit.getScoreboardManager().getMainScoreboard();
         for (var t : main.getTeams()) {
             if (!t.getName().startsWith("ss_")) continue;
@@ -336,7 +340,11 @@ public abstract class Game {
                 }
                 if (--countdown < 0) begin();
             }
-            case STARTING -> { for (Player p : players) U.bar(p, "&eStavím mapu &6" + mapName() + "&e..."); }
+            case STARTING -> {
+                for (Player p : players) U.bar(p, "&eStavím mapu &6" + mapName() + "&e...");
+                if (++stuck > 90) { pl.getLogger().warning("Hra " + type + " #" + slot + " se zasekla pri stavbe mapy - rusim"); broadcast("&cMapu se nepodařilo postavit, hra se ruší. Zkus to znovu."); destroy(); }
+            }
+            case BUILDING -> { if (++stuck > 120) { pl.getLogger().warning("Hra " + type + " #" + slot + " se zasekla v cekarne - rusim"); broadcast("&cČekárnu se nepodařilo připravit. Zkus to znovu."); destroy(); } }
             case RUNNING -> {
                 time++;
                 second();
@@ -363,7 +371,7 @@ public abstract class Game {
             remap = new EnumMap<>(Material.class);
             for (int k = 2; k + 1 < t.length; k += 2) remap.put((Material) t[k], (Material) t[k + 1]);
         } else map = best;
-        state = State.STARTING;
+        state = State.STARTING; stuck = 0;
         if (m.size() > 1) broadcast("&eVyhrála mapa: &6&l" + mapName + " &7(" + count[best] + " hlasů)");
         U.BlockQueue.Builder b = pl.queue.builder(w);
         b.remap = remap;
@@ -387,17 +395,60 @@ public abstract class Game {
             U.sound(p, Sound.ENTITY_ENDER_DRAGON_GROWL, 1.6f);
         }
         start();
+        // krátké „jak se hraje" pro všechny na začátku (jako na velkých serverech)
+        for (Player p : players) {
+            p.sendMessage(U.c("&8&m                                             "));
+            p.sendMessage(U.c(Lang.t(p, "  &6&l✦ " + type.display.toUpperCase(java.util.Locale.ROOT) + " ✦")));
+            p.sendMessage(U.c(Lang.t(p, "  &f" + type.desc)));
+            p.sendMessage(U.c(Lang.t(p, "  &7Mapa: &a" + mapName() + "  &7Hráčů: &a" + players.size() + "  &7Hodně štěstí!")));
+            p.sendMessage(U.c("&8&m                                             "));
+        }
+    }
+
+    /** hráč vyřazený ze hry může rovnou jít do další (nemusí čekat na konec) */
+    public void leaveEliminated(Player p) {
+        if (state == State.RUNNING && players.contains(p) && !alive.contains(p)) {
+            int kills = gameKills.getOrDefault(p, 0);
+            if (pl.stats != null) pl.stats.add(p, "games", 1);
+            if (pl.coins != null) pl.coins.add(p, 5 + Math.min(kills, 10) * 2, "odehraná hra");
+            pl.levels.add(p, 25 + Math.min(kills, 10) * 5, "odehraná hra", true);
+            if (pl.progress != null) pl.progress.track(p, "games", type, 1);
+            gm.lastType.put(p.getUniqueId(), type);
+        }
+        removePlayer(p, true);
+    }
+
+    // ---------------- zabití: statistiky, úkoly, série, první krev ----------------
+    protected final Map<Player, Integer> gameKills = new HashMap<>();
+    private final Map<Player, Integer> killStreak = new HashMap<>();
+    private boolean firstBlood;
+    /** připíše zabití (statistiky, denní úkoly, série). Hry s oživením to volají při každém zabití. */
+    public void creditKill(Player killer, Player victim) {
+        if (victim != null) killStreak.remove(victim);
+        if (killer == null || killer == victim || !players.contains(killer)) return;
+        if (pl.stats != null) pl.stats.add(killer, "kills", 1);
+        if (pl.progress != null) pl.progress.track(killer, "kills", type, 1);
+        int total = gameKills.merge(killer, 1, Integer::sum);
+        int s = killStreak.merge(killer, 1, Integer::sum);
+        killer.playSound(killer.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 0.8f + Math.min(s, 8) * 0.12f);
+        U.bar(killer, "&c⚔ +1 zabití &8| &7celkem &f" + total + (s >= 2 ? " &8| &6série " + s : ""));
+        if (!firstBlood) { firstBlood = true; broadcast("&4&l🩸 PRVNÍ KREV! &f" + killer.getName() + " &7vyřadil &f" + (victim == null ? "?" : victim.getName())); if (pl.coins != null) pl.coins.add(killer, 5, "první krev", true); }
+        if (s == 3) broadcast("&6⚡ " + killer.getName() + " &7má sérii &c3 zabití&7!");
+        else if (s == 5) { broadcast("&c&l🔥 " + killer.getName() + " je NEZASTAVITELNÝ! &7(5 v řadě)"); if (pl.coins != null) pl.coins.add(killer, 10, "série 5", true); }
+        else if (s == 10) { broadcast("&d&l☄ " + killer.getName() + " je LEGENDÁRNÍ! &7(10 v řadě)"); if (pl.coins != null) pl.coins.add(killer, 25, "série 10", true); }
     }
 
     public void eliminate(Player p, Player killer) {
         if (!alive.remove(p)) return;
-        if (killer != null && killer != p && pl.stats != null) pl.stats.add(killer, "kills", 1);
+        creditKill(killer, p);
         if (killer != null && killer != p) broadcast("&c☠ " + p.getName() + " &7byl vyřazen hráčem &c" + killer.getName());
         else broadcast("&c☠ " + p.getName() + " &7je vyřazen!");
         if (canDrop()) for (ItemStack it : p.getInventory().getContents()) if (it != null && it.getType() != Material.AIR) w.dropItemNaturally(p.getLocation(), it);
         U.reset(p, GameMode.SPECTATOR);
         p.teleport(specSpot());
-        U.title(p, "&c&lVYŘAZEN", "&7Sleduješ hru. &e/ss leave &7= odejít");
+        U.title(p, "&c&lVYŘAZEN", "&7Sleduješ hru. &e/ss znovu &7= další hra");
+        p.sendMessage(U.c(Lang.t(p, U.PREFIX + "&7Vyřazen. ")).append(U.c(Lang.t(p, "&a&l[▶ HRÁT ZNOVU]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/ss znovu")))
+                .append(U.c("  ")).append(U.c(Lang.t(p, "&7[Sledovat dál]"))));
         checkWin();
     }
 
@@ -416,8 +467,16 @@ public abstract class Game {
             U.sound(p, win ? Sound.UI_TOAST_CHALLENGE_COMPLETE : Sound.ENTITY_WITHER_DEATH, 1f);
         }
         if (pl.stats != null) for (Player p : players) { pl.stats.add(p, "games", 1); if (winners.contains(p)) pl.stats.add(p, "wins", 1); }
-        if (pl.coins != null) for (Player p : players) pl.coins.add(p, winners.contains(p) ? 25 : 5, winners.contains(p) ? "výhra" : "odehraná hra");
-        for (Player p : players) pl.levels.add(p, winners.contains(p) ? 100 : 25, winners.contains(p) ? "výhra" : "odehraná hra");
+        for (Player p : players) {
+            boolean win = winners.contains(p);
+            int kills = gameKills.getOrDefault(p, 0);
+            int coins = (win ? 25 : 5) + Math.min(kills, 10) * 2, xp = (win ? 100 : 25) + Math.min(kills, 10) * 5;
+            if (pl.coins != null) pl.coins.add(p, coins, win ? "výhra" : "odehraná hra", true);
+            pl.levels.add(p, xp, win ? "výhra" : "odehraná hra", true);
+            summary(p, win, names, kills, coins, xp);
+            if (pl.progress != null) { pl.progress.track(p, "games", type, 1); if (win) pl.progress.track(p, "wins", type, 1); }
+            gm.lastType.put(p.getUniqueId(), type);
+        }
         String keyType = pl.getConfig().getString("win-reward.key", "common");
         int amount = pl.getConfig().getInt("win-reward.amount", 1);
         for (Player p : winners) {
@@ -443,6 +502,28 @@ public abstract class Game {
             for (Player p : new ArrayList<>(players)) removePlayer(p, true);
             destroy();
         }, 120);
+    }
+
+    /** přehledné shrnutí na konci hry (místo spousty zpráv) + tlačítko „Hrát znovu" */
+    private void summary(Player p, boolean win, String names, int kills, int coins, int xp) {
+        String line = "&8&m                                             ";
+        p.sendMessage(U.c(line));
+        p.sendMessage(U.c(Lang.t(p, "  " + (win ? "&6&l✦ VÍTĚZSTVÍ ✦" : "&c&lKONEC HRY") + " &8– &e" + type.display)));
+        p.sendMessage(U.c(Lang.t(p, "  &7Mapa: &f" + mapName() + "  &7Čas: &f" + fmt(time))));
+        p.sendMessage(U.c(Lang.t(p, "  &7Vítěz: &a" + names)));
+        if (!gameKills.isEmpty()) {
+            List<Map.Entry<Player, Integer>> top = new ArrayList<>(gameKills.entrySet());
+            top.sort((a, b) -> b.getValue() - a.getValue());
+            StringBuilder sb = new StringBuilder("  &7Nejvíc zabití: ");
+            String[] medal = {"&6①", "&7②", "&c③"};
+            for (int i = 0; i < Math.min(3, top.size()); i++) sb.append(medal[i]).append(" &f").append(top.get(i).getKey().getName()).append(" &8(").append(top.get(i).getValue()).append(") ");
+            p.sendMessage(U.c(Lang.t(p, sb.toString())));
+        }
+        p.sendMessage(U.c(Lang.t(p, "  &7Tvoje zabití: &c" + kills + "  &7Odměna: &6+" + coins + " " + cz.adrrex.squarestar.Coins.ICON + " &b+" + xp + " XP")));
+        p.sendMessage(U.c(Lang.t(p, "  ")).append(U.c(Lang.t(p, "&a&l[▶ HRÁT ZNOVU]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/ss znovu"))
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c(Lang.t(p, "&eDalší hra: " + type.display))))).append(U.c("   "))
+                .append(U.c(Lang.t(p, "&e&l[✦ JINÁ HRA]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/ss hry"))));
+        p.sendMessage(U.c(line));
     }
 
     void destroy() {

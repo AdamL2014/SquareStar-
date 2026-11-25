@@ -328,6 +328,7 @@ public final class Lobby implements Listener {
         if (pl.xmas.active()) place(p, 7, Gui.skin(p, U.tag(U.item(Material.RED_SHULKER_BOX, 1, "&c&l❄ Adventní kalendář &7(pravý klik)", "&7Každý den dárek a mince!"), "ss_lobby", "advent"), "gift_red"));
         else if (U.tagOf(p.getInventory().getItem(7), "ss_lobby") != null) p.getInventory().setItem(7, null);
         place(p, 2, Gui.skin(p, U.tag(U.item(Material.PLAYER_HEAD, 1, "&d&l♥ Přátelé &7(pravý klik)", "&7Kdo je online a co hraje"), "ss_lobby", "friends"), "icon_menu_friends"));
+        place(p, 3, pl.progress.menuItem(p));
         place(p, 4, Gui.skin(p, pl.cosmetics.menuItem(), "icon_menu_cosmetics"));
         place(p, 5, U.tag(U.item(Material.JUKEBOX, 1, "&d&l♫ Hudba &7(pravý klik)", "&7Vyber skladbu a sestav playlist"), "ss_lobby", "music"));
         place(p, 6, Gui.skin(p, U.tag(U.item(Material.WRITABLE_BOOK, 1, "&e&l✦ Co je nové &7(pravý klik)", "&7Novinky na serveru"), "ss_lobby", "news"), "icon_menu_news"));
@@ -375,6 +376,7 @@ public final class Lobby implements Listener {
         else if (t.equals("news")) pl.news.open(e.getPlayer());
         else if (t.equals("shop")) pl.coins.open(e.getPlayer());
         else if (t.equals("music")) e.getPlayer().performCommand("hudba");
+        else if (t.equals("profile")) pl.progress.open(e.getPlayer());
         else if (t.equals("advent")) pl.xmas.openCalendar(e.getPlayer());
     }
 

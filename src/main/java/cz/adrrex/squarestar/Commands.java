@@ -18,6 +18,7 @@ public final class Commands implements CommandExecutor, TabCompleter {
         Player p = s instanceof Player pp ? pp : null;
         switch (sub) {
             case "hry", "menu" -> { if (p != null) pl.games.openMenu(p); }
+            case "znovu", "again" -> { if (p != null) pl.games.again(p); }
             case "join" -> {
                 if (p == null || a.length < 2) { s.sendMessage(U.tc(s, "&c/ss join <" + String.join("|", names()) + ">")); return true; }
                 try { pl.games.join(p, GameType.valueOf(a[1].toUpperCase(Locale.ROOT))); }
@@ -134,7 +135,7 @@ public final class Commands implements CommandExecutor, TabCompleter {
     @Override public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {
         List<String> out = new ArrayList<>();
         if (a.length == 1) {
-            out.addAll(List.of("hry", "join", "leave", "lobby", "lag", "top", "novinky", "pratele", "redstone", "jazyk"));
+            out.addAll(List.of("hry", "znovu", "join", "leave", "lobby", "lag", "top", "novinky", "pratele", "redstone", "jazyk"));
             if (s.hasPermission("squarestar.admin")) out.addAll(List.of("give", "key", "rebuild", "fx", "rank", "update"));
         } else if (a.length == 2 && a[0].equalsIgnoreCase("join")) out.addAll(names());
         else if (a.length == 2 && a[0].equalsIgnoreCase("give")) out.addAll(pl.items.defs.keySet());

@@ -1,5 +1,5 @@
 name: SquareStar
-version: 4.6.65
+version: 4.6.66
 main: cz.adrrex.squarestar.SquareStar
 api-version: '1.21.11'
 author: AdrrexStudio
@@ -107,6 +107,23 @@ commands:
   tphere:
     description: Teleport hrace k sobe (tym)
     aliases: [s]
+  profil:
+    description: Tvuj profil - denni odmena, ukoly, uspechy
+    aliases: [profile]
+  odmena:
+    description: Denni odmena
+    aliases: [daily]
+  ukoly:
+    description: Denni ukoly
+    aliases: [quests]
+  uspechy:
+    description: Uspechy
+    aliases: [achievements]
+  parta:
+    description: Parta - hrajte spolu
+    aliases: [party]
+  pc:
+    description: Chat party
 permissions:
   squarestar.admin:
     description: Admin prikazy (give, key, rebuildlobby)

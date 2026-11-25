@@ -43,6 +43,30 @@ public final class GameManager implements Listener {
     }
 
     public GameManager(SquareStar pl) { this.pl = pl; }
+    /** poslední hra hráče (tlačítko „Hrát znovu") */
+    public final Map<UUID, GameType> lastType = new HashMap<>();
+    public int activePlayers() { return map.size(); }
+
+    /** rychlá hra: kde čeká nejvíc lidí (a je volno), jinak náhodná hra pro 1–2 hráče */
+    public void quick(Player p) {
+        Game best = games.stream().filter(x -> x.joinable() && !x.event && !x.players.isEmpty()).max(java.util.Comparator.comparingInt(x -> x.players.size())).orElse(null);
+        if (best != null) { join(p, best.type); return; }
+        List<GameType> easy = java.util.Arrays.stream(GameType.values()).filter(t -> t.min <= 2).toList();
+        join(p, easy.get(new java.util.Random().nextInt(easy.size())));
+    }
+
+    /** /ss znovu: z konce hry (nebo z lobby) rovnou do další hry stejného typu */
+    public void again(Player p) {
+        GameType t = lastType.get(p.getUniqueId());
+        Game g = map.get(p);
+        if (g != null) {
+            if (g.state != Game.State.ENDING && g.alive.contains(p)) { U.msg(p, "&cHra ještě běží. &7Odejít: &e/ss leave"); return; }
+            t = g.type;
+            if (g.state == Game.State.ENDING) g.removePlayer(p, true); else g.leaveEliminated(p);
+        }
+        if (t == null) { openMenu(p); return; }
+        join(p, t);
+    }
 
     public int playingPvp() { int n = 0; for (GameType t : GameType.PVP_MODES) n += playing(t); return n; }
     public int playing(GameType t) { return games.stream().filter(x -> x.type == t).mapToInt(x -> x.players.size()).sum(); }
@@ -83,6 +107,11 @@ public final class GameManager implements Listener {
                 "&7Celkem hraje: &e" + playingPvp(), "", "&e▶ Klikni pro výběr režimu");
         if (!cz.adrrex.squarestar.Ranks.bedrock(p)) { var im = pv.getItemMeta(); im.setItemModel(new org.bukkit.NamespacedKey("squarestar", "icon_pvp")); pv.setItemMeta(im); }
         h.inv.setItem(20, U.tag(pv, "ss_menu", "PVPMENU"));
+        h.inv.setItem(4, U.tag(U.item(Material.FIREWORK_ROCKET, 1, "&a&l▶ Rychlá hra", "&7Pošle tě do hry, kde už", "&7čekají hráči (nebo do náhodné).", "", "&e▶ Klikni a hraj"), "ss_menu", "QUICK"));
+        if (pl.progress != null) h.inv.setItem(36, U.tag(U.item(Material.WRITABLE_BOOK, 1, "&e&l★ Denní úkoly a profil", "&7Splněno dnes: &a" + pl.progress.questsDone(p) + "&7/3",
+                pl.progress.dailyReady(p) ? "&a&lDenní odměna čeká!" : "&7Denní odměna: vyzvednuta", "", "&e▶ Klikni pro otevření"), "ss_menu", "PROFILE"));
+        GameType last = lastType.get(p.getUniqueId());
+        if (last != null) h.inv.setItem(42, U.tag(U.item(last.icon, 1, "&b&l↻ Hrát znovu", "&7Naposledy: &f" + last.display, "", "&e▶ Klikni pro připojení"), "ss_menu", last.name()));
         int[] pos = {21, 22, 23, 24};
         Cat[] cats = Cat.values();
         for (int i = 0; i < cats.length; i++) {
@@ -139,7 +168,13 @@ public final class GameManager implements Listener {
 
     public void join(Player p, GameType type) {
         if (map.containsKey(p)) { U.msg(p, "&cUž jsi ve hře. &7Napiš &e/ss leave"); return; }
-        Game g = games.stream().filter(x -> x.type == type && x.joinable() && !x.event).findFirst().orElse(null);
+        var party = pl.party == null ? null : pl.party.of(p);
+        if (party != null && !pl.party.isLeader(p)) { U.msg(p, "&cHru vybírá vůdce party. &7Chceš hrát sám? &e/parta odejit"); return; }
+        List<Player> crew = new ArrayList<>();
+        if (party != null) for (Player m : pl.party.followers(p)) if (!map.containsKey(m) && m.getWorld() == pl.mars) crew.add(m);
+        int need = 1 + crew.size();
+        if (need > type.max) { U.msg(p, "&cTvoje parta (" + need + ") je moc velká pro tuhle hru (max " + type.max + ")."); return; }
+        Game g = games.stream().filter(x -> x.type == type && x.joinable() && !x.event && x.players.size() + need <= x.maxPlayers()).findFirst().orElse(null);
         if (g == null) {
             int max = pl.getConfig().getInt("max-arenas", 6);
             if (games.size() >= max) { U.msg(p, "&cVšechny arény jsou plné, zkus to za chvíli."); return; }
@@ -152,6 +187,14 @@ public final class GameManager implements Listener {
         pl.lobby.saveInv(p);
         map.put(p, g);
         g.addPlayer(p);
+        lastType.put(p.getUniqueId(), type);
+        for (Player m : crew) {
+            if (!g.joinable()) { U.msg(m, "&cHra je plná, nevešel ses."); continue; }
+            U.msg(m, "&9Parta jde hrát &e" + type.display + "&9!");
+            pl.lobby.saveInv(m);
+            map.put(m, g);
+            g.addPlayer(m);
+        }
     }
 
     /** vytvoří soukromou hru pro event (nikdo se nepřipojí přes menu) */
@@ -241,6 +284,8 @@ public final class GameManager implements Listener {
             p.closeInventory();
             if (t.equals("PVPMENU")) openPvp(p);
             else if (t.equals("BACK")) openMenu(p);
+            else if (t.equals("PROFILE")) pl.progress.open(p);
+            else if (t.equals("QUICK")) quick(p);
             else if (t.startsWith("CAT:")) openCat(p, Cat.valueOf(t.substring(4)));
             else if (t.equals("REDSTONE")) { if (cz.adrrex.squarestar.RedstoneWeek.voting()) pl.redstone.visit(p, 0); else pl.redstone.join(p); }
             else join(p, GameType.valueOf(t));

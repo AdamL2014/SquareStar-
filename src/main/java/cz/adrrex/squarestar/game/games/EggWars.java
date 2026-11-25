@@ -264,6 +264,7 @@ public final class EggWars extends Game implements Listener {
             }
         }
         if (t == null || !t.bedAlive) { eliminate(p, killer); return; }
+        creditKill(killer, p);
         broadcast(t.color + p.getName() + " &7zemřel" + (killer != null && killer != p ? " &8(" + killer.getName() + ")" : "") + " &7- oživení za 5 s");
         respawning.add(p);
         U.reset(p, GameMode.SPECTATOR);

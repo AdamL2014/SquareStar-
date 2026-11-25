@@ -42,6 +42,8 @@ public final class SquareStar extends JavaPlugin {
     public Ai ai;
     public Meteors meteors;
     public Coins coins;
+    public Progress progress;
+    public Party party;
     public Christmas xmas;
 
     @Override public void onEnable() {
@@ -94,6 +96,9 @@ public final class SquareStar extends JavaPlugin {
         events = new EventManager(this); pm.registerEvents(events, this);
         beggar = new Beggar(this); pm.registerEvents(beggar, this);
         new Hud(this);
+        progress = new Progress(this); pm.registerEvents(progress, this); bind("profil", progress, null); bind("odmena", progress, null); bind("ukoly", progress, null); bind("uspechy", progress, null);
+        party = new Party(this); pm.registerEvents(party, this); bind("parta", party, party); bind("pc", party, null);
+        pm.registerEvents(new LobbyBoard(this), this);
         ai = new Ai(this); pm.registerEvents(ai, this); bind("ai", ai, ai);
         updater = new Updater(this);
         bind("pritel", friends, friends);

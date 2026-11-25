@@ -143,7 +143,7 @@ public final class Duels extends Game {
         Player win = killer != null && killer != p && alive.contains(killer) ? killer : players.stream().filter(x -> x != p && alive.contains(x)).findFirst().orElse(null);
         if (win == null) { end(List.of()); return; }
         int s = wins.merge(win, 1, Integer::sum);
-        if (pl.stats != null) pl.stats.add(win, "kills", 1);
+        creditKill(win, p);
         broadcast("&6" + win.getName() + " &evyhrál kolo &7(" + scoreLine() + "&7)");
         for (Player x : players) { x.setInvulnerable(true); U.sound(x, Sound.ENTITY_PLAYER_LEVELUP, 1.2f); }
         p.setHealth(1);

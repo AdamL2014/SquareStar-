@@ -25,7 +25,8 @@ public final class CmdGuard implements Listener {
     private static final Set<String> PLAYER = Set.of("ss", "squarestar", "hry", "games", "play", "hrat", "spawn", "lobby", "hub", "l", "emote", "e", "emoty",
             "pritel", "friend", "friends", "f", "pratele", "event", "fly", "letat", "novinky", "news", "changelog", "msg", "tell", "w", "m", "whisper", "zprava",
             "r", "reply", "odpoved", "ping", "pravidla", "rules", "discord", "dc", "afk", "online", "players", "hraci", "report", "nahlasit", "helpop", "pomoc",
-            "stats", "statistiky", "top", "kosmetika", "cosmetics", "emoji", "jazyk", "lang", "language", "help", "napoveda", "list", "hudba", "music", "mince", "coins", "obchod", "shop", "penize", "advent", "kalendar", "vanoce", "ai", "adrrexai", "ask", "ptej");
+            "stats", "statistiky", "top", "kosmetika", "cosmetics", "emoji", "jazyk", "lang", "language", "help", "napoveda", "list", "hudba", "music", "mince", "coins", "obchod", "shop", "penize", "advent", "kalendar", "vanoce", "ai", "adrrexai", "ask", "ptej",
+            "profil", "profile", "odmena", "daily", "ukoly", "quests", "uspechy", "achievements", "parta", "party", "pc");
     private static final Set<String> SECRET = Set.of("plugins", "pl", "version", "ver", "about", "icanhasbukkit", "?", "paper", "spigot", "bukkit", "timings", "spark", "geyser", "floodgate", "viaversion", "viaver", "vvbukkit", "viabackwards", "grim", "grimac");
     /** zakázané pro úplně všechny včetně majitele (příkaz hostingu, který hráče vyhodí z SquareStaru) */
     private static final Set<String> ALL_BLOCKED = Set.of("mk");
@@ -61,7 +62,8 @@ public final class CmdGuard implements Listener {
     /** vlastní nápověda místo výpisu všech příkazů serveru */
     public static void help(Player p) {
         String[] l = {"&6&l✦ SQUARESTAR – PŘÍKAZY ✦",
-                "&e/hry &7– menu miniher", "&e/spawn &7nebo &e/lobby &7– zpět na Mars", "&e/ss leave &7– opustit hru",
+                "&e/hry &7– menu miniher  &8| &e/ss znovu &7– hrát znovu", "&e/profil &7– profil, &e/odmena &7– denní odměna, &e/ukoly &7– denní úkoly, &e/uspechy",
+                "&e/parta <hráč> &7– hrát s kamarády  &8| &e/pc &7– chat party", "&e/spawn &7nebo &e/lobby &7– zpět na Mars", "&e/ss leave &7– opustit hru",
                 "&e/pritel &7– přátelé  &8| &e/msg &7a &e/r &7– soukromé zprávy",
                 "&e/kosmetika &7– stopy, čepice, balónky  &8| &e/emote &7– emoty",
                 "&e/stats &7– statistiky  &8| &e/novinky &7– co je nové",
