@@ -37,6 +37,10 @@ public final class Stats {
     public void add(Player p, String field, int n) { String key = k(p, field); y.set(key, y.getInt(key) + n); dirty = true; }
     public void setCoins(Player p, int c) { y.set(k(p, "coins"), c); dirty = true; }
     public void setXp(Player p, int xp) { y.set(k(p, "xp"), xp); dirty = true; }
+    public void setStr(Player p, String field, String v) { y.set(k(p, field), v); dirty = true; }
+    public void setInt(Player p, String field, int v) { y.set(k(p, field), v); dirty = true; }
+    /** všechna uložená data (pro web) – volat jen z hlavního vlákna */
+    public YamlConfiguration raw() { return y; }
     public int get(Player p, String field) { return y.getInt(p.getUniqueId() + "." + field); }
 
     public void save() {

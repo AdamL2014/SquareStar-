@@ -44,6 +44,7 @@ public final class SquareStar extends JavaPlugin {
     public Coins coins;
     public Progress progress;
     public Party party;
+    public Web web;
     public Christmas xmas;
 
     @Override public void onEnable() {
@@ -99,6 +100,7 @@ public final class SquareStar extends JavaPlugin {
         progress = new Progress(this); pm.registerEvents(progress, this); bind("profil", progress, null); bind("odmena", progress, null); bind("ukoly", progress, null); bind("uspechy", progress, null);
         party = new Party(this); pm.registerEvents(party, this); bind("parta", party, party); bind("pc", party, null);
         pm.registerEvents(new LobbyBoard(this), this);
+        web = new Web(this);
         ai = new Ai(this); pm.registerEvents(ai, this); bind("ai", ai, ai);
         updater = new Updater(this);
         bind("pritel", friends, friends);
@@ -151,7 +153,7 @@ public final class SquareStar extends JavaPlugin {
         return f;
     }
 
-    @Override public void onDisable() { if (skins != null) skins.shutdown(); if (games != null) games.stopAll(); if (stats != null) stats.save(); }
+    @Override public void onDisable() { if (web != null) web.stop(); if (skins != null) skins.shutdown(); if (games != null) games.stopAll(); if (stats != null) stats.save(); }
 
     private void bind(String name, org.bukkit.command.CommandExecutor ex, org.bukkit.command.TabCompleter tc) {
         var c = getCommand(name);

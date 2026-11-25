@@ -110,6 +110,17 @@ public final class Skins implements Listener {
     }
 
     /** hlava hráče (podle jména) jako kus textu – i s vrstvou „hat“ */
+    /** adresa PNG skinu (textures.minecraft.net) pro web; null = skin neznáme */
+    public String skinUrl(String name) {
+        String[] t = cache.get(key(name));
+        if (t == null || t[0] == null || t[0].isEmpty()) return null;
+        try {
+            String json = new String(java.util.Base64.getDecoder().decode(t[0]), java.nio.charset.StandardCharsets.UTF_8);
+            var o = com.google.gson.JsonParser.parseString(json).getAsJsonObject().getAsJsonObject("textures").getAsJsonObject("SKIN");
+            return o == null ? null : o.get("url").getAsString().replace("http://", "https://");
+        } catch (Exception e) { return null; }
+    }
+
     public Component head(String name, UUID id) {
         var b = ObjectContents.playerHead().name(name).hat(true);
         String[] t = cache.get(key(name));

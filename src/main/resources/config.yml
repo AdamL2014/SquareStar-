@@ -115,6 +115,12 @@ resource-pack:
   url: "https://raw.githubusercontent.com/AdamL2014/SquareStar-/main/download/SquareStar-ResourcePack.zip"
 
 # Ochrana proti multiúčtům: max hráčů z jedné IP adresy (0 = vypnuto). Owner a Admin mají výjimku.
+# Web serveru přímo v pluginu: http://<ip-serveru>:<port>/  (živí hráči, levely, odehraný čas, skiny, žebříčky)
+# Port musí být na hostingu otevřený (MineKeep: přidat port / "Network" v panelu). Vypnutí: enabled: false
+web:
+  enabled: true
+  port: 8123
+
 security:
   max-per-ip: 5
 

@@ -20,7 +20,8 @@ import java.util.*;
 public final class Basic implements CommandExecutor, TabCompleter, Listener {
     private final SquareStar pl;
     private final Map<UUID, UUID> lastMsg = new HashMap<>();
-    private final Set<UUID> afk = new HashSet<>(), vanished = new HashSet<>();
+    private final Set<UUID> afk = new HashSet<>();
+    public static final Set<UUID> vanished = new HashSet<>();
     private final Map<UUID, Long> reportCd = new HashMap<>();
 
     public Basic(SquareStar pl) { this.pl = pl; }

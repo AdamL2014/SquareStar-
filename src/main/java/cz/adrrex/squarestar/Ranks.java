@@ -121,7 +121,7 @@ public final class Ranks implements Listener {
 
     /** celková doba hraní na serveru, např. „12 h 5 min“ nebo „35 min“ */
     @SuppressWarnings("deprecation")
-    static String playtime(Player p, boolean shortForm) {
+    public static String playtime(Player p, boolean shortForm) {
         long min = p.getStatistic(org.bukkit.Statistic.PLAY_ONE_MINUTE) / 1200L;   // ticky -> minuty
         long h = min / 60, m = min % 60;
         if (shortForm) return h > 0 ? h + "h " + m + "m" : m + "m";

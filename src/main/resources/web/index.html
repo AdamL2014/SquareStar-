@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SquareStar – Minihry na Marsu</title>
+<meta name="description" content="SquareStar – Minecraft minihry na Marsu s nízkou gravitací. Java 1.21.11.">
+<style>
+:root{--bg:#120806;--bg2:#1d0d09;--card:#24110c;--line:#3a1d14;--text:#f6e9e3;--muted:#b99a8e;--orange:#ff8a1f;--red:#ff2d2d;--gold:#ffc83d}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:10;background:rgba(18,8,6,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{font-weight:900;letter-spacing:2px;font-size:20px}
+.logo b{color:var(--orange)} .logo i{font-style:normal;color:var(--red)}
+nav ul{display:flex;gap:24px;list-style:none}
+nav ul a{color:var(--muted);font-weight:600;font-size:15px;transition:color .2s}
+nav ul a:hover{color:var(--text)}
+.hero{position:relative;min-height:min(88vh,820px);display:flex;align-items:center;text-align:center;overflow:hidden}
+.stars,.stars:after{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 20% 30%,#fff8,transparent),radial-gradient(1px 1px at 70% 20%,#fff6,transparent),radial-gradient(2px 2px at 40% 70%,#fff5,transparent),radial-gradient(1px 1px at 85% 60%,#fff7,transparent),radial-gradient(1px 1px at 10% 80%,#fff6,transparent),radial-gradient(1px 1px at 55% 45%,#fff4,transparent)}
+.stars:after{content:"";transform:translate(13%,9%) scale(1.3);opacity:.6}
+.planet{position:absolute;width:900px;height:900px;border-radius:50%;left:50%;bottom:-640px;transform:translateX(-50%);background:radial-gradient(circle at 50% 20%,#d2551f,#8e2a10 45%,#3a0f06 75%);box-shadow:0 -30px 140px #ff5a1f55,inset 0 30px 80px #ffb36b44}
+.planet:before,.planet:after{content:"";position:absolute;border-radius:50%;background:#00000030}
+.planet:before{width:120px;height:50px;left:30%;top:12%}
+.planet:after{width:70px;height:30px;left:62%;top:8%}
+.hero .wrap{position:relative;z-index:2;padding-bottom:120px}
+.tag{display:inline-block;border:1px solid var(--line);background:#ffffff08;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--muted);margin-bottom:22px}
+h1{font-size:clamp(52px,11vw,120px);font-weight:900;letter-spacing:4px;line-height:1;background:linear-gradient(90deg,var(--orange),var(--red));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 6px 30px #ff4d1f55)}
+.sub{font-size:clamp(17px,2.4vw,22px);color:var(--muted);margin:18px auto 34px;max-width:620px}
+.ipbox{display:inline-flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 20px}
+.ipbox code{font-size:18px;font-weight:700;color:var(--gold)}
+.btn{border:0;cursor:pointer;font-weight:800;font-size:15px;padding:12px 22px;border-radius:10px;background:linear-gradient(90deg,var(--orange),var(--red));color:#fff;transition:transform .15s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px #ff4d1f55}
+.ver{margin-top:14px;font-size:14px;color:var(--muted)}
+section{padding:90px 0}
+h2{font-size:clamp(30px,5vw,44px);font-weight:900;margin-bottom:10px}
+h2 span{color:var(--orange)}
+.lead{color:var(--muted);margin-bottom:40px;max-width:640px}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;transition:transform .2s,border-color .2s}
+.card:hover{transform:translateY(-4px);border-color:var(--orange)}
+.card .ico{font-size:32px;margin-bottom:10px}
+.card h3{font-size:19px;margin-bottom:6px}
+.card p{color:var(--muted);font-size:15px}
+.games{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cat h3{color:var(--gold);font-size:14px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:#ffffff0a;border:1px solid var(--line);padding:6px 12px;border-radius:8px;font-size:14px;font-weight:600}
+.steps{counter-reset:s}
+.step{position:relative;padding-left:64px;margin-bottom:26px}
+.step:before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-weight:900;background:linear-gradient(135deg,var(--orange),var(--red))}
+.step h3{font-size:18px} .step p{color:var(--muted)}
+footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:14px;text-align:center}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--card);border:1px solid var(--orange);padding:12px 20px;border-radius:10px;transition:transform .3s;z-index:20}
+.toast.on{transform:translateX(-50%) translateY(0)}
+
+.live{display:inline-flex;align-items:center;gap:8px;margin-top:18px;font-weight:700;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:#666}
+.dot.on{background:#3ddc6b;box-shadow:0 0 0 0 #3ddc6b99;animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px #3ddc6b00}100%{box-shadow:0 0 0 0 #3ddc6b00}}
+.statrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:34px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;text-align:center}
+.stat b{display:block;font-size:34px;font-weight:900;color:var(--orange)}
+.stat span{color:var(--muted);font-size:14px}
+.players{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.pl{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;cursor:pointer;transition:border-color .2s,transform .2s}
+.pl:hover{border-color:var(--orange);transform:translateY(-2px)}
+.face{position:relative;flex:none;border-radius:8px;overflow:hidden;image-rendering:pixelated;background-repeat:no-repeat;background-color:#3a1d14}
+.face i{position:absolute;inset:0;background-repeat:no-repeat;image-rendering:pixelated}
+.face.ph{display:grid;place-items:center;font-weight:900;color:#fff;background:linear-gradient(135deg,var(--orange),var(--red))}
+.pl .nm{font-weight:800;font-size:17px}
+.rk{font-size:12px;font-weight:800;padding:2px 8px;border-radius:6px;background:#ffffff10;margin-left:6px}
+.meta{color:var(--muted);font-size:13px;margin-top:2px}
+.xpbar{height:6px;background:#ffffff12;border-radius:6px;margin-top:8px;overflow:hidden}
+.xpbar div{height:100%;background:linear-gradient(90deg,#55ffff,#3a8bff)}
+.empty{color:var(--muted);padding:30px;text-align:center;border:1px dashed var(--line);border-radius:14px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--muted);padding:9px 16px;border-radius:10px;font-weight:700;cursor:pointer}
+.tabs button.act{color:#fff;border-color:var(--orange);background:#ff8a1f22}
+.lb{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.row{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.pos{width:30px;font-weight:900;font-size:18px;color:var(--muted)}
+.row:nth-child(1) .pos{color:#ffc83d}.row:nth-child(2) .pos{color:#d6d6d6}.row:nth-child(3) .pos{color:#e08a4a}
+.row .v{margin-left:auto;font-weight:900;color:var(--orange)}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:30;padding:20px}
+.modal.on{display:flex}
+.mbox{background:var(--bg2);border:1px solid var(--orange);border-radius:18px;padding:26px;max-width:420px;width:100%;text-align:center;position:relative}
+.mbox .face{margin:0 auto 12px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.mgrid div{background:var(--card);border-radius:10px;padding:10px}
+.mgrid b{display:block;font-size:20px;color:var(--orange)}
+.mgrid span{font-size:12px;color:var(--muted)}
+.x{position:absolute;right:14px;top:10px;background:none;border:0;color:var(--muted);font-size:24px;cursor:pointer}
+@media(max-width:640px){nav ul{display:none}.planet{width:600px;height:600px;bottom:-430px}}
+</style>
+</head>
+<body>
+<nav><div class="wrap"><a class="logo" href="#"><b>SQUARE</b><i>STAR</i></a>
+<ul><li><a href="#online">Online</a></li><li><a href="#zebricky">Žebříčky</a></li><li><a href="#o-serveru">O serveru</a></li><li><a href="#minihry">Minihry</a></li><li><a href="#jak-hrat">Jak hrát</a></li></ul></div></nav>
+
+<header class="hero"><div class="stars"></div><div class="planet"></div>
+<div class="wrap">
+<div class="tag">🪐 Minecraft server · Java 1.21.11</div>
+<h1>SQUARESTAR</h1>
+<p class="sub">Minihry na Marsu s nízkou gravitací. Skákej výš, bojuj s kamarády a sbírej odměny každý den.</p>
+<div class="ipbox"><code id="ip">IP_ADRESA_SERVERU</code><button class="btn" onclick="copyIp()">Kopírovat IP</button></div>
+<p class="ver">Verze: Java 1.21.11</p>
+<div class="live"><span class="dot" id="dot"></span><span id="livetxt">Načítám stav serveru…</span></div>
+</div></header>
+
+<section id="online"><div class="wrap">
+<h2>Právě <span>online</span></h2>
+<p class="lead">Živá data přímo ze serveru. Obnovuje se samo každých 10 sekund. Klikni na hráče pro detail.</p>
+<div class="statrow">
+<div class="stat"><b id="sOnline">–</b><span>hráčů online</span></div>
+<div class="stat"><b id="sGames">–</b><span>běžících her</span></div>
+<div class="stat"><b id="sReg">–</b><span>hráčů celkem</span></div>
+<div class="stat"><b id="sTps">–</b><span>TPS (výkon, max 20)</span></div>
+</div>
+<div class="players" id="players"><div class="empty">Načítám…</div></div>
+</div></section>
+
+<section id="zebricky" class="games"><div class="wrap">
+<h2>🏆 <span>Žebříčky</span></h2>
+<p class="lead">Nejlepší hráči SquareStaru. Dostaneš se sem i ty?</p>
+<div class="tabs" id="tabs">
+<button data-k="xpTotal" class="act">★ Level</button><button data-k="wins">♛ Výhry</button><button data-k="kills">⚔ Zabití</button><button data-k="minutes">⏱ Odehraný čas</button><button data-k="gamesPlayed">✪ Hry</button>
+</div>
+<div class="lb" id="lb"><div class="empty">Načítám…</div></div>
+</div></section>
+
+<section id="o-serveru"><div class="wrap">
+<h2>Proč <span>SquareStar</span>?</h2>
+<p class="lead">Vlastní pluginy na míru od AdrrexStudio. Žádné kopie, všechno je udělané pro Mars.</p>
+<div class="grid">
+<div class="card"><div class="ico">🚀</div><h3>Nízká gravitace</h3><p>Na Marsu skáčeš dál a výš. Každá minihra se díky tomu hraje jinak.</p></div>
+<div class="card"><div class="ico">🎁</div><h3>Denní odměny a úkoly</h3><p>Každý den nová odměna, 3 úkoly a sérii odměníme vzácným klíčem.</p></div>
+<div class="card"><div class="ico">👥</div><h3>Parta</h3><p>Pozvi kamarády přes /parta a jděte do hry všichni spolu.</p></div>
+<div class="card"><div class="ico">🏆</div><h3>Levely a úspěchy</h3><p>XP za hry a výhry, 13 úspěchů, žebříčky nejlepších hráčů.</p></div>
+<div class="card"><div class="ico">✨</div><h3>Kosmetika</h3><p>Stopy, čepice, balónky, emoty a bedny s odměnami za mince.</p></div>
+<div class="card"><div class="ico">🤖</div><h3>AdrrexAI</h3><p>Vlastní AI pomocník přímo ve hře. Zeptej se ho na cokoli.</p></div>
+</div></div></section>
+
+<section id="minihry" class="games"><div class="wrap">
+<h2>Přes <span>20 miniher</span></h2>
+<p class="lead">Rozdělené do kategorií, ať hned najdeš, na co máš chuť.</p>
+<div class="grid">
+<div class="card cat"><h3>⚔ PvP</h3><div class="chips"><span class="chip">1v1</span><span class="chip">Všichni proti všem</span><span class="chip">5v5</span><span class="chip">10v10</span><span class="chip">Sumo</span></div></div>
+<div class="card cat"><h3>🛡 Bojové</h3><div class="chips"><span class="chip">BedWars</span><span class="chip">EggWars</span><span class="chip">The Bridge</span><span class="chip">AnniRun</span><span class="chip">Duels</span><span class="chip">SkyWars</span><span class="chip">UHC Run</span><span class="chip">Zombies</span></div></div>
+<div class="card cat"><h3>🕵 Schovávací</h3><div class="chips"><span class="chip">Schovka</span><span class="chip">Vrah mezi námi</span><span class="chip">Stavitelská bitva</span></div></div>
+<div class="card cat"><h3>🏁 Závodní</h3><div class="chips"><span class="chip">Parkour</span><span class="chip">Only Up</span><span class="chip">Dropper</span><span class="chip">Rover závod</span><span class="chip">Speedrun</span><span class="chip">Beat</span></div></div>
+<div class="card cat"><h3>🎉 Zábavné</h3><div class="chips"><span class="chip">Spleef</span><span class="chip">Útěk před TNT</span><span class="chip">Lucky Tower</span></div></div>
+</div></div></section>
+
+<section id="jak-hrat"><div class="wrap">
+<h2>Jak se <span>připojit</span></h2>
+<p class="lead">Za minutu jsi na Marsu.</p>
+<div class="steps">
+<div class="step"><h3>Spusť Minecraft Java 1.21.11</h3><p>Jdi do Multiplayer → Přidat server.</p></div>
+<div class="step"><h3>Vlož IP adresu</h3><p>Zkopíruj IP nahoře tlačítkem a vlož ji do pole „Adresa serveru".</p></div>
+<div class="step"><h3>Povol resource pack</h3><p>Díky němu uvidíš ikonky, 3D modely a ranky.</p></div>
+<div class="step"><h3>Hraj!</h3><p>Klikni na kompas v lobby a vyber minihru. Nezapomeň na /odmena 🎁</p></div>
+</div></div></section>
+
+<footer><div class="wrap">© <span id="y"></span> SquareStar · AdrrexStudio · Nejsme spojeni s Mojang ani Microsoft.</div></footer>
+<div class="modal" id="modal" onclick="if(event.target===this)this.classList.remove('on')"><div class="mbox" id="mbox"></div></div>
+<div class="toast" id="toast">IP zkopírována ✔</div>
+<script>
+/* ====== NASTAVENÍ ======
+   API_URL: když web běží přímo z pluginu (http://ip:8123), nech prázdné "".
+   Když web nahraješ jinam, napiš sem adresu pluginu, např. "http://123.45.67.89:8123".
+   SERVER_IP: IP, kterou hráči píšou do Minecraftu (prázdné = použije se adresa webu). */
+const API_URL = "";
+const SERVER_IP = "";
+
+const $=id=>document.getElementById(id);
+const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const time=m=>{m=+m||0;const h=Math.floor(m/60);return h>0?h+" h "+(m%60)+" min":(m%60)+" min"};
+let data=null,tab="xpTotal";
+$('y').textContent=new Date().getFullYear();
+(function(){const ip=SERVER_IP||(location.protocol.startsWith("http")&&location.hostname?location.hostname:"");if(ip)$('ip').textContent=ip})();
+
+function face(p,size){
+  if(!p.skin)return `<div class="face ph" style="width:${size}px;height:${size}px;font-size:${size/2}px">${esc((p.name||"?")[0].toUpperCase())}</div>`;
+  const u=esc(p.skin),bs=size*8;
+  return `<div class="face" style="width:${size}px;height:${size}px;background-image:url('${u}');background-size:${bs}px ${bs}px;background-position:-${size}px -${size}px"><i style="background-image:url('${u}');background-size:${bs}px ${bs}px;background-position:-${size*5}px -${size}px"></i></div>`;
+}
+function rank(p){return `<span class="rk" style="color:${esc(p.rankColor)}">${esc(p.rank)}</span>`}
+
+function renderPlayers(){
+  const box=$('players');
+  if(!data){box.innerHTML='<div class="empty">Server je teď offline nebo web není napojený na plugin.</div>';return}
+  if(!data.players.length){box.innerHTML='<div class="empty">Zrovna nikdo nehraje. Buď první! 🚀</div>';return}
+  box.innerHTML=data.players.map((p,i)=>`<div class="pl" onclick="show('on',${i})">${face(p,52)}<div style="flex:1;min-width:0">
+   <div class="nm">${esc(p.name)}${rank(p)}</div>
+   <div class="meta">✦ Level ${p.level} · ⏱ ${time(p.minutes)} · 🎮 ${esc(p.playing)}</div>
+   <div class="xpbar"><div style="width:${Math.min(100,p.xp/p.xpNeed*100)}%"></div></div></div></div>`).join("");
+}
+function val(p,k){return k==="xpTotal"?"✦ "+p.level:k==="minutes"?time(p.minutes):p[k]}
+function renderTop(){
+  const box=$('lb'),l=data&&data.top?data.top[tab]:null;
+  if(!l||!l.length){box.innerHTML='<div class="empty">Zatím tu nikdo není.</div>';return}
+  box.innerHTML=l.map((p,i)=>`<div class="row" style="cursor:pointer" onclick="show('top',${i})"><div class="pos">${i+1}.</div>${face(p,36)}<div><b>${esc(p.name)}</b>${rank(p)}</div><div class="v">${val(p,tab)}</div></div>`).join("");
+}
+function show(src,i){
+  const p=src==="on"?data.players[i]:data.top[tab][i];if(!p)return;
+  $('mbox').innerHTML=`<button class="x" onclick="$('modal').classList.remove('on')">×</button>${face(p,96)}
+   <h3 style="font-size:24px">${esc(p.name)}</h3><div style="margin-top:6px">${rank(p)}</div>
+   <div class="mgrid"><div><b>✦ ${p.level}</b><span>level</span></div><div><b>${time(p.minutes)}</b><span>odehraný čas</span></div>
+   <div><b>${p.wins??0}</b><span>výhry</span></div><div><b>${p.kills??0}</b><span>zabití</span></div>
+   <div><b>${p.gamesPlayed??0}</b><span>odehrané hry</span></div><div><b>${p.playing?esc(p.playing):"offline"}</b><span>právě</span></div></div>`;
+  $('modal').classList.add('on');
+}
+async function load(){
+  try{
+    const r=await fetch((API_URL||"")+"/api/status",{cache:"no-store"});
+    if(!r.ok)throw 0;data=await r.json();
+    $('dot').classList.add('on');$('livetxt').textContent=`Online · ${data.online}/${data.max} hráčů`;
+    $('sOnline').textContent=data.online;$('sGames').textContent=data.games;$('sReg').textContent=data.registered??"–";$('sTps').textContent=data.tps;
+  }catch(e){data=null;$('dot').classList.remove('on');$('livetxt').textContent="Server je offline";["sOnline","sGames","sReg","sTps"].forEach(k=>$(k).textContent="–")}
+  renderPlayers();renderTop();
+}
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;tab=b.dataset.k;document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('act',x===b));renderTop()});
+function copyIp(){const t=$('ip').textContent;const done=()=>{const x=$('toast');x.classList.add('on');setTimeout(()=>x.classList.remove('on'),1800)};try{navigator.clipboard.writeText(t).then(done,done)}catch(e){done()}}
+load();setInterval(load,10000);
+</script>
+</body>
+</html>
