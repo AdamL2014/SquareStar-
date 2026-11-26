@@ -61,7 +61,7 @@ public final class LobbyFx implements Listener {
 
     public void spawnAll() {
         for (Entity e : pl.mars.getEntities()) if (e.getScoreboardTags().contains(TAG)) e.remove();
-        title.clear(); rocket.clear(); trail.clear(); spinners.clear(); npcs.clear();
+        onlineTxt = null; title.clear(); rocket.clear(); trail.clear(); spinners.clear(); npcs.clear();
         if (pl.getConfig().getBoolean("lobby.fx.title", true)) spawnTitle();
         if (pl.getConfig().getBoolean("lobby.fx.rocket", true)) spawnRocket();
         spawnNpcs();
@@ -73,6 +73,7 @@ public final class LobbyFx implements Listener {
 
     // ---------------- obří 3D nápis ----------------
     private final List<TextDisplay> logo = new ArrayList<>(); private float logoScale;
+    private TextDisplay onlineTxt; private int shownOnline = -1;
     private void spawnTitle() {
         if (!"blocks".equalsIgnoreCase(pl.getConfig().getString("lobby.fx.title-style", "model"))) { spawnLogo(); return; }
         String text = pl.getConfig().getString("lobby.title", "SQUARESTAR").toUpperCase(Locale.ROOT);
@@ -119,6 +120,35 @@ public final class LobbyFx implements Listener {
             }
         }
         logoWave(0);
+        spawnOnline();
+    }
+
+    /** živý počet hráčů přímo pod obřím nápisem (obnovuje se každou sekundu) */
+    private void spawnOnline() {
+        float s = logoScale, k = (float) pl.getConfig().getDouble("lobby.fx.online-size", 0.3);
+        float off = (float) pl.getConfig().getDouble("lobby.fx.online-offset", -3.5) * s / 28f;
+        shownOnline = -1;
+        onlineTxt = pl.mars.spawn(titleCenter, TextDisplay.class, e -> {
+            e.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
+            e.setShadowed(true);
+            e.setBrightness(new Display.Brightness(15, 15));
+            e.setViewRange(8f);
+            e.setTeleportDuration(0);
+            e.setTransformation(new Transformation(new Vector3f(0, off, 0), new Quaternionf(), new Vector3f(s * k, s * k, s * k), new Quaternionf()));
+            e.addScoreboardTag(TAG); e.setPersistent(false);
+        });
+        updateOnline();
+    }
+    private void updateOnline() {
+        if (onlineTxt == null || !onlineTxt.isValid()) return;
+        int n = 0;
+        for (Player p : Bukkit.getOnlinePlayers()) if (!Basic.vanished.contains(p.getUniqueId())) n++;
+        if (n == shownOnline) return;
+        shownOnline = n;
+        onlineTxt.text(net.kyori.adventure.text.Component.text("● ", net.kyori.adventure.text.format.NamedTextColor.GREEN)
+                .append(net.kyori.adventure.text.Component.text(n, net.kyori.adventure.text.format.NamedTextColor.WHITE))
+                .append(net.kyori.adventure.text.Component.text(" ONLINE", net.kyori.adventure.text.format.NamedTextColor.GOLD))
+                .decorate(net.kyori.adventure.text.format.TextDecoration.BOLD));
     }
     /** písmena se vlní nahoru-dolů a lehce naklápějí, jako vlna */
     private void logoWave(double t) {
@@ -416,6 +446,7 @@ public final class LobbyFx implements Listener {
                 else m.setRotation((float) Math.toDegrees(Math.atan2(m.getLocation().getX(), -m.getLocation().getZ())), 0);
             }
             if (tick % 2 == 0) logoWave(tick * 0.12);
+            if (tick % 20 == 0) updateOnline();
             ambient();
             if (tick % 10 == 0 && !title.isEmpty()) {
                 phase += 0.55;
