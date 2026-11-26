@@ -31,18 +31,18 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
 
     private boolean staff(CommandSender s) { return !(s instanceof Player p) || p.isOp() || pl.ranks.of(p).admin || p.hasPermission("squarestar.helper"); }
     private boolean admin(CommandSender s) { return !(s instanceof Player p) || p.isOp() || p.hasPermission("squarestar.admin"); }
-    private void staffMsg(String m) { for (Player o : Bukkit.getOnlinePlayers()) if (staff(o)) o.sendMessage(U.c(m)); Bukkit.getConsoleSender().sendMessage(U.c(m)); }
+    private void staffMsg(String m) { for (Player o : Bukkit.getOnlinePlayers()) if (staff(o)) ChatFree.send(o, U.c(m)); Bukkit.getConsoleSender().sendMessage(U.c(m)); }
     private static String join(String[] a, int from) { return String.join(" ", Arrays.copyOfRange(a, from, a.length)); }
 
     @Override public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {
         Player p = s instanceof Player pp ? pp : null;
         String n = c.getName();
-        if (Arrays.asList(STAFF_CMDS).contains(n) && !staff(s)) { s.sendMessage(U.tc(s, "&cTenhle příkaz je jen pro tým serveru.")); return true; }
+        if (Arrays.asList(STAFF_CMDS).contains(n) && !staff(s)) { ChatFree.send(s, U.tc(s, "&cTenhle příkaz je jen pro tým serveru.")); return true; }
         switch (n) {
             case "msg" -> {
-                if (a.length < 2) { s.sendMessage(U.tc(s, "&e/msg <hráč> <zpráva>")); return true; }
+                if (a.length < 2) { ChatFree.send(s, U.tc(s, "&e/msg <hráč> <zpráva>")); return true; }
                 Player t = Bukkit.getPlayerExact(a[0]);
-                if (t == null || (vanished.contains(t.getUniqueId()) && !staff(s))) { s.sendMessage(U.tc(s, "&cHráč není online.")); return true; }
+                if (t == null || (vanished.contains(t.getUniqueId()) && !staff(s))) { ChatFree.send(s, U.tc(s, "&cHráč není online.")); return true; }
                 pm(s, t, join(a, 1));
             }
             case "r" -> {
@@ -56,7 +56,7 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
                 Player t = a.length > 0 ? Bukkit.getPlayerExact(a[0]) : p;
                 if (t == null) return true;
                 int ms = t.getPing();
-                s.sendMessage(U.tc(s, "&7Ping " + (t == p ? "" : t.getName() + " ") + ": " + (ms < 80 ? "&a" : ms < 180 ? "&e" : "&c") + ms + " ms"));
+                ChatFree.send(s, U.tc(s, "&7Ping " + (t == p ? "" : t.getName() + " ") + ": " + (ms < 80 ? "&a" : ms < 180 ? "&e" : "&c") + ms + " ms"));
             }
             case "pravidla" -> {
                 for (String r : pl.getConfig().getStringList("rules").isEmpty() ? List.of(
@@ -68,11 +68,11 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
                         "&e5. &fNesdílej osobní údaje (adresa, telefon...).",
                         "&e6. &fPoslouchej tým serveru.",
                         "&7Porušení = varování, kick nebo ban.") : pl.getConfig().getStringList("rules"))
-                    s.sendMessage(U.tc(s, p == null ? r : Lang.t(p, r)));
+                    ChatFree.send(s, U.tc(s, p == null ? r : Lang.t(p, r)));
             }
             case "discord" -> {
                 String d = pl.getConfig().getString("links.discord", "");
-                s.sendMessage(U.tc(s, d.isEmpty() ? "&7Discord zatím nemáme – sleduj &bvidriftvideo.netlify.app" : "&9&lDiscord: &f" + d)
+                ChatFree.send(s, U.tc(s, d.isEmpty() ? "&7Discord zatím nemáme – sleduj &bvidriftvideo.netlify.app" : "&9&lDiscord: &f" + d)
                         .clickEvent(d.isEmpty() ? null : net.kyori.adventure.text.event.ClickEvent.openUrl(d)));
             }
             case "afk" -> { if (p != null) setAfk(p, !afk.contains(p.getUniqueId())); }
@@ -80,10 +80,10 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
                 List<String> names = new ArrayList<>();
                 for (Player o : Bukkit.getOnlinePlayers()) if (!vanished.contains(o.getUniqueId()) || staff(s))
                     names.add(pl.ranks.of(o).color + o.getName() + (afk.contains(o.getUniqueId()) ? " &7(AFK)" : ""));
-                s.sendMessage(U.tc(s, "&6&lOnline (" + names.size() + "): &r" + String.join("&7, ", names)));
+                ChatFree.send(s, U.tc(s, "&6&lOnline (" + names.size() + "): &r" + String.join("&7, ", names)));
             }
             case "report" -> {
-                if (p == null || a.length < 2) { s.sendMessage(U.tc(s, "&e/report <hráč> <důvod>")); return true; }
+                if (p == null || a.length < 2) { ChatFree.send(s, U.tc(s, "&e/report <hráč> <důvod>")); return true; }
                 long now = System.currentTimeMillis();
                 if (now - reportCd.getOrDefault(p.getUniqueId(), 0L) < 60_000) { U.msg(p, "&cDalší report můžeš poslat za minutu."); return true; }
                 reportCd.put(p.getUniqueId(), now);
@@ -92,18 +92,18 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
                 U.msg(p, "&aDíky! Report jsme poslali týmu serveru.");
             }
             case "helpop" -> {
-                if (p == null || a.length == 0) { s.sendMessage(U.tc(s, "&e/helpop <otázka>")); return true; }
+                if (p == null || a.length == 0) { ChatFree.send(s, U.tc(s, "&e/helpop <otázka>")); return true; }
                 staffMsg("&b&l? HELPOP &f" + p.getName() + "&7: &f" + join(a, 0));
                 U.msg(p, "&aZpráva odeslána týmu. Brzy ti někdo odpoví.");
             }
             case "stats" -> { if (p != null) pl.stats.show(p); }
             case "kosmetika" -> { if (p != null && pl.games.of(p) == null) pl.cosmetics.open(p); }
-            case "emoji" -> s.sendMessage(U.c(Emojis.list()));
+            case "emoji" -> ChatFree.send(s, U.c(Emojis.list()));
             case "jazyk" -> { if (p != null) pl.intro.openLang(p); }
             case "hry" -> { if (p != null) pl.games.openMenu(p); }
             // ---------- tým ----------
             case "sc" -> {
-                if (a.length == 0) { s.sendMessage(U.tc(s, "&e/sc <zpráva> &7– chat jen pro tým")); return true; }
+                if (a.length == 0) { ChatFree.send(s, U.tc(s, "&e/sc <zpráva> &7– chat jen pro tým")); return true; }
                 staffMsg("&d&l[TÝM] &f" + s.getName() + "&7: &d" + join(a, 0));
             }
             case "vanish" -> {
@@ -114,21 +114,21 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
                 U.msg(p, on ? "&a&lNeviditelný &7– hráči tě nevidí." : "&7Jsi zase viditelný.");
             }
             case "gm" -> {
-                if (!admin(s) || p == null) { s.sendMessage(U.tc(s, "&cJen pro admina.")); return true; }
+                if (!admin(s) || p == null) { ChatFree.send(s, U.tc(s, "&cJen pro admina.")); return true; }
                 GameMode m = switch (a.length == 0 ? "" : a[0]) { case "1", "c" -> GameMode.CREATIVE; case "2", "a" -> GameMode.ADVENTURE; case "3", "sp" -> GameMode.SPECTATOR; default -> GameMode.SURVIVAL; };
                 p.setGameMode(m); U.msg(p, "&aRežim: &e" + m.name().toLowerCase(Locale.ROOT));
             }
             case "bc" -> {
-                if (!admin(s)) { s.sendMessage(U.tc(s, "&cJen pro admina.")); return true; }
-                if (a.length == 0) { s.sendMessage(U.tc(s, "&e/bc <zpráva>")); return true; }
+                if (!admin(s)) { ChatFree.send(s, U.tc(s, "&cJen pro admina.")); return true; }
+                if (a.length == 0) { ChatFree.send(s, U.tc(s, "&e/bc <zpráva>")); return true; }
                 String m = join(a, 0);
                 for (Player o : Bukkit.getOnlinePlayers()) {
-                    o.sendMessage(U.c("")); o.sendMessage(U.tc(o, "&c&l⚑ OZNÁMENÍ &8» &f" + m)); o.sendMessage(U.c(""));
+                    ChatFree.send(o, U.c("")); ChatFree.send(o, U.tc(o, "&c&l⚑ OZNÁMENÍ &8» &f" + m)); ChatFree.send(o, U.c(""));
                     o.playSound(o.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1.2f);
                 }
             }
             case "clearchat" -> {
-                for (Player o : Bukkit.getOnlinePlayers()) { if (!staff(o)) for (int i = 0; i < 100; i++) o.sendMessage(U.c("")); }
+                for (Player o : Bukkit.getOnlinePlayers()) { if (!staff(o)) for (int i = 0; i < 100; i++) ChatFree.send(o, U.c("")); }
                 U.all("&7Chat vyčistil &e" + s.getName());
             }
             case "heal" -> {
@@ -140,7 +140,7 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
             }
             case "tphere" -> {
                 Player t = a.length > 0 ? Bukkit.getPlayerExact(a[0]) : null;
-                if (p == null || t == null) { s.sendMessage(U.tc(s, "&e/tphere <hráč>")); return true; }
+                if (p == null || t == null) { ChatFree.send(s, U.tc(s, "&e/tphere <hráč>")); return true; }
                 t.teleport(p); U.msg(p, "&a" + t.getName() + " teleportován k tobě.");
             }
         }
@@ -149,11 +149,11 @@ public final class Basic implements CommandExecutor, TabCompleter, Listener {
 
     private void pm(CommandSender from, Player to, String msg) {
         String fn = from.getName();
-        from.sendMessage(U.tc(from, "&d&l✉ &7Ty &8→ &e" + to.getName() + "&8: &f" + msg));
-        to.sendMessage(U.tc(to, "&d&l✉ &e" + fn + " &8→ &7Ty&8: &f" + msg));
+        ChatFree.send(from, U.tc(from, "&d&l✉ &7Ty &8→ &e" + to.getName() + "&8: &f" + msg));
+        ChatFree.send(to, U.tc(to, "&d&l✉ &e" + fn + " &8→ &7Ty&8: &f" + msg));
         to.playSound(to.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.6f, 1.8f);
         if (from instanceof Player f) { lastMsg.put(to.getUniqueId(), f.getUniqueId()); lastMsg.put(f.getUniqueId(), to.getUniqueId()); }
-        if (afk.contains(to.getUniqueId())) from.sendMessage(U.tc(from, "&7(" + to.getName() + " je AFK)"));
+        if (afk.contains(to.getUniqueId())) ChatFree.send(from, U.tc(from, "&7(" + to.getName() + " je AFK)"));
     }
 
     private void setAfk(Player p, boolean on) {

@@ -104,8 +104,36 @@ public final class Emotes implements CommandExecutor, TabCompleter, org.bukkit.e
     }
     private final Map<UUID, org.bukkit.entity.ArmorStand> seats = new HashMap<>();
 
+    // menu emotů (pro hráče bez chatu)
+    static final class MenuHolder implements org.bukkit.inventory.InventoryHolder {
+        org.bukkit.inventory.Inventory inv;
+        @Override public org.bukkit.inventory.@NotNull Inventory getInventory() { return inv; }
+    }
+    public void openMenu(Player p) {
+        int n = E.size(), size = Math.min(54, Math.max(18, (n + 8) / 9 * 9 + 9));
+        MenuHolder h = new MenuHolder();
+        h.inv = Bukkit.createInventory(h, size, Gui.title(size, Lang.t(p, "&f&lEmoty")));
+        int i = 0;
+        for (String id : E.keySet()) {
+            if (i >= size - 9) break;
+            h.inv.setItem(i++, U.tag(U.item(Material.NAME_TAG, 1, "&e&l" + id, "&7Klikni pro přehrání"), "ss_emote", id));
+        }
+        h.inv.setItem(size - 5, U.tag(U.item(Material.ARROW, 1, "&7◀ Zpět na profil"), "ss_emote", "_back"));
+        p.openInventory(h.inv);
+    }
+    @org.bukkit.event.EventHandler public void menuClick(org.bukkit.event.inventory.InventoryClickEvent e) {
+        if (!(e.getInventory().getHolder() instanceof MenuHolder) || !(e.getWhoClicked() instanceof Player p)) return;
+        e.setCancelled(true);
+        String t = U.tagOf(e.getCurrentItem(), "ss_emote");
+        if (t == null) return;
+        if (t.equals("_back")) { pl.progress.open(p); return; }
+        p.closeInventory();
+        p.performCommand("emote " + t);
+    }
+
     @Override public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {
         if (!(s instanceof Player p)) return true;
+        if (a.length == 0 && pl.getConfig().getBoolean("emotes.menu-on-empty", true)) { openMenu(p); return true; }
         String id = a.length == 0 ? "" : a[0].toLowerCase(Locale.ROOT);
         if (!E.containsKey(id)) { U.msg(p, "&7Emoty: &e" + String.join("&7, &e", E.keySet()) + " &8(/emote hi)"); return true; }
         var g = pl.games.of(p);
@@ -127,7 +155,7 @@ public final class Emotes implements CommandExecutor, TabCompleter, org.bukkit.e
         // zpráva lidem okolo (každý ve svém jazyce)
         for (Player o : p.getWorld().getPlayers())
             if (o.getLocation().distanceSquared(p.getLocation()) < 48 * 48)
-                { o.sendMessage(U.c("&8» &f" + p.getName() + " &7" + (Lang.en(o) ? e[2] : e[1]) + " " + e[0])); if (Ranks.bedrock(o)) U.bar(o, "&f" + p.getName() + " &7" + (Lang.en(o) ? e[2] : e[1]) + " " + e[0]); }
+                { ChatFree.send(o, U.c("&8» &f" + p.getName() + " &7" + (Lang.en(o) ? e[2] : e[1]) + " " + e[0])); if (Ranks.bedrock(o)) U.bar(o, "&f" + p.getName() + " &7" + (Lang.en(o) ? e[2] : e[1]) + " " + e[0]); }
         // bublina nad hlavou
         TextDisplay bubble = p.getWorld().spawn(p.getLocation().add(0, 2.3, 0), TextDisplay.class, d -> {
             d.setBillboard(Display.Billboard.CENTER);

@@ -198,6 +198,6 @@ public final class Stats {
     /** /ss top – osobní statistiky v chatu */
     public void show(Player p) {
         U.msg(p, "&6&lTvoje statistiky:");
-        p.sendMessage(U.c(Lang.t(p, "&7Výhry: &a" + get(p, "wins") + " &8| &7Hry: &e" + get(p, "games") + " &8| &7Zabití: &c" + get(p, "kills") + " &8| &7Level: &b" + pl.levels.level(p))));
+        ChatFree.send(p, U.c(Lang.t(p, "&7Výhry: &a" + get(p, "wins") + " &8| &7Hry: &e" + get(p, "games") + " &8| &7Zabití: &c" + get(p, "kills") + " &8| &7Level: &b" + pl.levels.level(p))));
     }
 }

@@ -353,7 +353,7 @@ public final class Lobby implements Listener {
         if (pl.getConfig().getBoolean("lobby.force-on-join", true)) Bukkit.getScheduler().runTask(pl, () -> send(p));
         Bukkit.getScheduler().runTaskLater(pl, () -> {
             if (!p.isOnline()) return;
-            p.showTitle(net.kyori.adventure.title.Title.title(U.c("&c&l✦ &6&lSQUARE&c&lSTAR &c&l✦"), U.c("&7Vítej na Marsu, &e" + p.getName() + "&7!"),
+            p.showTitle(net.kyori.adventure.title.Title.title(U.c("&c&l✦ &6&lSQUARE&c&lSTAR &c&l✦"), U.c(Lang.t(p, "&7Vítej na Marsu, &e") + p.getName() + "&7!"),
                     net.kyori.adventure.title.Title.Times.times(java.time.Duration.ofMillis(600), java.time.Duration.ofMillis(2500), java.time.Duration.ofMillis(800))));
             p.playSound(p.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1f, 1.3f);
             p.getWorld().spawnParticle(Particle.END_ROD, p.getLocation().add(0, 1, 0), 40, 0.6, 1, 0.6, 0.08);

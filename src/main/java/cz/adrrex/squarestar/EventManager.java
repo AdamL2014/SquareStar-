@@ -69,12 +69,12 @@ public final class EventManager implements CommandExecutor, TabCompleter, Listen
             else U.msg(p, "&d&l★ &aJsi v eventu! &7Počkej, až ho " + host + " spustí.");
             return true;
         }
-        if (!allowed(s)) { s.sendMessage(U.tc(s, "&cEventy může pořádat jen majitel nebo admin. &7Připojit se: &e/event join")); return true; }
+        if (!allowed(s)) { ChatFree.send(s, U.tc(s, "&cEventy může pořádat jen majitel nebo admin. &7Připojit se: &e/event join")); return true; }
         switch (sub) {
-            case "", "menu" -> { if (s instanceof Player p) { if (custom) control(p); else open(p); } else s.sendMessage(U.tc(s, "&7/event start|stop|join")); }
+            case "", "menu" -> { if (s instanceof Player p) { if (custom) control(p); else open(p); } else ChatFree.send(s, U.tc(s, "&7/event start|stop|join")); }
             case "start" -> start(s);
             case "stop" -> stop(s);
-            default -> s.sendMessage(U.tc(s, "&7/event &8- menu, &7/event start&8, &7/event stop&8, &7/event join"));
+            default -> ChatFree.send(s, U.tc(s, "&7/event &8- menu, &7/event start&8, &7/event stop&8, &7/event join"));
         }
         return true;
     }
@@ -185,13 +185,13 @@ public final class EventManager implements CommandExecutor, TabCompleter, Listen
     private void invite() {
         spawnNpc();
         for (Player o : Bukkit.getOnlinePlayers()) {
-            o.sendMessage(U.c(""));
-            o.sendMessage(U.c(Lang.t(o, "&d&l★ EVENT ★ &f" + host + " &7pořádá event: &6&l" + eventName())));
-            o.sendMessage(U.c(Lang.t(o, "&7Max. hráčů: &e" + max + " &8| &7Gravitace: " + (lowGravity ? "&anízká" : "&cnormální"))));
-            o.sendMessage(U.c(Lang.t(o, "&a&l[ KLIKNI A PŘIPOJ SE ]")).clickEvent(ClickEvent.runCommand("/event join"))
+            ChatFree.send(o, U.c(""));
+            ChatFree.send(o, U.c(Lang.t(o, "&d&l★ EVENT ★ &f" + host + " &7pořádá event: &6&l" + eventName())));
+            ChatFree.send(o, U.c(Lang.t(o, "&7Max. hráčů: &e" + max + " &8| &7Gravitace: " + (lowGravity ? "&anízká" : "&cnormální"))));
+            ChatFree.send(o, U.c(Lang.t(o, "&a&l[ KLIKNI A PŘIPOJ SE ]")).clickEvent(ClickEvent.runCommand("/event join"))
                     .hoverEvent(HoverEvent.showText(U.c("&e/event join"))));
-            o.sendMessage(U.c(Lang.t(o, "&7…nebo klikni na &d&lEVENT NPC &7před bednami na spawnu!")));
-            o.sendMessage(U.c(""));
+            ChatFree.send(o, U.c(Lang.t(o, "&7…nebo klikni na &d&lEVENT NPC &7před bednami na spawnu!")));
+            ChatFree.send(o, U.c(""));
             U.title(o, "&d&l★ EVENT ★", "&6" + eventName() + " &7– napiš &e/event join");
             o.playSound(o.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 0.8f, 1.4f);
         }
@@ -210,8 +210,8 @@ public final class EventManager implements CommandExecutor, TabCompleter, Listen
             startTimer();
             return;
         }
-        if (game == null) { s.sendMessage(U.tc(s, "&cŽádný event. Otevři menu: &e/event")); return; }
-        if (game.players.size() < game.type.min) { s.sendMessage(U.tc(s, "&cMálo hráčů: &e" + game.players.size() + "&c (min. " + game.type.min + ")")); return; }
+        if (game == null) { ChatFree.send(s, U.tc(s, "&cŽádný event. Otevři menu: &e/event")); return; }
+        if (game.players.size() < game.type.min) { ChatFree.send(s, U.tc(s, "&cMálo hráčů: &e" + game.players.size() + "&c (min. " + game.type.min + ")")); return; }
         pl.games.startEvent(game);
         U.all("&d&l★ EVENT &6" + game.type.display + " &dzačíná! &7(" + game.players.size() + " hráčů)");
         game = null;
@@ -230,7 +230,7 @@ public final class EventManager implements CommandExecutor, TabCompleter, Listen
             Bukkit.getScheduler().runTaskLater(pl, this::dropWorld, 40);
             return;
         }
-        if (game == null) { s.sendMessage(U.tc(s, "&7Žádný event neběží.")); return; }
+        if (game == null) { ChatFree.send(s, U.tc(s, "&7Žádný event neběží.")); return; }
         for (Player p : new ArrayList<>(game.players)) pl.games.leave(p);
         game = null;
         removeNpc();

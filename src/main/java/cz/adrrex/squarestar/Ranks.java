@@ -91,7 +91,7 @@ public final class Ranks implements Listener {
     private Component link(Component c) {
         String url = pl.getConfig().getString("ranks.vidrift-url", "https://vidriftvideo.netlify.app");
         return c.clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl(url))
-                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c("&b&lVid&d&lRift\n&7Česká video platforma\n&eKlikni: &f" + url)));
+                .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c("&b&lVid&d&lRift\n&7Česká video platforma &8/ &7Czech video platform\n&eKlik / Click: &f" + url)));
     }
     private static String nameColor(Rank r) { return r == Rank.HRAC ? "&7" : r.color.replace("&l", ""); }
 

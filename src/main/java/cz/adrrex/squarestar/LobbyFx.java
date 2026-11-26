@@ -585,8 +585,8 @@ public final class LobbyFx implements Listener {
     private void openVidrift(Player p) {
         String url = pl.getConfig().getString("ranks.vidrift-url", "https://vidriftvideo.netlify.app");
         boolean en = Lang.en(p);
-        p.sendMessage(U.c("&8» &b&lVid&d&lRift &7" + (en ? "Czech video platform: movies, channels and games." : "česká video platforma: filmy, kanály a hry.")));
-        p.sendMessage(U.c(en ? "&e&l▶ CLICK HERE &7to open VidRift" : "&e&l▶ KLIKNI SEM &7a otevři VidRift")
+        ChatFree.send(p, U.c("&8» &b&lVid&d&lRift &7" + (en ? "Czech video platform: movies, channels and games." : "česká video platforma: filmy, kanály a hry.")));
+        ChatFree.send(p, U.c(en ? "&e&l▶ CLICK HERE &7to open VidRift" : "&e&l▶ KLIKNI SEM &7a otevři VidRift")
                 .clickEvent(net.kyori.adventure.text.event.ClickEvent.openUrl(url))
                 .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c("&b" + url))));
         U.title(p, "&b&lVid&d&lRift", en ? "&7Watch a movie! Link is in chat" : "&7Podívej se na film! Odkaz je v chatu");

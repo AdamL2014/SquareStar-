@@ -81,11 +81,11 @@ public final class Updater implements org.bukkit.event.Listener {
             String remote = http.send(HttpRequest.newBuilder(URI.create(BASE + "version.txt?t=" + System.currentTimeMillis())).timeout(Duration.ofSeconds(15)).build(),
                     HttpResponse.BodyHandlers.ofString()).body().trim();
             if (!remote.matches("\\d+(\\.\\d+){0,2}") || !newer(remote, local)) {
-                if (who != null) who.sendMessage(U.c("&aServer má nejnovější verzi &e" + local + " &7(GitHub: " + remote + ")"));
+                if (who != null) ChatFree.send(who, U.c("&aServer má nejnovější verzi &e" + local + " &7(GitHub: " + remote + ")"));
                 return;
             }
             if (remote.equals(failedVersion())) {
-                if (who != null) who.sendMessage(U.c("&cAktualizace na " + remote + " se minule nepovedla (jar se nevyměnil). Nahraj SquareStar.jar do plugins/ ručně a smaž squarestar-data/update-failed.txt."));
+                if (who != null) ChatFree.send(who, U.c("&cAktualizace na " + remote + " se minule nepovedla (jar se nevyměnil). Nahraj SquareStar.jar do plugins/ ručně a smaž squarestar-data/update-failed.txt."));
                 return;
             }
             busy = true;
@@ -106,7 +106,7 @@ public final class Updater implements org.bukkit.event.Listener {
         } catch (Exception ex) {
             busy = false;
             pl.getLogger().warning("Kontrola aktualizace selhala: " + ex.getMessage());
-            if (who != null) who.sendMessage(U.c("&cKontrola aktualizace selhala: &7" + ex.getMessage()));
+            if (who != null) ChatFree.send(who, U.c("&cKontrola aktualizace selhala: &7" + ex.getMessage()));
         }
     }
 

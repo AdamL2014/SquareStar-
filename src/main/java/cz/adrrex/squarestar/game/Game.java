@@ -1,5 +1,6 @@
 package cz.adrrex.squarestar.game;
 
+import cz.adrrex.squarestar.ChatFree;
 import cz.adrrex.squarestar.SquareStar;
 import cz.adrrex.squarestar.U;
 import cz.adrrex.squarestar.Lang;
@@ -397,11 +398,11 @@ public abstract class Game {
         start();
         // krátké „jak se hraje" pro všechny na začátku (jako na velkých serverech)
         for (Player p : players) {
-            p.sendMessage(U.c("&8&m                                             "));
-            p.sendMessage(U.c(Lang.t(p, "  &6&l✦ " + type.display.toUpperCase(java.util.Locale.ROOT) + " ✦")));
-            p.sendMessage(U.c(Lang.t(p, "  &f" + type.desc)));
-            p.sendMessage(U.c(Lang.t(p, "  &7Mapa: &a" + mapName() + "  &7Hráčů: &a" + players.size() + "  &7Hodně štěstí!")));
-            p.sendMessage(U.c("&8&m                                             "));
+            ChatFree.send(p, U.c("&8&m                                             "));
+            ChatFree.send(p, U.c(Lang.t(p, "  &6&l✦ " + type.display.toUpperCase(java.util.Locale.ROOT) + " ✦")));
+            ChatFree.send(p, U.c(Lang.t(p, "  &f" + type.desc)));
+            ChatFree.send(p, U.c(Lang.t(p, "  &7Mapa: &a" + mapName() + "  &7Hráčů: &a" + players.size() + "  &7Hodně štěstí!")));
+            ChatFree.send(p, U.c("&8&m                                             "));
         }
     }
 
@@ -447,7 +448,7 @@ public abstract class Game {
         U.reset(p, GameMode.SPECTATOR);
         p.teleport(specSpot());
         U.title(p, "&c&lVYŘAZEN", "&7Sleduješ hru. &e/ss znovu &7= další hra");
-        p.sendMessage(U.c(Lang.t(p, U.PREFIX + "&7Vyřazen. ")).append(U.c(Lang.t(p, "&a&l[▶ HRÁT ZNOVU]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/ss znovu")))
+        ChatFree.send(p, U.c(Lang.t(p, U.PREFIX + "&7Vyřazen. ")).append(U.c(Lang.t(p, "&a&l[▶ HRÁT ZNOVU]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/ss znovu")))
                 .append(U.c("  ")).append(U.c(Lang.t(p, "&7[Sledovat dál]"))));
         checkWin();
     }
@@ -507,23 +508,23 @@ public abstract class Game {
     /** přehledné shrnutí na konci hry (místo spousty zpráv) + tlačítko „Hrát znovu" */
     private void summary(Player p, boolean win, String names, int kills, int coins, int xp) {
         String line = "&8&m                                             ";
-        p.sendMessage(U.c(line));
-        p.sendMessage(U.c(Lang.t(p, "  " + (win ? "&6&l✦ VÍTĚZSTVÍ ✦" : "&c&lKONEC HRY") + " &8– &e" + type.display)));
-        p.sendMessage(U.c(Lang.t(p, "  &7Mapa: &f" + mapName() + "  &7Čas: &f" + fmt(time))));
-        p.sendMessage(U.c(Lang.t(p, "  &7Vítěz: &a" + names)));
+        ChatFree.send(p, U.c(line));
+        ChatFree.send(p, U.c(Lang.t(p, "  " + (win ? "&6&l✦ VÍTĚZSTVÍ ✦" : "&c&lKONEC HRY") + " &8– &e" + type.display)));
+        ChatFree.send(p, U.c(Lang.t(p, "  &7Mapa: &f" + mapName() + "  &7Čas: &f" + fmt(time))));
+        ChatFree.send(p, U.c(Lang.t(p, "  &7Vítěz: &a" + names)));
         if (!gameKills.isEmpty()) {
             List<Map.Entry<Player, Integer>> top = new ArrayList<>(gameKills.entrySet());
             top.sort((a, b) -> b.getValue() - a.getValue());
             StringBuilder sb = new StringBuilder("  &7Nejvíc zabití: ");
             String[] medal = {"&6①", "&7②", "&c③"};
             for (int i = 0; i < Math.min(3, top.size()); i++) sb.append(medal[i]).append(" &f").append(top.get(i).getKey().getName()).append(" &8(").append(top.get(i).getValue()).append(") ");
-            p.sendMessage(U.c(Lang.t(p, sb.toString())));
+            ChatFree.send(p, U.c(Lang.t(p, sb.toString())));
         }
-        p.sendMessage(U.c(Lang.t(p, "  &7Tvoje zabití: &c" + kills + "  &7Odměna: &6+" + coins + " " + cz.adrrex.squarestar.Coins.ICON + " &b+" + xp + " XP")));
-        p.sendMessage(U.c(Lang.t(p, "  ")).append(U.c(Lang.t(p, "&a&l[▶ HRÁT ZNOVU]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/ss znovu"))
+        ChatFree.send(p, U.c(Lang.t(p, "  &7Tvoje zabití: &c" + kills + "  &7Odměna: &6+" + coins + " " + cz.adrrex.squarestar.Coins.ICON + " &b+" + xp + " XP")));
+        ChatFree.send(p, U.c(Lang.t(p, "  ")).append(U.c(Lang.t(p, "&a&l[▶ HRÁT ZNOVU]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/ss znovu"))
                 .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c(Lang.t(p, "&eDalší hra: " + type.display))))).append(U.c("   "))
                 .append(U.c(Lang.t(p, "&e&l[✦ JINÁ HRA]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/ss hry"))));
-        p.sendMessage(U.c(line));
+        ChatFree.send(p, U.c(line));
     }
 
     void destroy() {

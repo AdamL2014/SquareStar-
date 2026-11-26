@@ -109,9 +109,9 @@ public final class Ufo implements CommandExecutor {
     }
 
     @Override public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {
-        if (!s.hasPermission("squarestar.admin")) { s.sendMessage(U.c("&cNemáš oprávnění.")); return true; }
-        if (flying) { s.sendMessage(U.c("&7UFO už letí.")); return true; }
-        fly(); s.sendMessage(U.c("&aUFO vyletělo!"));
+        if (!s.hasPermission("squarestar.admin")) { ChatFree.send(s, U.c("&cNemáš oprávnění.")); return true; }
+        if (flying) { ChatFree.send(s, U.c("&7UFO už letí.")); return true; }
+        fly(); ChatFree.send(s, U.c("&aUFO vyletělo!"));
         return true;
     }
 }

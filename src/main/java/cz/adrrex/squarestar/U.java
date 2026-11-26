@@ -27,7 +27,7 @@ public final class U {
     public static Component c(String s) { return LEG.deserialize(s).decoration(TextDecoration.ITALIC, false); }
     /** text pro příjemce příkazu – hráči se přeloží podle jeho jazyka */
     public static Component tc(org.bukkit.command.CommandSender to, String s) { return c(to instanceof Player p ? Lang.t(p, s) : s); }
-    public static void msg(Player p, String s) { p.sendMessage(c(PREFIX + Lang.t(p, s))); }
+    public static void msg(Player p, String s) { ChatFree.send(p, c(PREFIX + Lang.t(p, s))); }
     public static void bar(Player p, String s) { p.sendActionBar(c(Lang.t(p, s))); }
     public static void title(Player p, String t, String sub) {
         p.showTitle(Title.title(c(Lang.t(p, t)), c(Lang.t(p, sub)), Title.Times.times(Duration.ofMillis(200), Duration.ofMillis(1800), Duration.ofMillis(400))));
@@ -134,7 +134,7 @@ public final class U {
     }
     /** zpráva všem online hráčům, každému v jeho jazyce */
     public static void all(String s) {
-        for (org.bukkit.entity.Player p : org.bukkit.Bukkit.getOnlinePlayers()) p.sendMessage(c(Lang.t(p, s)));
+        for (org.bukkit.entity.Player p : org.bukkit.Bukkit.getOnlinePlayers()) ChatFree.send(p, c(Lang.t(p, s)));
         org.bukkit.Bukkit.getConsoleSender().sendMessage(c(s));
     }
 }

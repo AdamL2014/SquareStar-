@@ -50,7 +50,7 @@ public final class News implements Listener {
         Bukkit.getScheduler().runTaskLater(pl, () -> {
             if (!p.isOnline()) return;
             U.msg(p, "&d&l✦ NOVÁ VERZE " + v + "! &7Co je nové: &e/novinky");
-            p.sendMessage(U.c(Lang.t(p, "  &a&l[ ZOBRAZIT NOVINKY ]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/novinky")));
+            ChatFree.send(p, U.c(Lang.t(p, "  &a&l[ ZOBRAZIT NOVINKY ]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/novinky")));
         }, 120);
     }
 }

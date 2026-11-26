@@ -244,7 +244,7 @@ public final class Christmas implements Listener, CommandExecutor {
             String m = a[0].toLowerCase(Locale.ROOT);
             if (m.equals("on") || m.equals("off") || m.equals("auto")) {
                 pl.mars.getPersistentDataContainer().set(MODE, PersistentDataType.STRING, m);
-                s.sendMessage(U.tc(s, "&aVánoční režim: &e" + m + " &7(aktivní: " + (active() ? "&aano" : "&cne") + "&7)"));
+                ChatFree.send(s, U.tc(s, "&aVánoční režim: &e" + m + " &7(aktivní: " + (active() ? "&aano" : "&cne") + "&7)"));
                 return true;
             }
         }

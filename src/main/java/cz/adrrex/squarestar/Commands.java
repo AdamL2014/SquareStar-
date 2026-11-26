@@ -20,7 +20,7 @@ public final class Commands implements CommandExecutor, TabCompleter {
             case "hry", "menu" -> { if (p != null) pl.games.openMenu(p); }
             case "znovu", "again" -> { if (p != null) pl.games.again(p); }
             case "join" -> {
-                if (p == null || a.length < 2) { s.sendMessage(U.tc(s, "&c/ss join <" + String.join("|", names()) + ">")); return true; }
+                if (p == null || a.length < 2) { ChatFree.send(s, U.tc(s, "&c/ss join <" + String.join("|", names()) + ">")); return true; }
                 try { pl.games.join(p, GameType.valueOf(a[1].toUpperCase(Locale.ROOT))); }
                 catch (IllegalArgumentException ex) { pl.getLogger().log(java.util.logging.Level.WARNING, "join " + a[1], ex); U.msg(p, "&cNeznámá hra. Možnosti: &e" + String.join(", ", names())); }
             }
@@ -28,10 +28,10 @@ public final class Commands implements CommandExecutor, TabCompleter {
             case "lobby", "spawn" -> { if (p != null) { if (pl.games.of(p) != null) pl.games.leave(p); else pl.lobby.send(p); } }
             case "jazyk", "lang", "language" -> { if (p != null) pl.intro.openLang(p); }
             case "udrzba", "maintenance" -> {
-                if (!s.hasPermission("squarestar.admin")) { s.sendMessage(U.tc(s, "&cNa tohle nemáš práva.")); return true; }
+                if (!s.hasPermission("squarestar.admin")) { ChatFree.send(s, U.tc(s, "&cNa tohle nemáš práva.")); return true; }
                 boolean on = a.length > 1 ? a[1].equalsIgnoreCase("on") || a[1].equalsIgnoreCase("zap") : !pl.motd.maintenance();
                 pl.motd.setMaintenance(on);
-                s.sendMessage(U.tc(s, on ? "&c&lÚdržba ZAPNUTA &7- připojí se jen tým." : "&a&lÚdržba VYPNUTA &7- server je otevřený."));
+                ChatFree.send(s, U.tc(s, on ? "&c&lÚdržba ZAPNUTA &7- připojí se jen tým." : "&a&lÚdržba VYPNUTA &7- server je otevřený."));
             }
             case "redstone", "rs" -> {
                 if (p == null) return true;
@@ -46,73 +46,73 @@ public final class Commands implements CommandExecutor, TabCompleter {
             case "pratele", "friends" -> { if (p != null) pl.friends.open(p); }
             case "update", "aktualizace" -> {
                 if (!admin(s)) return true;
-                s.sendMessage(U.tc(s, "&7Kontroluji GitHub..."));
+                ChatFree.send(s, U.tc(s, "&7Kontroluji GitHub..."));
                 Bukkit.getScheduler().runTaskAsynchronously(pl, () -> pl.updater.check(s));
             }
             case "meteor" -> { if (admin(s)) pl.meteors.launch(); }
             case "intro" -> { if (p != null && pl.games.of(p) == null) pl.intro.play(p); }
             case "give" -> {
                 if (!admin(s)) return true;
-                if (a.length < 2) { s.sendMessage(U.tc(s, "&c/ss give <item> [hráč] [počet] &7Itemy: " + String.join(", ", pl.items.defs.keySet()))); return true; }
+                if (a.length < 2) { ChatFree.send(s, U.tc(s, "&c/ss give <item> [hráč] [počet] &7Itemy: " + String.join(", ", pl.items.defs.keySet()))); return true; }
                 Player t = a.length >= 3 ? Bukkit.getPlayerExact(a[2]) : p;
                 int n = a.length >= 4 ? parse(a[3]) : 1;
                 ItemStack it = pl.items.get(a[1], n);
-                if (t == null || it == null) { s.sendMessage(U.tc(s, "&cŠpatný hráč nebo item.")); return true; }
+                if (t == null || it == null) { ChatFree.send(s, U.tc(s, "&cŠpatný hráč nebo item.")); return true; }
                 t.getInventory().addItem(it);
-                s.sendMessage(U.tc(s, "&aDáno: " + a[1] + " x" + n + " -> " + t.getName()));
+                ChatFree.send(s, U.tc(s, "&aDáno: " + a[1] + " x" + n + " -> " + t.getName()));
             }
             case "key" -> {
                 if (!admin(s)) return true;
-                if (a.length < 3) { s.sendMessage(U.tc(s, "&c/ss key <hráč> <" + String.join("|", pl.crates.types.keySet()) + "> [počet]")); return true; }
+                if (a.length < 3) { ChatFree.send(s, U.tc(s, "&c/ss key <hráč> <" + String.join("|", pl.crates.types.keySet()) + "> [počet]")); return true; }
                 Player t = Bukkit.getPlayerExact(a[1]);
                 ItemStack k = pl.crates.key(a[2], a.length >= 4 ? parse(a[3]) : 1);
-                if (t == null || k == null) { s.sendMessage(U.tc(s, "&cŠpatný hráč nebo typ bedny.")); return true; }
+                if (t == null || k == null) { ChatFree.send(s, U.tc(s, "&cŠpatný hráč nebo typ bedny.")); return true; }
                 t.getInventory().addItem(k);
-                s.sendMessage(U.tc(s, "&aKlíč dán hráči " + t.getName()));
+                ChatFree.send(s, U.tc(s, "&aKlíč dán hráči " + t.getName()));
             }
             case "rebuildlobby", "rebuild" -> {
                 if (!admin(s)) return true;
-                s.sendMessage(U.tc(s, "&ePřestavuji Mars lobby, nápis, raketu a NPC..."));
-                pl.lobby.build(() -> { pl.crates.placeBlocks(); pl.lobby.spawnHolo(); pl.fx.spawnAll(); s.sendMessage(U.tc(s, "&aLobby přestavěna.")); });
+                ChatFree.send(s, U.tc(s, "&ePřestavuji Mars lobby, nápis, raketu a NPC..."));
+                pl.lobby.build(() -> { pl.crates.placeBlocks(); pl.lobby.spawnHolo(); pl.fx.spawnAll(); ChatFree.send(s, U.tc(s, "&aLobby přestavěna.")); });
             }
             case "fx" -> {
                 if (!admin(s)) return true;
                 pl.fx.spawnAll();
-                s.sendMessage(U.tc(s, "&a3D efekty (nápis, raketa, NPC) znovu vytvořeny."));
+                ChatFree.send(s, U.tc(s, "&a3D efekty (nápis, raketa, NPC) znovu vytvořeny."));
             }
             case "lag" -> {
                 double[] tps = Bukkit.getTPS();
                 double mspt = Bukkit.getAverageTickTime();
                 int ent = 0; for (var w : Bukkit.getWorlds()) ent += w.getEntityCount();
                 long used = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576, max = Runtime.getRuntime().maxMemory() / 1048576;
-                s.sendMessage(U.tc(s, String.format("&6TPS: &f%.1f &7(1m) &8| &6MSPT: &f%.1f ms &8| &6RAM: &f%d/%d MB", tps[0], mspt, used, max)));
-                s.sendMessage(U.tc(s, "&6Entity: &f" + ent + " &8| &6Hry: &f" + pl.games.activeGames() + " &8| &7(20 TPS a pod 50 ms = server je OK)"));
+                ChatFree.send(s, U.tc(s, String.format("&6TPS: &f%.1f &7(1m) &8| &6MSPT: &f%.1f ms &8| &6RAM: &f%d/%d MB", tps[0], mspt, used, max)));
+                ChatFree.send(s, U.tc(s, "&6Entity: &f" + ent + " &8| &6Hry: &f" + pl.games.activeGames() + " &8| &7(20 TPS a pod 50 ms = server je OK)"));
             }
             case "rank" -> {
                 if (!admin(s)) return true;
-                if (a.length < 3) { s.sendMessage(U.tc(s, "&c/ss rank <hráč> <" + String.join("|", Arrays.stream(Ranks.Rank.values()).map(r -> r.name().toLowerCase(Locale.ROOT)).toList()) + ">")); return true; }
+                if (a.length < 3) { ChatFree.send(s, U.tc(s, "&c/ss rank <hráč> <" + String.join("|", Arrays.stream(Ranks.Rank.values()).map(r -> r.name().toLowerCase(Locale.ROOT)).toList()) + ">")); return true; }
                 Player t = Bukkit.getPlayerExact(a[1]);
-                if (t == null) { s.sendMessage(U.tc(s, "&cHráč není online.")); return true; }
+                if (t == null) { ChatFree.send(s, U.tc(s, "&cHráč není online.")); return true; }
                 try { Ranks.Rank r = Ranks.Rank.valueOf(a[2].toUpperCase(Locale.ROOT));
                     // OWNER smí dávat/brát jen jiný OWNER nebo konzole (admin ne)
                     boolean owner = !(s instanceof Player sp) || pl.ranks.of(sp) == Ranks.Rank.OWNER;
-                    if (!owner && (r == Ranks.Rank.OWNER || pl.ranks.of(t) == Ranks.Rank.OWNER)) { s.sendMessage(U.tc(s, "&cRank OWNER může dávat nebo brát jen majitel serveru.")); return true; }
-                    if (!owner && (r == Ranks.Rank.ADMIN || r == Ranks.Rank.DEVELOPER) && pl.ranks.of((Player) s) != Ranks.Rank.OWNER && pl.ranks.of((Player) s) != Ranks.Rank.ADMIN) { s.sendMessage(U.tc(s, "&cNa tento rank nemáš práva.")); return true; }
-                    pl.ranks.set(t, r); s.sendMessage(U.tc(s, "&a" + t.getName() + " má rank " + r.color + r.name())); }
-                catch (IllegalArgumentException ex) { s.sendMessage(U.tc(s, "&cNeznámý rank.")); }
+                    if (!owner && (r == Ranks.Rank.OWNER || pl.ranks.of(t) == Ranks.Rank.OWNER)) { ChatFree.send(s, U.tc(s, "&cRank OWNER může dávat nebo brát jen majitel serveru.")); return true; }
+                    if (!owner && (r == Ranks.Rank.ADMIN || r == Ranks.Rank.DEVELOPER) && pl.ranks.of((Player) s) != Ranks.Rank.OWNER && pl.ranks.of((Player) s) != Ranks.Rank.ADMIN) { ChatFree.send(s, U.tc(s, "&cNa tento rank nemáš práva.")); return true; }
+                    pl.ranks.set(t, r); ChatFree.send(s, U.tc(s, "&a" + t.getName() + " má rank " + r.color + r.name())); }
+                catch (IllegalArgumentException ex) { ChatFree.send(s, U.tc(s, "&cNeznámý rank.")); }
             }
             default -> {
-                s.sendMessage(U.tc(s, "&c&l✦ SquareStar &7- příkazy"));
-                for (String h : Lobby.help()) s.sendMessage(U.tc(s, h));
+                ChatFree.send(s, U.tc(s, "&c&l✦ SquareStar &7- příkazy"));
+                for (String h : Lobby.help()) ChatFree.send(s, U.tc(s, h));
                 if (s.hasPermission("squarestar.admin")) {
-                    s.sendMessage(U.tc(s, "&c/ss give <item> [hráč] [počet] &7- vesmírné itemy"));
-                    s.sendMessage(U.tc(s, "&c/ss key <hráč> <typ> [počet] &7- klíče k bednám"));
-                    s.sendMessage(U.tc(s, "&c/ss rebuild &7- znovu postaví Mars lobby + 3D efekty"));
-                    s.sendMessage(U.tc(s, "&c/ss fx &7- obnoví jen 3D nápis, raketu a NPC"));
-                    s.sendMessage(U.tc(s, "&c/ss rank <hráč> <rank> &7- nastaví rank (owner, admin...)"));
-                    s.sendMessage(U.tc(s, "&c/ss lag &7- výkon serveru (TPS, MSPT, RAM)"));
-                    s.sendMessage(U.tc(s, "&c/ss update &7- zkontroluje a nainstaluje aktualizaci"));
-                    s.sendMessage(U.tc(s, "&c/event &7- uspořádat event"));
+                    ChatFree.send(s, U.tc(s, "&c/ss give <item> [hráč] [počet] &7- vesmírné itemy"));
+                    ChatFree.send(s, U.tc(s, "&c/ss key <hráč> <typ> [počet] &7- klíče k bednám"));
+                    ChatFree.send(s, U.tc(s, "&c/ss rebuild &7- znovu postaví Mars lobby + 3D efekty"));
+                    ChatFree.send(s, U.tc(s, "&c/ss fx &7- obnoví jen 3D nápis, raketu a NPC"));
+                    ChatFree.send(s, U.tc(s, "&c/ss rank <hráč> <rank> &7- nastaví rank (owner, admin...)"));
+                    ChatFree.send(s, U.tc(s, "&c/ss lag &7- výkon serveru (TPS, MSPT, RAM)"));
+                    ChatFree.send(s, U.tc(s, "&c/ss update &7- zkontroluje a nainstaluje aktualizaci"));
+                    ChatFree.send(s, U.tc(s, "&c/event &7- uspořádat event"));
                 }
             }
         }
@@ -122,7 +122,7 @@ public final class Commands implements CommandExecutor, TabCompleter {
     private static int parse(String s) { try { return Math.max(1, Math.min(64, Integer.parseInt(s))); } catch (NumberFormatException e) { return 1; } }
     private static boolean admin(CommandSender s) {
         if (s.hasPermission("squarestar.admin")) return true;
-        s.sendMessage(U.tc(s, "&cNa tohle nemáš práva.")); return false;
+        ChatFree.send(s, U.tc(s, "&cNa tohle nemáš práva.")); return false;
     }
     /** názvy her seřazené podle kategorií (PvP, pak stejné kategorie jako v menu) */
     private static List<String> names() {

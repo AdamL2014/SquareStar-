@@ -91,10 +91,10 @@ public final class Coins implements CommandExecutor, Listener {
         // /mince – stav, /mince <hráč> <+-počet> – admin
         if (a.length >= 2 && s.hasPermission("squarestar.admin")) {
             Player t = Bukkit.getPlayerExact(a[0]);
-            if (t == null) { s.sendMessage(U.tc(s, "&cHráč není online.")); return true; }
+            if (t == null) { ChatFree.send(s, U.tc(s, "&cHráč není online.")); return true; }
             try { int n = Integer.parseInt(a[1]); if (a[1].startsWith("+") || a[1].startsWith("-")) set(t, get(t) + n); else set(t, n); }
-            catch (NumberFormatException ex) { s.sendMessage(U.tc(s, "&e/mince <hráč> <počet|+počet|-počet>")); return true; }
-            s.sendMessage(U.tc(s, "&a" + t.getName() + " má teď &6" + get(t) + " " + ICON));
+            catch (NumberFormatException ex) { ChatFree.send(s, U.tc(s, "&e/mince <hráč> <počet|+počet|-počet>")); return true; }
+            ChatFree.send(s, U.tc(s, "&a" + t.getName() + " má teď &6" + get(t) + " " + ICON));
             return true;
         }
         if (s instanceof Player p) { if (l.equalsIgnoreCase("obchod") || l.equalsIgnoreCase("shop")) open(p); else U.msg(p, "&7Máš &6" + get(p) + " " + ICON + " mincí&7. Obchod: &e/obchod"); }

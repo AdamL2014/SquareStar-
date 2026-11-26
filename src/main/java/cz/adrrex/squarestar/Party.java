@@ -1,6 +1,9 @@
 package cz.adrrex.squarestar;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -51,10 +54,11 @@ public final class Party implements CommandExecutor, TabCompleter, Listener {
         invites.put(t.getUniqueId(), p.getUniqueId());
         inviteTime.put(t.getUniqueId(), System.currentTimeMillis());
         U.msg(p, "&aPozvánka poslána hráči &e" + t.getName() + "&a. &7(platí 60 s)");
-        t.sendMessage(U.c(U.PREFIX + Lang.t(t, "&e" + p.getName() + " &7tě zve do party! "))
+        ChatFree.send(t, U.c(U.PREFIX + Lang.t(t, "&e" + p.getName() + " &7tě zve do party! "))
                 .append(U.c(Lang.t(t, "&a&l[PŘIJMOUT]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/parta prijmout"))
                         .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c(Lang.t(t, "&eKlikni a přidej se"))))));
         U.sound(t, Sound.BLOCK_NOTE_BLOCK_PLING, 1.6f);
+        if (ChatFree.hidden(t)) U.title(t, "&9&lPARTA", "&e" + p.getName() + " &7tě zve – Profil → Parta");
     }
 
     private void accept(Player p) {
@@ -107,15 +111,80 @@ public final class Party implements CommandExecutor, TabCompleter, Listener {
         U.msg(p, "&9&lTvoje parta &8(" + x.members.size() + "/" + MAX + "): " + String.join("&7, ", names));
     }
 
+
+    // =================== MENU (pro hráče bez chatu) ===================
+    static final class MenuHolder implements org.bukkit.inventory.InventoryHolder {
+        org.bukkit.inventory.Inventory inv;
+        @Override public org.bukkit.inventory.@NotNull Inventory getInventory() { return inv; }
+    }
+
+    private static org.bukkit.inventory.ItemStack head(OfflinePlayer o, String name, String... lore) {
+        org.bukkit.inventory.ItemStack it = U.item(Material.PLAYER_HEAD, 1, name, lore);
+        if (it.getItemMeta() instanceof org.bukkit.inventory.meta.SkullMeta sm) { sm.setOwningPlayer(o); it.setItemMeta(sm); }
+        return it;
+    }
+
+    public void openMenu(Player p) {
+        MenuHolder h = new MenuHolder();
+        h.inv = Bukkit.createInventory(h, 54, Gui.title(54, Lang.t(p, "&9&lParta")));
+        P x = of(p);
+        UUID lid = invites.get(p.getUniqueId());
+        Long at = inviteTime.get(p.getUniqueId());
+        Player inviter = lid == null ? null : Bukkit.getPlayer(lid);
+        if (inviter != null && at != null && System.currentTimeMillis() - at <= 60_000 && x == null) {
+            h.inv.setItem(4, U.tag(head(inviter, "&a&lPřijmout pozvánku do party", "&7Zve tě: &e" + inviter.getName(), "", "&eKlikni pro přijetí"), "ss_party", "accept"));
+        }
+        if (x != null) {
+            int i = 0;
+            for (UUID u : x.members) {
+                if (i >= 8) break;
+                OfflinePlayer o = Bukkit.getOfflinePlayer(u);
+                boolean ld = u.equals(x.leader);
+                boolean canKick = isLeader(p) && !u.equals(p.getUniqueId());
+                String nm = (ld ? "&6♛ " : "&f") + (o.getName() == null ? "?" : o.getName());
+                var it = canKick ? U.tag(head(o, nm, "&7Člen party", "", "&cKlikni pro vyhození"), "ss_party", "kick:" + u)
+                                 : head(o, nm, ld ? "&7Vůdce party" : "&7Člen party");
+                h.inv.setItem(10 + i++, it);
+            }
+        } else h.inv.setItem(13, U.item(Material.PAPER, 1, "&7Nejsi v žádné partě", "&7Pozvi kamaráda níže –", "&7party se vytvoří sama."));
+        if (x == null || isLeader(p)) {
+            int slot = 27;
+            for (Player o : Bukkit.getOnlinePlayers()) {
+                if (slot > 44) break;
+                if (o == p || of(o) != null || Basic.vanished.contains(o.getUniqueId())) continue;
+                h.inv.setItem(slot++, U.tag(head(o, "&e" + o.getName(), "&7Klikni pro pozvání do party"), "ss_party", "inv:" + o.getUniqueId()));
+            }
+            if (slot == 27) h.inv.setItem(31, U.item(Material.BARRIER, 1, "&7Nikdo další není online"));
+        }
+        h.inv.setItem(45, U.tag(U.item(Material.ARROW, 1, "&7◀ Zpět na profil"), "ss_party", "back"));
+        if (x != null) h.inv.setItem(47, U.tag(U.item(Material.RED_BED, 1, "&c&lOdejít z party"), "ss_party", "leave"));
+        if (isLeader(p)) h.inv.setItem(51, U.tag(U.item(Material.TNT, 1, "&c&lRozpustit partu"), "ss_party", "disband"));
+        h.inv.setItem(49, U.item(Material.BOOK, 1, "&9&lParta &8(" + (x == null ? 0 : x.members.size()) + "/" + MAX + ")", "&7Vůdce vybere hru v menu miniher", "&7a všichni jdou s ním."));
+        p.openInventory(h.inv);
+    }
+
+    @EventHandler public void menuClick(org.bukkit.event.inventory.InventoryClickEvent e) {
+        if (!(e.getInventory().getHolder() instanceof MenuHolder) || !(e.getWhoClicked() instanceof Player p)) return;
+        e.setCancelled(true);
+        String t = U.tagOf(e.getCurrentItem(), "ss_party");
+        if (t == null) return;
+        if (t.equals("accept")) { accept(p); openMenu(p); }
+        else if (t.equals("leave")) { leave(p, false); openMenu(p); }
+        else if (t.equals("disband")) { if (isLeader(p)) disband(of(p), "&c" + p.getName() + " rozpustil partu."); openMenu(p); }
+        else if (t.equals("back")) pl.progress.open(p);
+        else if (t.startsWith("inv:")) { Player o = Bukkit.getPlayer(UUID.fromString(t.substring(4))); if (o != null) invite(p, o); Bukkit.getScheduler().runTask(pl, () -> openMenu(p)); }
+        else if (t.startsWith("kick:") && isLeader(p)) { p.performCommand("parta vyhodit " + Bukkit.getOfflinePlayer(UUID.fromString(t.substring(5))).getName()); Bukkit.getScheduler().runTask(pl, () -> openMenu(p)); }
+    }
+
     @EventHandler public void quit(PlayerQuitEvent e) {
         invites.remove(e.getPlayer().getUniqueId());
         if (of(e.getPlayer()) != null) leave(e.getPlayer(), true);
     }
 
     @Override public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {
-        if (!(s instanceof Player p)) { s.sendMessage("Jen pro hrace."); return true; }
+        if (!(s instanceof Player p)) { ChatFree.send(s, "Jen pro hrace."); return true; }
         if (c.getName().equals("pc")) { chat(p, String.join(" ", a)); return true; }
-        if (a.length == 0) { info(p); return true; }
+        if (a.length == 0) { if (pl.getConfig().getBoolean("party.menu-on-empty", true)) openMenu(p); else info(p); return true; }
         switch (a[0].toLowerCase(Locale.ROOT)) {
             case "prijmout", "accept" -> accept(p);
             case "odejit", "leave" -> leave(p, false);
@@ -148,7 +217,7 @@ public final class Party implements CommandExecutor, TabCompleter, Listener {
         if (x == null) { U.msg(p, "&cNejsi v partě."); return; }
         if (m.isBlank()) { U.msg(p, "&c/pc <zpráva>"); return; }
         String clean = m.replace("&", "").replace("§", "");
-        for (UUID u : x.members) { Player t = Bukkit.getPlayer(u); if (t != null) t.sendMessage(U.c("&9&lPARTA &8» &f" + p.getName() + "&7: &f").append(net.kyori.adventure.text.Component.text(clean))); }
+        for (UUID u : x.members) { Player t = Bukkit.getPlayer(u); if (t != null) ChatFree.send(t, U.c("&9&lPARTA &8» &f" + p.getName() + "&7: &f").append(net.kyori.adventure.text.Component.text(clean))); }
     }
 
     @Override public List<String> onTabComplete(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {

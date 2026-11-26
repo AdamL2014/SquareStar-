@@ -164,7 +164,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         String[] r = rules(en);
         if (p.getUniqueId().getMostSignificantBits() == 0) {   // Bedrock: bez okna
             say(p, en ? "&eBefore you start, please read the rules:" : "&eNež začneš, přečti si pravidla:");
-            for (String x : r) p.sendMessage(U.c("&7 • &f" + x));
+            for (String x : r) ChatFree.send(p, U.c("&7 • &f" + x));
             say(p, en ? "&aType &e/ai accept &ato agree." : "&aSouhlasíš příkazem &e/ai accept&a.");
             return;
         }
@@ -183,7 +183,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
                                             ClickCallback.Options.builder().uses(1).lifetime(Duration.ofMinutes(15)).build())),
                             ActionButton.create(Component.text(en ? "I disagree" : "Nesouhlasím", NamedTextColor.RED), null, 150, null))));
             p.showDialog(d);
-        } catch (Throwable t) { pl.getLogger().warning("AdrrexAI souhlas: " + t); say(p, en ? "&aType &e/ai accept &ato agree to the rules." : "&aSouhlas s pravidly: &e/ai accept"); for (String x : r) p.sendMessage(U.c("&7 • &f" + x)); }
+        } catch (Throwable t) { pl.getLogger().warning("AdrrexAI souhlas: " + t); say(p, en ? "&aType &e/ai accept &ato agree to the rules." : "&aSouhlas s pravidly: &e/ai accept"); for (String x : r) ChatFree.send(p, U.c("&7 • &f" + x)); }
     }
 
     private void open(Player p) {
@@ -279,7 +279,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
 
     // ---------------- příkaz ----------------
     @Override public boolean onCommand(CommandSender s, Command c, String label, String[] a) {
-        if (!(s instanceof Player p)) { s.sendMessage("AdrrexAI: jen pro hráče. Stav: klíč " + (key().isEmpty() ? "CHYBÍ" : "nastaven") + ", model " + model()); return true; }
+        if (!(s instanceof Player p)) { ChatFree.send(s, "AdrrexAI: jen pro hráče. Stav: klíč " + (key().isEmpty() ? "CHYBÍ" : "nastaven") + ", model " + model()); return true; }
         boolean admin = p.isOp() || p.hasPermission("squarestar.admin");
         if (a.length >= 1 && (a[0].equalsIgnoreCase("accept") || a[0].equalsIgnoreCase("souhlasim"))) { accept(p); return true; }
         if (a.length == 0) { open(p); return true; }
@@ -293,7 +293,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
             if (a.length < 2 || !a[1].startsWith("gsk_") || a[1].length() < 20) { say(p, "&cPoužití: &e/ai setkey gsk_xxxxxxxx &7(klíč z console.groq.com/keys, začíná gsk_)"); return true; }
             try { saveKey(a[1]); } catch (java.io.IOException ex) { say(p, "&cKlíč se nepodařilo uložit: " + ex.getMessage()); return true; }
             say(p, "&aKlíč uložen &7(hlavní složka serveru + plugins/SquareStar). &7Ověřuji…");
-            p.sendMessage(U.c("&8Tip: zprávu s klíčem si můžeš z historie chatu smazat, v logu serveru ale zůstane – je-li to problém, vygeneruj na Groq nový klíč."));
+            ChatFree.send(p, U.c("&8Tip: zprávu s klíčem si můžeš z historie chatu smazat, v logu serveru ale zůstane – je-li to problém, vygeneruj na Groq nový klíč."));
             verify(p, a[1]);
             return true;
         }
@@ -311,15 +311,15 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
 
     private void intro(Player p) {
         boolean en = Lang.en(p);
-        p.sendMessage(U.c(""));
-        p.sendMessage(U.c("&b&l✦ AdrrexAI &7– " + (en ? "your server assistant" : "tvůj pomocník na serveru")));
-        p.sendMessage(U.c(en ? "&fI know every minigame, command and feature of SquareStar, plus Minecraft in general." : "&fZnám všechny minihry, příkazy i funkce SquareStaru a obecně celý Minecraft."));
-        p.sendMessage(U.c(en ? "&7Ask with &e/ai <question>&7, e.g. &e/ai how do I get a pet?" : "&7Zeptej se: &e/ai <otázka>&7, třeba &e/ai jak získám peta?"));
-        p.sendMessage(U.c(en ? "&7New topic: &e/ai reset" : "&7Nové téma: &e/ai reset"));
-        p.sendMessage(U.c(""));
+        ChatFree.send(p, U.c(""));
+        ChatFree.send(p, U.c("&b&l✦ AdrrexAI &7– " + (en ? "your server assistant" : "tvůj pomocník na serveru")));
+        ChatFree.send(p, U.c(en ? "&fI know every minigame, command and feature of SquareStar, plus Minecraft in general." : "&fZnám všechny minihry, příkazy i funkce SquareStaru a obecně celý Minecraft."));
+        ChatFree.send(p, U.c(en ? "&7Ask with &e/ai <question>&7, e.g. &e/ai how do I get a pet?" : "&7Zeptej se: &e/ai <otázka>&7, třeba &e/ai jak získám peta?"));
+        ChatFree.send(p, U.c(en ? "&7New topic: &e/ai reset" : "&7Nové téma: &e/ai reset"));
+        ChatFree.send(p, U.c(""));
     }
 
-    private void say(Player p, String text) { p.sendMessage(U.c(TAG + text)); }
+    private void say(Player p, String text) { ChatFree.send(p, U.c(TAG + text)); }
 
     // ---------------- dotaz ----------------
     private void ask(Player p, String q) {
@@ -328,7 +328,7 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
         if (!consented(p)) { consent(p); return; }
         if (key().isEmpty()) {
             respond(p, en ? "&cI am not set up yet." : "&cZatím nejsem nastavená.");
-            if (p.isOp()) p.sendMessage(U.c("&7(Admin: napiš &f/ai setkey gsk_tvůj_klíč &7– uloží se a ověří; klíč získáš na console.groq.com/keys)"));
+            if (p.isOp()) ChatFree.send(p, U.c("&7(Admin: napiš &f/ai setkey gsk_tvůj_klíč &7– uloží se a ověří; klíč získáš na console.groq.com/keys)"));
             return;
         }
         q = q.strip(); if (q.length() > 400) q = q.substring(0, 400);
@@ -382,8 +382,8 @@ public final class Ai implements CommandExecutor, TabCompleter, Listener {
             return;
         }
         boolean first = true;
-        for (String line : clean(ans)) { p.sendMessage(U.c((first ? TAG : "&f") + line)); first = false; }
-        p.sendMessage(U.c(""));
+        for (String line : clean(ans)) { ChatFree.send(p, U.c((first ? TAG : "&f") + line)); first = false; }
+        ChatFree.send(p, U.c(""));
     }
 
     /** odstraní markdown a barevné kódy, zalomí řádky (Minecraft chat markdown neumí) */

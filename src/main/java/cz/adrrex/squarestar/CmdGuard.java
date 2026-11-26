@@ -56,7 +56,7 @@ public final class CmdGuard implements Listener {
      */
     @EventHandler public void joinClear(PlayerJoinEvent e) {
         Player p = e.getPlayer();
-        Bukkit.getScheduler().runTaskLater(pl, () -> { if (p.isOnline()) for (int i = 0; i < 30; i++) p.sendMessage(Component.empty()); }, 25);
+        Bukkit.getScheduler().runTaskLater(pl, () -> { if (p.isOnline()) for (int i = 0; i < 30; i++) ChatFree.send(p, Component.empty()); }, 25);
     }
 
     /** vlastní nápověda místo výpisu všech příkazů serveru */
@@ -71,7 +71,7 @@ public final class CmdGuard implements Listener {
                 "&e/obchod &7– obchod za mince  &8| &e/advent &7– adventní kalendář",
                 "&e/hudba &7– hudba zap/vyp  &8| &e/ping &8| &e/online &8| &e/afk &8| &e/pravidla &8| &e/discord &8| &e/jazyk",
                 "&e/report <hráč> <důvod> &7– nahlásit  &8| &e/helpop &7– zeptat se týmu"};
-        for (String s : l) p.sendMessage(U.c(Lang.t(p, s)));
+        for (String s : l) ChatFree.send(p, U.c(Lang.t(p, s)));
     }
 
     /** tab-doplňování: hráč uvidí jen svoje příkazy */

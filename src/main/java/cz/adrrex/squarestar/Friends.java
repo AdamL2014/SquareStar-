@@ -72,7 +72,8 @@ public final class Friends implements CommandExecutor, TabCompleter, Listener {
                 requests.computeIfAbsent(t.getUniqueId(), x -> new HashSet<>()).add(p.getUniqueId());
                 U.msg(p, "&aŽádost o přátelství poslána hráči &e" + t.getName());
                 U.msg(t, "&e" + p.getName() + " &7ti posílá žádost o přátelství!");
-                t.sendMessage(U.c(Lang.t(t, "  &a&l[ PŘIJMOUT ]")).clickEvent(ClickEvent.runCommand("/pritel prijmout " + p.getName()))
+                if (ChatFree.hidden(t)) U.title(t, "&d&l♥ PŘÁTELÉ", "&e" + p.getName() + " &7ti poslal žádost – Profil → Přijmout žádosti");
+                ChatFree.send(t, U.c(Lang.t(t, "  &a&l[ PŘIJMOUT ]")).clickEvent(ClickEvent.runCommand("/pritel prijmout " + p.getName()))
                         .append(U.c("   ")).append(U.c(Lang.t(t, "&c&l[ ODMÍTNOUT ]")).clickEvent(ClickEvent.runCommand("/pritel odmitnout " + p.getName()))));
                 t.playSound(t.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1.5f);
             }
@@ -96,6 +97,14 @@ public final class Friends implements CommandExecutor, TabCompleter, Listener {
             default -> open(p);
         }
         return true;
+    }
+
+    /** přijme všechny čekající žádosti (tlačítko v menu, pro hráče bez chatu) */
+    public void acceptAll(Player p) {
+        Set<UUID> rq = new HashSet<>(requests.getOrDefault(p.getUniqueId(), Set.of()));
+        int n = 0;
+        for (UUID u : rq) { Player t = Bukkit.getPlayer(u); if (t != null) { accept(p, t); n++; } }
+        if (n == 0) U.msg(p, "&7Nemáš žádné žádosti o přátelství.");
     }
 
     private void accept(Player p, Player t) {

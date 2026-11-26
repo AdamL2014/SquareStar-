@@ -44,6 +44,7 @@ public final class SquareStar extends JavaPlugin {
     public Coins coins;
     public Progress progress;
     public Party party;
+    public Emotes emotes;
     public Web web;
     public Christmas xmas;
 
@@ -98,6 +99,7 @@ public final class SquareStar extends JavaPlugin {
         beggar = new Beggar(this); pm.registerEvents(beggar, this);
         new Hud(this);
         progress = new Progress(this); pm.registerEvents(progress, this); bind("profil", progress, null); bind("odmena", progress, null); bind("ukoly", progress, null); bind("uspechy", progress, null);
+        pm.registerEvents(new ChatFree(), this); ChatFree.start(this);
         party = new Party(this); pm.registerEvents(party, this); bind("parta", party, party); bind("pc", party, null);
         pm.registerEvents(new LobbyBoard(this), this);
         web = new Web(this);
@@ -119,10 +121,10 @@ public final class SquareStar extends JavaPlugin {
         meteors = new Meteors(this);
         Holo.start(this);
         bind("novinky", (s, c, l, a) -> { if (s instanceof Player p) news.open(p); return true; }, null);
-        Emotes em = new Emotes(this);
+        Emotes em = new Emotes(this); emotes = em;
         var mc = getCommand("udrzba");
         if (mc != null) mc.setExecutor((s, c, l, a) -> {
-            if (!s.hasPermission("squarestar.admin")) { s.sendMessage(U.tc(s, "&cNa tohle nemáš práva.")); return true; }
+            if (!s.hasPermission("squarestar.admin")) { ChatFree.send(s, U.tc(s, "&cNa tohle nemáš práva.")); return true; }
             boolean on = a.length > 0 ? a[0].equalsIgnoreCase("on") || a[0].equalsIgnoreCase("zap") : !motd.maintenance();
             motd.setMaintenance(on);
             U.all(on ? "&c&l⚠ ÚDRŽBA ZAPNUTA &7- na serveru zůstává jen tým." : "&a&l✔ Údržba skončila &7- server je zase otevřený!");

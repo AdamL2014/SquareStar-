@@ -232,6 +232,14 @@ public final class Progress implements CommandExecutor, Listener {
         h.inv.setItem(31, U.tag(U.item(Material.GOLDEN_HELMET, 1, "&e&l🏆 Úspěchy", "&7Splněno: &e" + achCount(p) + "/" + ACHS.length, "", "&eKlikni pro zobrazení"), "ss_prof", "ach"));
         h.inv.setItem(30, U.tag(U.item(Material.EMERALD, 1, "&a&l" + Coins.ICON + " Obchod", "&eKlikni pro otevření"), "ss_prof", "shop"));
         h.inv.setItem(32, U.tag(U.item(Material.COMPASS, 1, "&6&l✦ Minihry", "&eKlikni pro otevření"), "ss_prof", "games"));
+        // další funkce bez příkazů (pro hráče bez chatu)
+        h.inv.setItem(37, U.tag(U.item(Material.CAKE, 1, "&9&lParta", "&7Hraj s kamarády", "&eKlikni pro otevření"), "ss_prof", "party"));
+        h.inv.setItem(38, U.tag(U.item(Material.NAME_TAG, 1, "&d&lEmoty", "&7Zamávej, tancuj, oslavuj", "&eKlikni pro otevření"), "ss_prof", "emotes"));
+        h.inv.setItem(39, U.tag(U.item(Material.AMETHYST_SHARD, 1, "&e&lHerna", "&7Automaty o mince", "&eKlikni pro vstup"), "ss_prof", "arcade"));
+        h.inv.setItem(40, U.tag(U.item(Material.FIREWORK_ROCKET, 1, "&6&lEvent", "&7Připojit se k eventu", "&eKlikni pro připojení"), "ss_prof", "event"));
+        h.inv.setItem(41, U.tag(U.item(Material.PLAYER_HEAD, 1, "&d&lPřijmout žádosti o přátelství", "&eKlikni pro přijetí"), "ss_prof", "friends"));
+        h.inv.setItem(42, U.tag(U.item(Material.FEATHER, 1, "&b&lLétání", "&7Zapnout / vypnout (VIP+)", "&eKlikni"), "ss_prof", "fly"));
+        h.inv.setItem(43, U.tag(U.item(Material.WRITABLE_BOOK, 1, "&f&lJazyk / Language", "&eKlikni pro změnu"), "ss_prof", "lang"));
         p.openInventory(h.inv);
     }
 
@@ -268,6 +276,13 @@ public final class Progress implements CommandExecutor, Listener {
             case "back" -> open(p);
             case "shop" -> pl.coins.open(p);
             case "games" -> pl.games.openMenu(p);
+            case "party" -> pl.party.openMenu(p);
+            case "emotes" -> pl.emotes.openMenu(p);
+            case "arcade" -> { p.closeInventory(); p.performCommand("herna"); }
+            case "event" -> { p.closeInventory(); p.performCommand("event join"); }
+            case "friends" -> { pl.friends.acceptAll(p); }
+            case "fly" -> { p.closeInventory(); p.performCommand("fly"); }
+            case "lang" -> pl.intro.openLang(p);
         }
     }
 
@@ -277,7 +292,7 @@ public final class Progress implements CommandExecutor, Listener {
             if (!p.isOnline()) return;
             quests(p);
             if (dailyReady(p)) {
-                p.sendMessage(U.c(U.PREFIX + Lang.t(p, "&6&l🎁 Denní odměna je připravená! "))
+                ChatFree.send(p, U.c(U.PREFIX + Lang.t(p, "&6&l🎁 Denní odměna je připravená! "))
                         .append(U.c(Lang.t(p, "&a&l[VYZVEDNOUT]")).clickEvent(net.kyori.adventure.text.event.ClickEvent.runCommand("/odmena"))
                                 .hoverEvent(net.kyori.adventure.text.event.HoverEvent.showText(U.c(Lang.t(p, "&eKlikni pro odměnu"))))));
                 U.sound(p, Sound.BLOCK_NOTE_BLOCK_CHIME, 1.4f);
@@ -286,7 +301,7 @@ public final class Progress implements CommandExecutor, Listener {
     }
 
     @Override public boolean onCommand(@NotNull CommandSender s, @NotNull Command c, @NotNull String l, String @NotNull [] a) {
-        if (!(s instanceof Player p)) { s.sendMessage("Jen pro hrace."); return true; }
+        if (!(s instanceof Player p)) { ChatFree.send(s, "Jen pro hrace."); return true; }
         switch (c.getName()) {
             case "odmena" -> claimDaily(p);
             case "uspechy" -> openAch(p);

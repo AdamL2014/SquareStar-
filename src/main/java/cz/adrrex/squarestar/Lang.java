@@ -94,6 +94,17 @@ public final class Lang {
     }
 
     private static void a(String cs, String en) { D.add(new String[]{cs, en}); }
+    /** doplňkové překlady: řádek = česky TAB anglicky, \\n = nový řádek */
+    private static void loadFile() {
+        try (var in = Lang.class.getResourceAsStream("/lang_en.tsv")) {
+            if (in == null) return;
+            for (String l : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).split("\n")) {
+                int t = l.indexOf('\t');
+                if (t <= 0) continue;
+                a(l.substring(0, t).replace("\\n", "\n"), l.substring(t + 1).replace("\\n", "\n"));
+            }
+        } catch (Exception ignored) { }
+    }
     static {
         a("mincí", "coins"); a("Máš:", "You have:"); a("Nemáš dost mincí!", "Not enough coins!"); a("Potřebuješ", "You need"); a("máš", "you have"); a("Mince dostaneš za hry a výhry.", "You get coins for games and wins.");
         a("Obchod", "Shop"); a("Klíče a kosmetika za mince", "Keys and cosmetics for coins"); a("Tvoje mince:", "Your coins:"); a("Mince dostaneš za:", "You get coins for:");
@@ -752,6 +763,7 @@ public final class Lang {
         a("Neonové studio", "Neon Studio");
         a("Padej šachtou, nenaraz do ničeho a dopadni do vody. 8 levelů!", "Fall down the shaft, hit nothing and land in the water. 8 levels!");
         a("Mario Kart na Marsu: itemy, drift a turbo. 3 kola!", "Mario Kart on Mars: items, drift and turbo. 3 laps!");
+        loadFile(); // doplňkové překlady (lang_en.tsv v resources)
         D.sort((x, y) -> y[0].length() - x[0].length()); // nejdelší fráze první
         for (String[] e : D) P.add(java.util.regex.Pattern.compile("(?<!(?<!&)\\p{L})" + java.util.regex.Pattern.quote(e[0]) + "(?![\\p{L}])"));
     }
