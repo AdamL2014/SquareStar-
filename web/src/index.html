@@ -103,8 +103,8 @@
 
  <section id="obchod" class="panel page">
   <a class="back" href="#top">← Zpět na hlavní stránku</a>
-  <div class="shophero glass"><div><h2>OBCHOD</h2><p>Kupuj za mince ze hry. Věc se ti hned objeví na serveru.</p></div>
-   <div class="bal"><span>Tvoje mince</span><b id="balance">Přihlas se</b></div></div>
+  <div class="shophero glass"><div><h2>OBCHOD</h2><p>Kupuj za Mars Coiny ze hry. Věc se ti hned objeví na serveru.</p></div>
+   <div class="bal"><span>Tvoje Mars Coiny</span><b id="balance">Přihlas se</b></div></div>
   <div class="tabs" id="shopTabs"><button data-cat="" class="act">Vše</button><button data-cat="Rank">Ranky</button><button data-cat="Klíč">Klíče</button><button data-cat="Kosmetika">Kosmetika</button></div>
   <div class="shop" id="shop"></div>
   <div class="glass cartbar"><span id="cartInfo">Košík je prázdný</span><span class="msg" id="buyMsg"></span><button class="gbtn" data-action="checkout" id="checkoutBtn">Koupit</button></div>
@@ -113,18 +113,19 @@
  <section id="kosmetika" class="panel page">
   <a class="back" href="#top">← Zpět na hlavní stránku</a>
   <div class="wd" id="wd">
-   <aside class="wd-side" id="wdSide"></aside>
-   <div class="wd-mid">
-    <div class="wd-bar"><b id="wdTitle">Kosmetika</b><div class="wd-tools"><label class="sr" for="wdSearch">Hledat</label><input id="wdSearch" placeholder="Hledat…" autocomplete="off"><span class="wd-coins" id="wdCoins">0</span></div></div>
-    <div class="wd-grid" id="wdGrid"></div>
-   </div>
-   <div class="wd-prev">
-    <div class="wd-bar"><button class="wd-ib" data-wd="spin" aria-label="Otočit postavu"><svg class="ic"><use href="#i-play"/></svg></button><div class="wd-outfit"><button class="wd-ib" data-wd="prev" aria-label="Předchozí outfit">‹</button><b id="wdOutfit">Outfit 1</b><button class="wd-ib" data-wd="next" aria-label="Další outfit">›</button></div><button class="wd-ib plus" data-wd="new" aria-label="Nový outfit">+</button></div>
-    <div class="stage" id="stage"><div class="rig" id="rig"></div><div class="pfx" id="pfx"></div></div>
+   <div class="wd-left glass">
+    <div class="wd-top"><div class="wd-on"><small>Tvůj vzhled</small><b id="wdOutfit">Steve</b></div></div>
+    <div class="stage" id="stage"><div class="orbit" aria-hidden="true"></div><div class="plat" aria-hidden="true"></div><div class="rig" id="rig"></div><div class="pfx" id="pfx"></div>
+     <div class="wd-rot"><button data-wd="front" class="on" aria-label="Zepředu">◐</button><button data-wd="spin" aria-label="Otočka">⟳</button><button data-wd="back" aria-label="Zezadu">◑</button></div></div>
+    <div class="slots" id="wdEq"></div>
     <div class="wd-colors" id="wdColors"></div>
     <div class="wd-act" id="wdAct"></div>
-    <div class="wd-fb"><button data-wd="front" class="on">Zepředu</button><button data-wd="back">Zezadu</button></div>
-    <div class="wd-eq" id="wdEq"></div>
+   </div>
+   <div class="wd-right">
+    <div class="wd-head"><div><h2>ŠATNÍK</h2><p>Vyber si vzhled. Uvidíš ho hned na postavě i ve hře.</p></div><div class="bal sm"><span>Tvoje Mars Coiny</span><b id="wdCoins">—</b></div></div>
+    <div class="wd-tabs" id="wdSide"></div>
+    <div class="wd-search"><label class="sr" for="wdSearch">Hledat</label><input id="wdSearch" placeholder="Hledat věc…" autocomplete="off"><span id="wdTitle" class="wd-count"></span></div>
+    <div class="wd-grid" id="wdGrid"></div>
    </div>
   </div>
  </section>

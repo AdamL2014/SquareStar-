@@ -1,17 +1,20 @@
-// Účet (přihlášení kódem ze hry /web), obchod za herní mince a přátelé.
+// Účet (přihlášení kódem ze hry /web), obchod za Mars Coiny a přátelé.
 // V náhledu (cfg.demo) vše běží jen v prohlížeči. Napojení na server: viz komentáře "API:".
 import { $, esc, pixelHead } from "./util.js";
 import { startTilt, toast } from "./fx.js";
 import { RANK_IMG } from "./ranks.js";
 
+// Stejné jako na serveru: klíče z /obchod (Coins.java), ranky se za Mars Coiny nekupují.
 const SHOP = [
-  { id: "vip", cat: "Rank", name: "VIP", desc: "Barevné jméno, /fly v lobby a 2 emoty navíc", price: 1500, c: "t-green", icon: "crown", rk: "vip" },
-  { id: "mvp", cat: "Rank", name: "MVP", desc: "Vše z VIP + vlastní částice a 2× denní odměna", price: 4000, c: "t-pink", icon: "star", rk: "mvp" },
-  { id: "key", cat: "Klíč", name: "Legendární klíč", desc: "Otevře legendární bednu v lobby", price: 600, c: "t-purple", icon: "gift" },
-  { id: "keys5", cat: "Klíč", name: "5× Vzácný klíč", desc: "Balíček vzácných klíčů", price: 900, c: "t-red", icon: "pack" },
-  { id: "emotes", cat: "Kosmetika", name: "Balíček emotů", desc: "6 animovaných emotů do lobby", price: 450, c: "t-green", icon: "smile" },
-  { id: "trail", cat: "Kosmetika", name: "Raketová stopa", desc: "Ohnivá stopa za tebou při skoku", price: 350, c: "t-orange", icon: "rocket" },
+  { id: "vip", cat: "Rank", name: "VIP", desc: "Barevné jméno, /fly v lobby a další výhody", price: 0, noCoin: 1, c: "t-green", icon: "crown", rk: "vip" },
+  { id: "mvp", cat: "Rank", name: "MVP", desc: "Vše z VIP a ještě víc", price: 0, noCoin: 1, c: "t-pink", icon: "star", rk: "mvp" },
+  { id: "key-common", cat: "Klíč", name: "Obyčejný klíč", desc: "Otevři s ním bednu na spawnu", price: 60, c: "t-green", icon: "gift" },
+  { id: "key-rare", cat: "Klíč", name: "Vzácný klíč", desc: "Otevři s ním bednu na spawnu", price: 150, c: "t-blue", icon: "gift" },
+  { id: "key-legendary", cat: "Klíč", name: "Legendární klíč", desc: "Otevři s ním bednu na spawnu", price: 400, c: "t-gold", icon: "gift" },
+  { id: "cos", cat: "Kosmetika", name: "Šatník", desc: "Čepice, pety, pláště, balónky, stopy a aury", price: 0, link: "#kosmetika", c: "t-purple", icon: "spark" },
 ];
+export const coin = (n) => `${Number(n).toLocaleString("cs-CZ")}<i class="coin" title="Mars Coin"></i>`;
+const MC = "Mars Coinů";
 
 export const S = { cat: "", user: null, coins: 0, cart: new Set(), owned: new Set(),
   friends: [{ name: "Kuba123", on: true, play: "BedWars" }, { name: "Terka_CZ", on: true, play: "Lobby" }, { name: "MarsKing", on: false, play: "" }],
@@ -24,23 +27,23 @@ export const needLogin = () => { if (S.user) return false; open(); return true; 
 
 function renderAcc() {
   const b = $("accBtn"), c = $("coins");
-  if (S.user) { b.innerHTML = `<img class="av head" src="${pixelHead(S.user)}" alt="">${esc(S.user)}`; c.hidden = false; c.textContent = S.coins + " mincí"; }
+  if (S.user) { b.innerHTML = `<img class="av head" src="${pixelHead(S.user)}" alt="">${esc(S.user)}`; c.hidden = false; c.innerHTML = coin(S.coins); }
   else { b.textContent = "Přihlásit"; c.hidden = true; }
-  $("balance").textContent = S.user ? S.coins + " mincí" : "Přihlas se";
+  $("balance").innerHTML = S.user ? coin(S.coins) : "Přihlas se";
   $("frLocked").hidden = !!S.user; $("frBox").hidden = !S.user;
 }
 
 function renderShop() {
   $("shop").innerHTML = SHOP.filter((it) => !S.cat || it.cat === S.cat).map((it) => {
-    const own = S.owned.has(it.id), inCart = S.cart.has(it.id);
-    const lbl = own ? "Vlastníš" : inCart ? "V košíku · zrušit" : `${it.price} mincí · Do košíku`;
+    const inCart = S.cart.has(it.id);
+    const lbl = it.noCoin ? "Nelze za Mars Coiny" : it.link ? "Otevřít šatník →" : inCart ? "V košíku · zrušit" : `${coin(it.price)} · Do košíku`;
     return `<div class="tile item ${it.c}"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-${it.icon}"/></svg>
       <span class="tag">${it.cat}</span><div class="tx">${it.rk ? `<img class="rkbig" src="${RANK_IMG[it.rk]}" alt="Rank ${it.name}">` : ""}<h2>${it.name}</h2><p>${it.desc}</p>
-      <button class="buy${own || inCart ? " on" : ""}" data-action="cart" data-id="${it.id}" ${own ? "disabled" : ""}>${lbl}</button></div></div>`;
+      ${it.link ? `<a class="buy" href="${it.link}">${lbl}</a>` : `<button class="buy${inCart || it.noCoin ? " on" : ""}" data-action="cart" data-id="${it.id}" ${it.noCoin ? "disabled" : ""}>${lbl}</button>`}</div></div>`;
   }).join("");
   const sel = SHOP.filter((i) => S.cart.has(i.id)), total = sel.reduce((a, i) => a + i.price, 0);
-  $("cartInfo").textContent = sel.length ? `Košík: ${sel.map((i) => i.name).join(", ")} · ${total} mincí` : "Košík je prázdný";
-  $("checkoutBtn").textContent = `Koupit (${total} mincí)`;
+  $("cartInfo").textContent = sel.length ? `Košík: ${sel.map((i) => i.name).join(", ")} · ${total} ${MC}` : "Košík je prázdný";
+  $("checkoutBtn").innerHTML = `Koupit (${coin(total)})`;
   startTilt("#shop .tile");
 }
 
@@ -105,9 +108,9 @@ export function startAccount(cfg) {
       if (needLogin()) return;
       const sel = SHOP.filter((i) => S.cart.has(i.id)), total = sel.reduce((x, i) => x + i.price, 0);
       if (!sel.length) return void ($("buyMsg").textContent = "Košík je prázdný.");
-      if (total > S.coins) return void ($("buyMsg").textContent = "Nemáš dost mincí.");
+      if (total > S.coins) return void ($("buyMsg").textContent = "Nemáš dost Mars Coinů.");
       // API: POST /api/shop/buy {items} -> server odečte mince a dá věci hráči ve hře
-      S.coins -= total; sel.forEach((i) => S.owned.add(i.id)); S.cart.clear(); $("buyMsg").textContent = "Koupeno! Věci máš ve hře."; all();
+      S.coins -= total; S.cart.clear(); $("buyMsg").textContent = "Koupeno! Klíče máš ve hře."; all();
     }
     else if (a === "fr-accept") { S.requests = S.requests.filter((x) => x !== n); S.friends.push({ name: n, on: true, play: "Lobby" }); renderFriends(); }
     else if (a === "fr-deny") { S.requests = S.requests.filter((x) => x !== n); renderFriends(); }
