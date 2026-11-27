@@ -3,14 +3,15 @@
 import { $, esc, pixelHead } from "./util.js";
 import { startTilt, toast } from "./fx.js";
 import { RANK_IMG } from "./ranks.js";
+import { modelThumb } from "./render3d.js";
 
 // Stejné jako na serveru: klíče z /obchod (Coins.java), ranky se za Mars Coiny nekupují.
 const SHOP = [
   { id: "vip", cat: "Rank", name: "VIP", desc: "Barevné jméno, /fly v lobby a další výhody", price: 0, noCoin: 1, c: "t-green", icon: "crown", rk: "vip" },
   { id: "mvp", cat: "Rank", name: "MVP", desc: "Vše z VIP a ještě víc", price: 0, noCoin: 1, c: "t-pink", icon: "star", rk: "mvp" },
-  { id: "key-common", cat: "Klíč", name: "Obyčejný klíč", desc: "Otevři s ním bednu na spawnu", price: 60, c: "t-green", icon: "gift" },
-  { id: "key-rare", cat: "Klíč", name: "Vzácný klíč", desc: "Otevři s ním bednu na spawnu", price: 150, c: "t-blue", icon: "gift" },
-  { id: "key-legendary", cat: "Klíč", name: "Legendární klíč", desc: "Otevři s ním bednu na spawnu", price: 400, c: "t-gold", icon: "gift" },
+  { id: "key-common", model: "crate_common", cat: "Klíč", name: "Obyčejný klíč", desc: "Otevře obyčejnou bednu na spawnu", price: 60, c: "t-green", icon: "gift" },
+  { id: "key-rare", model: "crate_rare", cat: "Klíč", name: "Vzácný klíč", desc: "Otevře vzácnou bednu na spawnu", price: 150, c: "t-blue", icon: "gift" },
+  { id: "key-legendary", model: "crate_legendary", cat: "Klíč", name: "Legendární klíč", desc: "Otevře legendární bednu na spawnu", price: 400, c: "t-gold", icon: "gift" },
   { id: "cos", cat: "Kosmetika", name: "Šatník", desc: "Čepice, pety, pláště, balónky, stopy a aury", price: 0, link: "#kosmetika", c: "t-purple", icon: "spark" },
 ];
 export const coin = (n) => `${Number(n).toLocaleString("cs-CZ")}<i class="coin" title="Mars Coin"></i>`;
@@ -37,7 +38,7 @@ function renderShop() {
   $("shop").innerHTML = SHOP.filter((it) => !S.cat || it.cat === S.cat).map((it) => {
     const inCart = S.cart.has(it.id);
     const lbl = it.noCoin ? "Nelze za Mars Coiny" : it.link ? "Otevřít šatník →" : inCart ? "V košíku · zrušit" : `${coin(it.price)} · Do košíku`;
-    return `<div class="tile item ${it.c}"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-${it.icon}"/></svg>
+    return `<div class="tile item ${it.c}"><i class="shine"></i>${it.model ? `<img class="art mdl" src="${modelThumb(it.model, 200)}" alt="">` : `<svg class="art" viewBox="0 0 24 24"><use href="#i-${it.icon}"/></svg>`}
       <span class="tag">${it.cat}</span><div class="tx">${it.rk ? `<img class="rkbig" src="${RANK_IMG[it.rk]}" alt="Rank ${it.name}">` : ""}<h2>${it.name}</h2><p>${it.desc}</p>
       ${it.link ? `<a class="buy" href="${it.link}">${lbl}</a>` : `<button class="buy${inCart || it.noCoin ? " on" : ""}" data-action="cart" data-id="${it.id}" ${it.noCoin ? "disabled" : ""}>${lbl}</button>`}</div></div>`;
   }).join("");

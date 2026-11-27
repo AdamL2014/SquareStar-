@@ -4,7 +4,9 @@ export const time = (m) => { m = +m || 0; const h = Math.floor(m / 60); return h
 export const safeColor = (c) => (/^#[0-9a-fA-F]{6}$/.test(c) ? c : "#a88d83");
 
 /* Pixelová hlava 8×8 vygenerovaná ze jména (když nemáme skin ze serveru). */
-const HEADS = new Map();
+const HEADS = new Map(), HEADPX = new Map();
+/** barvy pixelů hlavy (8×8) pro 3D postavu */
+export function pixelHeadData(name) { if (!HEADPX.has(name)) pixelHead(name); return HEADPX.get(name); }
 export function pixelHead(name) {
   if (HEADS.has(name)) return HEADS.get(name);
   let h = 2166136261; for (const ch of String(name)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
@@ -23,5 +25,8 @@ export function pixelHead(name) {
   px(3, 5, shade(skin, .75)); px(4, 5, shade(skin, .75));
   const m = shade(skin, .55); px(2, 6, m); px(3, 6, m); px(4, 6, m); px(5, 6, m);
   if (r() < .35) for (let i = 1; i < 7; i++) px(i, 7, shade(hair, .9));
-  const u = c.toDataURL(); HEADS.set(name, u); return u;
+  const u = c.toDataURL(); HEADS.set(name, u);
+  const d = x.getImageData(0, 0, 8, 8).data, pxs = [];
+  for (let i = 0; i < 64; i++) pxs.push(`rgb(${d[i * 4]},${d[i * 4 + 1]},${d[i * 4 + 2]})`);
+  HEADPX.set(name, { px: pxs, skin, hair }); return u;
 }

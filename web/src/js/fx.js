@@ -1,4 +1,7 @@
 import { $, pixelHead } from "./util.js";
+import { ICON } from "./icons.js";
+// hra -> ikona z resource packu serveru
+const GICON = { "1v1": "pvp1v1", "Všichni proti všem": "pvp", "5v5": "pvp5v5", "10v10": "pvp10v10", Sumo: "sumo", BedWars: "bedwars", SkyWars: "skywars", Zombies: "zombies", Schovka: "hideseek", "Vrah mezi námi": "murder", "Stavitelská bitva": "buildbattle", Parkour: "parkour", Dropper: "dropper", "Rover závod": "rover", Speedrun: "speedrun", Spleef: "spleef", "Útěk před TNT": "tntrun", "Lucky Tower": "luckytower" };
 
 // Ikony miniher (24×24, tahy)
 export const GI = {
@@ -39,7 +42,7 @@ const word = (n) => (n === 1 ? "hra" : n < 5 ? "hry" : "her");
 
 export function renderCategories() {
   $("gcat").innerHTML = CATS.map((k) => `<div class="gsec" style="--c1:${k.c[0]};--c2:${k.c[1]}"><h3><span class="dot"></span>${k.t}<small>${k.g.length} ${word(k.g.length)}</small></h3>
-    <div class="ggrid">${k.g.map(([n, i]) => `<div class="game"><div class="gi"><svg viewBox="0 0 24 24" aria-hidden="true">${GI[i]}</svg></div><b>${n}</b><span>${k.t}</span></div>`).join("")}</div></div>`).join("");
+    <div class="ggrid">${k.g.map(([n, i]) => `<div class="game"><div class="gi">${GICON[n] ? `<img class="pix" src="${ICON[GICON[n]]}" alt="">` : `<svg viewBox="0 0 24 24" aria-hidden="true">${GI[i]}</svg>`}</div><b>${n}</b><span>${k.t}</span></div>`).join("")}</div></div>`).join("");
 }
 
 export function startStars() {

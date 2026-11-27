@@ -3,6 +3,7 @@
 import { $, esc, pixelHead } from "./util.js";
 import { S, needLogin, onAccount, all, coin } from "./account.js";
 import { toast } from "./fx.js";
+import { startStage, modelThumb } from "./render3d.js";
 
 /* ---------- pixel sprity 12×12 (písmena = barvy z palety, "a" = barva varianty) ---------- */
 const SP = {
@@ -48,9 +49,10 @@ function sprite(name, col = "#3a8bff") {
 /* ---------- katalog ---------- */
 /* Katalog = stejné věci jako v pluginu (Cosmetics.java): ID, názvy i ceny. */
 const T = (id, n, sp, c) => ({ id: "trail:" + id, n, slot: "stopa", sp, colors: [c] });
-const H = (id, n, sp, c) => ({ id: "hat:" + id, n, slot: "hlava", sp, colors: [c] });
+const HM = { HELMET: "oxygen_helmet", ROCKET: "hat_rocket", UFO: "hat_ufo", EARTH: "earth", STAR: "star_shard", CROWN: "hat_crown", HALO: "hat_halo", ALIEN: "hat_alien", SATURN: "hat_saturn", PROPELLER: "hat_propeller", SATELLITE: "hat_satellite", MARS: "hat_mars", WITCH: "hat_witch", SANTA: "hat_santa" };
+const H = (id, n, sp, c) => ({ id: "hat:" + id, n, slot: "hlava", sp, model: HM[id], colors: [c] });
 const P = (id, n, sp, c) => ({ id: "hat:" + id, n, slot: "hlava", pet: 1, sp, colors: [c] });
-const B = (id, n, c) => ({ id: "balloon:" + id, n, slot: "balonek", sp: "balloon", colors: [c] });
+const B = (id, n, c) => ({ id: "balloon:" + id, n, slot: "balonek", sp: "balloon", model: "balloon_" + id.toLowerCase(), colors: [c] });
 const C = (id, n, c) => ({ id: "cape:" + id, n, slot: "plast", sp: "cape", colors: [c] });
 const A = (id, n, c) => ({ id: "aura:" + id, n, slot: "aura", sp: "ring", colors: [c] });
 const ITEMS = [
@@ -81,12 +83,13 @@ function price(id) {
 }
 ITEMS.forEach((i) => { i.price = price(i.id); i.r = i.price < 0 ? "a" : i.price >= 300 ? "l" : i.price >= 150 ? "e" : i.price >= 100 ? "v" : "b"; });
 /* emoty ze serveru (/emote) */
+const EMO_SYM = { cheer: "★", hi: "HI", dance: "♪", twerk: "♫", spin: "↻", sleep: "z", swim: "≈", fly: "➶", sit: "⌐", dead: "☠", bow: "✦", gg: "GG", love: "❤", clap: "✦✦", rage: "⚡", rocket: "▲" };
 const EMOTES = [["Jásání", "cheer"], ["Mávání", "hi"], ["Tanec", "dance"], ["Twerk", "twerk"], ["Tornádo", "spin"], ["Spaní", "sleep"], ["Plavání vzduchem", "swim"], ["Letadlo", "fly"], ["Sednout", "sit"], ["Mrtvý (naoko)", "dead"], ["Poklona", "bow"], ["GG", "gg"], ["Láska", "love"], ["Tleskání", "clap"], ["Vztek", "rage"], ["Odlet na Mars", "rocket"]];
 
 const RAR = { b: ["Běžné", "#9aa3b5"], v: ["Vzácné", "#3ddc84"], e: ["Epické", "#b06bff"], l: ["Legendární", "#ffc83d"], a: ["Advent", "#5ee7ff"] };
 const TABS = [["hlava", "Čepice a pety", "rocket"], ["plast", "Pláště", "cape"], ["balonek", "Balónky", "balloon"], ["stopa", "Stopy", "flames"], ["aura", "Aury", "ring"], ["emoty", "Emoty", null]];
 const SLOTS = [["hlava", "Hlava"], ["plast", "Plášť"], ["balonek", "Balónek"], ["stopa", "Stopa"], ["aura", "Aura"]];
-const W = { tab: "hlava", q: "", sel: "hat:HELMET", owned: new Set(["hat:HELMET"]), color: {}, outfits: [{ name: "Můj vzhled", eq: { hlava: "hat:HELMET" } }], oi: 0, angle: -25, ownEm: new Set(EMOTES.map(([n]) => n)) };
+const W = { tab: "hlava", q: "", sel: "hat:HELMET", owned: new Set(["hat:HELMET"]), color: {}, outfits: [{ name: "Můj vzhled", eq: { hlava: "hat:HELMET" } }], oi: 0, angle: 20, ownEm: new Set(EMOTES.map(([n]) => n)) };
 const eq = () => W.outfits[W.oi].eq;
 const item = (id) => ITEMS.find((i) => i.id === id);
 const colOf = (it) => W.color[it.id] || (it.colors ? it.colors[0] : "#3a8bff");
@@ -99,7 +102,7 @@ function card(it) {
   const own = W.owned.has(it.id), on = eq()[it.slot] === it.id, sel = W.sel === it.id, [rn, rc] = RAR[it.r || "b"];
   return `<button class="wc${sel ? " sel" : ""}${on ? " on" : ""}" style="--rc:${rc}" data-wd="item" data-v="${it.id}" aria-label="${esc(it.n)}">
     <span class="wc-r">${rn}</span>${it.isNew && !own ? '<span class="wc-new">Novinka</span>' : ""}
-    <div class="wc-art"><i class="wc-glow"></i>${sprite(it.sp, colOf(it))}</div>
+    <div class="wc-art"><i class="wc-glow"></i>${it.model ? `<img class="mdl" src="${modelThumb(it.model)}" alt="">` : sprite(it.sp, colOf(it))}</div>
     ${it.colors && it.colors.length > 1 ? `<div class="wc-dots">${it.colors.map((c) => `<i style="background:${c}"></i>`).join("")}</div>` : ""}
     <b>${esc(it.n)}</b>
     <span class="wc-foot">${own ? (on ? '<em class="ok">Nasazeno</em>' : '<em>Vlastníš</em>') : `${it.price < 0 ? '<em class="adv">Adventní kalendář</em>' : `<span class="price">${it.price ? coin(it.price) : "Zdarma"}</span>`}`}</span></button>`;
@@ -109,7 +112,7 @@ function renderGrid() {
   let html = "", n = 0;
   if (W.tab === "emoty") {
     const l = EMOTES.filter(([x]) => !q || x.toLowerCase().includes(q)); n = l.length;
-    html = l.map(([x, p]) => { const own = W.ownEm.has(x); return `<button class="wc emote" style="--rc:#ff8a1f" data-wd="emote" data-v="${esc(x)}"><span class="wc-r">Emote</span><div class="wc-art"><i class="wc-glow"></i><img class="head big" src="${pixelHead(S.user || "Steve")}" alt=""></div><b>${esc(x)}</b><span class="wc-foot"><em>Zahrát · /emote ${esc(p)}</em></span></button>`; }).join("");
+    html = l.map(([x, p]) => { const own = W.ownEm.has(x); return `<button class="wc emote" style="--rc:#ff8a1f" data-wd="emote" data-v="${esc(x)}"><span class="wc-r">Emote</span><div class="wc-art"><i class="wc-glow"></i><span class="emo">${EMO_SYM[p] || "✦"}</span></div><b>${esc(x)}</b><span class="wc-foot"><em>Zahrát · /emote ${esc(p)}</em></span></button>`; }).join("");
   } else if (W.tab === "outfity") {
     n = W.outfits.length;
     html = W.outfits.map((o, i) => `<button class="wc outfit${i === W.oi ? " sel" : ""}" style="--rc:#5ee7ff" data-wd="outfit" data-v="${i}"><span class="wc-r">Outfit</span><div class="wc-art mini"><i class="wc-glow"></i>${Object.values(o.eq).slice(0, 4).map((id) => sprite(item(id).sp, colOf(item(id)))).join("") || "<em>prázdný</em>"}</div><b>${esc(o.name)}</b><span class="wc-foot"><em>${Object.keys(o.eq).length} věci</em></span></button>`).join("");
@@ -133,51 +136,40 @@ function renderPanel() {
   }
   $("wdAct").innerHTML = act;
   const e = eq();
-  $("wdEq").innerHTML = SLOTS.map(([slot, n]) => { const id = e[slot]; return `<button class="slot${id ? " full" : ""}" data-wd="${id ? "unequip" : "tab"}" data-v="${slot}" title="${id ? "Sundat: " + esc(item(id).n) : n}">${id ? sprite(item(id).sp, colOf(item(id))) : ""}<span>${n}</span></button>`; }).join("");
+  $("wdEq").innerHTML = SLOTS.map(([slot, n]) => { const id = e[slot]; return `<button class="slot${id ? " full" : ""}" data-wd="${id ? "unequip" : "tab"}" data-v="${slot}" title="${id ? "Sundat: " + esc(item(id).n) : n}">${id ? (item(id).model ? `<img class="mdl" src="${modelThumb(item(id).model, 96)}" alt="">` : sprite(item(id).sp, colOf(item(id)))) : ""}<span>${n}</span></button>`; }).join("");
   renderRig();
 }
 
-/* ---------- 3D postava ---------- */
-const U = 7; // 1 pixel skinu = 7 px
-function box(w, h, d, x, y, z, faces, cls = "") {
-  const f = (n, W2, H2, tr, c) => `<i class="f ${n}" style="width:${W2}px;height:${H2}px;transform:${tr};${c}"></i>`;
-  const [fr, bk, l, r, t, b] = faces;
-  return `<div class="bx ${cls}" style="transform:translate3d(${x}px,${y}px,${z}px)">${f("q1", w, h, `translateZ(${d / 2}px)`, fr)}${f("q2", w, h, `rotateY(180deg) translateZ(${d / 2}px)`, bk)}${f("q3", d, h, `rotateY(-90deg) translateZ(${w / 2}px)`, l)}${f("q4", d, h, `rotateY(90deg) translateZ(${w / 2}px)`, r)}${f("q5", w, d, `rotateX(90deg) translateZ(${h / 2}px)`, t)}${f("q6", w, d, `rotateX(-90deg) translateZ(${h / 2}px)`, b)}</div>`;
+/* ---------- 3D postava (canvas renderer, modely ze serveru, animace emotů z BetterModel) ---------- */
+let stage = null;
+const SHAPE = { flames: "●", hearts: "❤", notes: "♪", sparkle: "✦", snow: "❄" };
+const spriteImg = new Map();
+function petImg(it) {
+  const k = it.id; if (spriteImg.has(k)) return spriteImg.get(k);
+  const im = new Image(); im.src = "data:image/svg+xml;utf8," + encodeURIComponent(sprite(it.sp, colOf(it)).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" '));
+  spriteImg.set(k, im); return im;
 }
-const solid = (c) => `background:${c}`;
 function renderRig() {
-  const nick = S.user || "Steve", face = pixelHead(nick), e = eq(), skin = "#d9a06a", hair = "#3b2416";
-  const shirt = "#3aa6b9", pants = "#3b4aa8", shoe = "#4a4a4a";
-  const sh = (c, k) => solid(shade(c, k));
-  let h = "";
-  // hlava (8×8×8)
-  h += box(8 * U, 8 * U, 8 * U, 0, -10 * U, 0, [`background:url(${face}) 0 0/100% 100%`, sh(hair, .9), sh(skin, .85), sh(skin, .85), solid(hair), sh(skin, .8)], "head");
-  // tělo, ruce, nohy
-  h += box(8 * U, 12 * U, 4 * U, 0, 0, 0, [solid(shirt), sh(shirt, .8), sh(shirt, .75), sh(shirt, .75), sh(shirt, 1.1), sh(shirt, .7)]);
-  h += box(4 * U, 12 * U, 4 * U, -6 * U, 0, 0, [`background:linear-gradient(${skin} 0 33%,${shirt} 33%)`, sh(skin, .8), sh(skin, .75), sh(skin, .85), sh(shirt, 1.1), sh(skin, .7)], "arm");
-  h += box(4 * U, 12 * U, 4 * U, 6 * U, 0, 0, [`background:linear-gradient(${shirt} 0 67%,${skin} 67%)`, sh(skin, .8), sh(skin, .85), sh(skin, .75), sh(shirt, 1.1), sh(skin, .7)], "arm");
-  h += box(4 * U, 12 * U, 4 * U, -2 * U, 12 * U, 0, [`background:linear-gradient(${pants} 0 80%,${shoe} 80%)`, sh(pants, .8), sh(pants, .75), sh(pants, .85), sh(pants, 1), solid(shoe)], "leg");
-  h += box(4 * U, 12 * U, 4 * U, 2 * U, 12 * U, 0, [`background:linear-gradient(${pants} 0 80%,${shoe} 80%)`, sh(pants, .8), sh(pants, .85), sh(pants, .75), sh(pants, 1), solid(shoe)], "leg");
-  // kosmetika (sloty jako na serveru: hlava, plášť, balónek, stopa, aura)
-  const hat = e.hlava && item(e.hlava);
-  if (hat && hat.pet) h += `<div class="ax pet" style="transform:translate3d(${11 * U}px,${-12 * U}px,${2 * U}px)">${sprite(hat.sp, colOf(hat))}</div>`;
-  else if (hat && hat.sp === "halo") h += `<div class="ax halo" style="transform:translate3d(0,${-16 * U}px,0) rotateX(90deg)"></div>`;
-  else if (hat && hat.sp === "helmet") { const c = "#e8eef8"; h += box(9.6 * U, 9.6 * U, 9.6 * U, 0, -10 * U, 0, ["background:#9fe8ff55;box-shadow:inset 0 0 0 4px " + c, sh(c, .9), sh(c, .85), sh(c, .85), sh(c, 1.05), sh(c, .6)], "glassbox"); }
-  else if (hat) { const s = sprite(hat.sp, colOf(hat)); h += `<div class="ax hatsp" style="transform:translate3d(0,${-17.5 * U}px,0)">${s}</div><div class="ax hatsp" style="transform:translate3d(0,${-17.5 * U}px,0) rotateY(90deg)">${s}</div>`; }
-  if (e.plast) { const c = colOf(item(e.plast)); h += `<div class="ax cape" style="transform:translate3d(0,${.8 * U}px,${-2.6 * U}px) rotateX(8deg);background:linear-gradient(${shade(c, 1.15)},${shade(c, .7)})"></div>`; }
-  if (e.balonek) { const bl = item(e.balonek); h += `<div class="ax balloon" style="transform:translate3d(${-10 * U}px,${-22 * U}px,0)">${sprite("balloon", colOf(bl))}<i></i></div>`; }
-  if (e.aura) { const c = colOf(item(e.aura)); h += `<div class="ax aura" style="--c:${c};transform:translate3d(0,${4 * U}px,0) rotateX(90deg)">${"<i></i>".repeat(8)}</div>`; }
-  $("rig").innerHTML = `<div class="rot" id="rot" style="transform:rotateX(-8deg) rotateY(${W.angle}deg)">${h}</div>`;
-  const tr = e.stopa && item(e.stopa), pt = tr ? tr.sp : "";
-  $("pfx").className = "pfx " + pt; $("pfx").style.setProperty("--c", tr ? colOf(tr) : "#fff");
-  $("pfx").innerHTML = pt ? Array.from({ length: 14 }, (_, i) => `<i style="--x:${(i * 37) % 100}%;--d:${(i % 7) * .45}s;--s:${.7 + (i % 3) * .25}"></i>`).join("") : "";
+  if (!stage) return;
+  const e = eq(), hat = e.hlava && item(e.hlava), tr = e.stopa && item(e.stopa);
+  stage.set({
+    nick: S.user || "Steve",
+    hat: hat && !hat.pet ? { model: hat.model } : null,
+    pet: hat && hat.pet ? petImg(hat) : null,
+    cape: e.plast ? colOf(item(e.plast)) : null,
+    balloon: e.balonek ? item(e.balonek).model : null,
+    trail: tr ? { shape: SHAPE[tr.sp] || "✦", color: colOf(tr) } : null,
+    aura: e.aura ? colOf(item(e.aura)) : null,
+  });
 }
-const setAngle = (a) => { W.angle = a; const r = $("rot"); if (r) r.style.transform = `rotateX(-8deg) rotateY(${a}deg)`; };
+function turnTo(target) { const s = W.angle, t0 = performance.now(); const f = (t) => { const k = Math.min(1, (t - t0) / 500), e = 1 - (1 - k) ** 3; setAngle(s + (target - s) * e); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
+const setAngle = (a) => { W.angle = a; if (stage) stage.yaw = -a * Math.PI / 180; };
 
 const renderAll = () => { renderSide(); renderGrid(); renderPanel(); };
 
 export function startWardrobe() {
   onAccount.push(() => { renderGrid(); renderPanel(); });
+  stage = startStage($("stageCv")); setAngle(W.angle);
   renderAll();
   $("wdSearch").addEventListener("input", (e) => { W.q = e.target.value.trim(); renderGrid(); });
   // otáčení tažením
@@ -202,12 +194,12 @@ export function startWardrobe() {
     else if (a === "emote") {
       const p = EMOTES.find(([n]) => n === v)[1];
       if (!W.ownEm.has(v)) { if (needLogin()) return; if (S.coins < p) return toast("Nemáš dost Mars Coinů"); S.coins -= p; W.ownEm.add(v); all(); toast(`Emote ${v} je tvůj!`); }
-      const r = $("rig"); r.classList.remove("dance"); void r.offsetWidth; r.classList.add("dance");
+      const id = EMOTES.find(([n]) => n === v)[1]; if (stage) stage.play(id);
     }
     else if (a === "outfit") { W.oi = +v; renderAll(); }
     else if (a === "prev" || a === "next") { W.oi = (W.oi + (a === "next" ? 1 : -1) + W.outfits.length) % W.outfits.length; renderAll(); }
     else if (a === "new") { W.outfits.push({ name: `Outfit ${W.outfits.length + 1}`, eq: {} }); W.oi = W.outfits.length - 1; renderAll(); toast("Nový outfit vytvořen"); }
-    else if (a === "front" || a === "back") { document.querySelectorAll(".wd-rot button").forEach((x) => x.classList.toggle("on", x === b)); setAngle(a === "front" ? -25 : 155); }
+    else if (a === "front" || a === "back") { document.querySelectorAll(".wd-rot button").forEach((x) => x.classList.toggle("on", x === b)); turnTo(a === "front" ? 20 : 200); }
     else if (a === "spin") { let t0 = null; const s = W.angle; const f = (t) => { t0 ??= t; const k = Math.min(1, (t - t0) / 1200); setAngle(s + 360 * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
   });
 }
