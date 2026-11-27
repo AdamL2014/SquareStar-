@@ -3,6 +3,7 @@ import { loadConfig } from "./config.js";
 import { startLive } from "./live.js";
 import { startDemo } from "./demo.js";
 import { startAccount } from "./account.js";
+import { startWardrobe } from "./wardrobe.js";
 import { state, renderPlayers, renderTop, renderStats, renderPill, showModal, closeModal } from "./render.js";
 import { renderCategories, startStars, startReveal, startTilt, renderTicker, toast } from "./fx.js";
 
@@ -22,7 +23,7 @@ const live = {
   },
 };
 if (cfg.demo) { mode = "live"; startDemo((d) => live.onData(d)); } else startLive(cfg, live);
-startAccount(cfg);
+startAccount(cfg); startWardrobe();
 
 document.addEventListener("click", (e) => {
   const a = e.target.closest("[data-action]")?.dataset.action;

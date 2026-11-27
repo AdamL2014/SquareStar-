@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const R = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rd = (f) => fs.readFileSync(path.join(R, "src", f), "utf8");
 
-const order = ["util", "config", "live", "demo", "ranks", "render", "fx", "account", "main"];
+const order = ["util", "config", "live", "demo", "ranks", "render", "fx", "account", "wardrobe", "main"];
 const code = order.map((n) => rd(`js/${n}.js`)
   .replace(/^import .*;\s*$/gm, "")
   .replace(/^export (const|function|async function) /gm, "$1 ")).join("\n");

@@ -45,7 +45,7 @@
 
 <nav id="nav">
  <a class="nlogo" href="#top"><svg class="mk" viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="8" width="24" height="24" rx="3" fill="url(#lg)" transform="rotate(45 20 20)"/><path d="M20 11l2.6 6.4L29 20l-6.4 2.6L20 29l-2.6-6.4L11 20l6.4-2.6z" fill="#1c1e2d"/></svg><b>SQUARESTAR</b></a>
- <div class="nlinks" id="nlinks"><a href="#online">Online</a><a href="#obchod">Obchod</a><a href="#pratele">Přátelé</a><a href="#zebricky">Žebříčky</a><a href="#minihry">Minihry</a><a href="#pripojit">Jak hrát</a></div>
+ <div class="nlinks" id="nlinks"><a href="#online">Online</a><a href="#obchod">Obchod</a><a href="#kosmetika">Kosmetika</a><a href="#pratele">Přátelé</a><a href="#zebricky">Žebříčky</a><a href="#minihry">Minihry</a><a href="#pripojit">Jak hrát</a></div>
  <div class="nright"><span class="coins" id="coins" hidden></span><button class="acc" id="accBtn" data-action="account">Přihlásit</button><span class="pill"><span class="dot" id="dot"></span><span id="livetxt">Načítám…</span></span><button class="burger" data-action="menu" aria-label="Menu"><i></i><i></i><i></i></button></div>
 </nav>
 
@@ -108,6 +108,25 @@
   <div class="tabs" id="shopTabs"><button data-cat="" class="act">Vše</button><button data-cat="Rank">Ranky</button><button data-cat="Klíč">Klíče</button><button data-cat="Kosmetika">Kosmetika</button></div>
   <div class="shop" id="shop"></div>
   <div class="glass cartbar"><span id="cartInfo">Košík je prázdný</span><span class="msg" id="buyMsg"></span><button class="gbtn" data-action="checkout" id="checkoutBtn">Koupit</button></div>
+ </section>
+
+ <section id="kosmetika" class="panel page">
+  <a class="back" href="#top">← Zpět na hlavní stránku</a>
+  <div class="wd" id="wd">
+   <aside class="wd-side" id="wdSide"></aside>
+   <div class="wd-mid">
+    <div class="wd-bar"><b id="wdTitle">Kosmetika</b><div class="wd-tools"><label class="sr" for="wdSearch">Hledat</label><input id="wdSearch" placeholder="Hledat…" autocomplete="off"><span class="wd-coins" id="wdCoins">0</span></div></div>
+    <div class="wd-grid" id="wdGrid"></div>
+   </div>
+   <div class="wd-prev">
+    <div class="wd-bar"><button class="wd-ib" data-wd="spin" aria-label="Otočit postavu"><svg class="ic"><use href="#i-play"/></svg></button><div class="wd-outfit"><button class="wd-ib" data-wd="prev" aria-label="Předchozí outfit">‹</button><b id="wdOutfit">Outfit 1</b><button class="wd-ib" data-wd="next" aria-label="Další outfit">›</button></div><button class="wd-ib plus" data-wd="new" aria-label="Nový outfit">+</button></div>
+    <div class="stage" id="stage"><div class="rig" id="rig"></div><div class="pfx" id="pfx"></div></div>
+    <div class="wd-colors" id="wdColors"></div>
+    <div class="wd-act" id="wdAct"></div>
+    <div class="wd-fb"><button data-wd="front" class="on">Zepředu</button><button data-wd="back">Zezadu</button></div>
+    <div class="wd-eq" id="wdEq"></div>
+   </div>
+  </div>
  </section>
 
  <section id="pratele" class="panel page">

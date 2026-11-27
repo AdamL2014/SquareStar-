@@ -13,14 +13,14 @@ const SHOP = [
   { id: "trail", cat: "Kosmetika", name: "Raketová stopa", desc: "Ohnivá stopa za tebou při skoku", price: 350, c: "t-orange", icon: "rocket" },
 ];
 
-const S = { cat: "", user: null, coins: 0, cart: new Set(), owned: new Set(),
+export const S = { cat: "", user: null, coins: 0, cart: new Set(), owned: new Set(),
   friends: [{ name: "Kuba123", on: true, play: "BedWars" }, { name: "Terka_CZ", on: true, play: "Lobby" }, { name: "MarsKing", on: false, play: "" }],
   requests: ["PixelPavel"], pendingNick: "" };
 
 const NICK = /^[A-Za-z0-9_]{3,16}$/;
 const open = () => { $("lgStep1").hidden = false; $("lgStep2").hidden = true; $("login").classList.add("on"); setTimeout(() => $("lgN").focus(), 50); };
 const close = () => $("login").classList.remove("on");
-const needLogin = () => { if (S.user) return false; open(); return true; };
+export const needLogin = () => { if (S.user) return false; open(); return true; };
 
 function renderAcc() {
   const b = $("accBtn"), c = $("coins");
@@ -53,10 +53,11 @@ function renderFriends() {
     : '<div class="empty">Zatím nemáš žádné přátele. Přidej prvního!</div>';
 }
 
-const all = () => { renderAcc(); renderShop(); renderFriends(); };
+export const onAccount = [];
+export const all = () => { renderAcc(); renderShop(); renderFriends(); onAccount.forEach((f) => f()); };
 
 /* samostatné stránky: #obchod a #pratele */
-const PAGES = ["obchod", "pratele"];
+const PAGES = ["obchod", "pratele", "kosmetika"];
 function route() {
   const p = location.hash.slice(1), page = PAGES.includes(p) ? p : "home";
   if (document.body.dataset.page === page && page === "home") return;
