@@ -3,7 +3,7 @@
 import { $, esc, pixelHead } from "./util.js";
 import { S, needLogin, onAccount, all, coin } from "./account.js";
 import { toast } from "./fx.js";
-import { startStage, modelThumb } from "./render3d.js";
+import { startStage, modelThumb, bannerPixels } from "./render3d.js";
 
 /* ---------- pixel sprity 12×12 (písmena = barvy z palety, "a" = barva varianty) ---------- */
 const SP = {
@@ -53,7 +53,9 @@ const HM = { HELMET: "oxygen_helmet", ROCKET: "hat_rocket", UFO: "hat_ufo", EART
 const H = (id, n, sp, c) => ({ id: "hat:" + id, n, slot: "hlava", sp, model: HM[id], colors: [c] });
 const P = (id, n, sp, c) => ({ id: "hat:" + id, n, slot: "hlava", pet: 1, sp, colors: [c] });
 const B = (id, n, c) => ({ id: "balloon:" + id, n, slot: "balonek", sp: "balloon", model: "balloon_" + id.toLowerCase(), colors: [c] });
-const C = (id, n, c) => ({ id: "cape:" + id, n, slot: "plast", sp: "cape", colors: [c] });
+const CAPE = { RED: ["RED"], BLUE: ["BLUE"], BLACK: ["BLACK", "BORDER", "RED"], MARS: ["ORANGE", "GRADIENT", "RED"], GALAXY: ["PURPLE", "GRADIENT", "BLACK"], ROYAL: ["PURPLE", "BORDER", "YELLOW"], CREEPER: ["LIME", "CREEPER", "BLACK"], SKULL: ["BLACK", "SKULL", "WHITE"], FLOWER: ["PINK", "FLOWER", "MAGENTA"], ICE: ["LIGHT_BLUE", "GRADIENT", "WHITE"] };
+const C = (id, n, c) => ({ id: "cape:" + id, n, slot: "plast", sp: "cape", banner: bannerPixels(...CAPE[id]), colors: [c] });
+function bannerSvg(bn) { let s = ""; for (let y = 0; y < bn.H; y++) for (let x = 0; x < bn.W; x++) s += `<rect x="${x}" y="${y}" width="1.05" height="1.05" fill="#${bn.px[y * bn.W + x].toString(16).padStart(6, "0")}"/>`; return `<svg viewBox="-6 -2 32 44" shape-rendering="crispEdges" aria-hidden="true"><rect x="-1" y="-1.5" width="22" height="1.5" fill="#6b4a2a"/>${s}</svg>`; }
 const A = (id, n, c) => ({ id: "aura:" + id, n, slot: "aura", sp: "ring", colors: [c] });
 const ITEMS = [
   H("HELMET", "Kyslíková helma", "helmet", "#5bc8ff"), H("ROCKET", "Mini raketa", "rocket", "#e23b3b"), H("UFO", "UFO", "ufo", "#9aa3b5"), H("EARTH", "Planeta Země", "planet", "#2f86ff"),
@@ -102,7 +104,7 @@ function card(it) {
   const own = W.owned.has(it.id), on = eq()[it.slot] === it.id, sel = W.sel === it.id, [rn, rc] = RAR[it.r || "b"];
   return `<button class="wc${sel ? " sel" : ""}${on ? " on" : ""}" style="--rc:${rc}" data-wd="item" data-v="${it.id}" aria-label="${esc(it.n)}">
     <span class="wc-r">${rn}</span>${it.isNew && !own ? '<span class="wc-new">Novinka</span>' : ""}
-    <div class="wc-art"><i class="wc-glow"></i>${it.model ? `<img class="mdl" src="${modelThumb(it.model)}" alt="">` : sprite(it.sp, colOf(it))}</div>
+    <div class="wc-art"><i class="wc-glow"></i>${it.model ? `<img class="mdl" src="${modelThumb(it.model)}" alt="">` : it.banner ? bannerSvg(it.banner) : sprite(it.sp, colOf(it))}</div>
     ${it.colors && it.colors.length > 1 ? `<div class="wc-dots">${it.colors.map((c) => `<i style="background:${c}"></i>`).join("")}</div>` : ""}
     <b>${esc(it.n)}</b>
     <span class="wc-foot">${own ? (on ? '<em class="ok">Nasazeno</em>' : '<em>Vlastníš</em>') : `${it.price < 0 ? '<em class="adv">Adventní kalendář</em>' : `<span class="price">${it.price ? coin(it.price) : "Zdarma"}</span>`}`}</span></button>`;
@@ -136,7 +138,7 @@ function renderPanel() {
   }
   $("wdAct").innerHTML = act;
   const e = eq();
-  $("wdEq").innerHTML = SLOTS.map(([slot, n]) => { const id = e[slot]; return `<button class="slot${id ? " full" : ""}" data-wd="${id ? "unequip" : "tab"}" data-v="${slot}" title="${id ? "Sundat: " + esc(item(id).n) : n}">${id ? (item(id).model ? `<img class="mdl" src="${modelThumb(item(id).model, 96)}" alt="">` : sprite(item(id).sp, colOf(item(id)))) : ""}<span>${n}</span></button>`; }).join("");
+  $("wdEq").innerHTML = SLOTS.map(([slot, n]) => { const id = e[slot]; return `<button class="slot${id ? " full" : ""}" data-wd="${id ? "unequip" : "tab"}" data-v="${slot}" title="${id ? "Sundat: " + esc(item(id).n) : n}">${id ? (item(id).model ? `<img class="mdl" src="${modelThumb(item(id).model, 96)}" alt="">` : item(id).banner ? bannerSvg(item(id).banner) : sprite(item(id).sp, colOf(item(id)))) : ""}<span>${n}</span></button>`; }).join("");
   renderRig();
 }
 
@@ -156,7 +158,7 @@ function renderRig() {
     nick: S.user || "Steve",
     hat: hat && !hat.pet ? { model: hat.model } : null,
     pet: hat && hat.pet ? petImg(hat) : null,
-    cape: e.plast ? colOf(item(e.plast)) : null,
+    cape: e.plast ? item(e.plast).banner : null,
     balloon: e.balonek ? item(e.balonek).model : null,
     trail: tr ? { shape: SHAPE[tr.sp] || "✦", color: colOf(tr) } : null,
     aura: e.aura ? colOf(item(e.aura)) : null,
@@ -174,7 +176,7 @@ export function startWardrobe() {
   $("wdSearch").addEventListener("input", (e) => { W.q = e.target.value.trim(); renderGrid(); });
   // otáčení tažením
   const st = $("stage"); let drag = null;
-  st.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, a: W.angle }; st.setPointerCapture(e.pointerId); st.classList.add("drag"); });
+  st.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; drag = { x: e.clientX, a: W.angle }; st.setPointerCapture(e.pointerId); st.classList.add("drag"); });
   st.addEventListener("pointermove", (e) => { if (drag) setAngle(drag.a + (e.clientX - drag.x) * .8); });
   const end = () => { drag = null; st.classList.remove("drag"); };
   st.addEventListener("pointerup", end); st.addEventListener("pointercancel", end);

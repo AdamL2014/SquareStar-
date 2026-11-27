@@ -2,6 +2,7 @@
 import { MODELS } from "./models3d.js";
 import { RIG } from "./rig3d.js";
 import { pixelHeadData } from "./util.js";
+import { SKIN } from "./skin.js";
 
 /* ---------- matice 4×4 (sloupcové pole 16 čísel) ---------- */
 const I = () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
@@ -41,6 +42,57 @@ function addBox(out, m, f, t, col, div = 1) {
       const a = map(i / n, j / n), b = map((i + 1) / n, j / n), c = map((i + 1) / n, (j + 1) / n), d = map(i / n, (j + 1) / n);
       out.push({ p: [P(...a), P(...b), P(...c), P(...d)], c: parse(col(fn, i, j, n)) });
     }
+  }
+}
+
+/* kvádr potažený skinem 64×64: texel po texelu (u,v = počátek dílu, w,h,d v pixelech skinu, r0..r1 = řádky výšky) */
+function addSkinBox(out, m, f, t, P0, skin) {
+  const [u, v, w, h, d, r0, r1] = P0, rows = r1 - r0;
+  const X = (a) => f[0] + (t[0] - f[0]) * a, Y = (a) => f[1] + (t[1] - f[1]) * a, Z = (a) => f[2] + (t[2] - f[2]) * a;
+  const face = (ru, rv, C, R, map) => {
+    for (let i = 0; i < C; i++) for (let j = 0; j < R; j++) {
+      const c = skin[(rv + j) * 64 + ru + i]; if (c === undefined) continue;
+      const q = [map(i / C, j / R), map((i + 1) / C, j / R), map((i + 1) / C, (j + 1) / R), map(i / C, (j + 1) / R)].map((p) => ap(m, p));
+      out.push({ p: q, c: hex(c) });
+    }
+  };
+  face(u + d, v + d + r0, w, rows, (a, b) => [X(1 - a), Y(1 - b), Z(0)]);            // přední (sever)
+  face(u + d + w + d, v + d + r0, w, rows, (a, b) => [X(a), Y(1 - b), Z(1)]);        // zadní
+  face(u, v + d + r0, d, rows, (a, b) => [X(1), Y(1 - b), Z(1 - a)]);                 // pravý bok (+x)
+  face(u + d + w, v + d + r0, d, rows, (a, b) => [X(0), Y(1 - b), Z(a)]);             // levý bok
+  if (r0 === 0) face(u + d, v, w, d, (a, b) => [X(1 - a), Y(1), Z(1 - b)]);           // vršek
+  if (r1 === h) face(u + d + w, v, w, d, (a, b) => [X(1 - a), Y(0), Z(b)]);           // spodek
+}
+const SKINMAP = {
+  h_ph_head: [0, 0, 8, 8, 8, 0, 8], pc_chest: [16, 16, 8, 12, 4, 0, 4], pw_waist: [16, 16, 8, 12, 4, 4, 8], phip_hip: [16, 16, 8, 12, 4, 8, 12],
+  pra_right_arm: [40, 16, 4, 12, 4, 0, 6], prfa_right_forearm: [40, 16, 4, 12, 4, 6, 12], pla_left_arm: [32, 48, 4, 12, 4, 0, 6], plfa_left_forearm: [32, 48, 4, 12, 4, 6, 12],
+  prl_right_leg: [0, 16, 4, 12, 4, 0, 6], prfl_right_foreleg: [0, 16, 4, 12, 4, 6, 12], pll_left_leg: [16, 48, 4, 12, 4, 0, 6], plfl_left_foreleg: [16, 48, 4, 12, 4, 6, 12],
+};
+
+/* ---------- banner (plášť ze serveru: barva + vzor) 20×40 px ---------- */
+const DYE = { WHITE: 0xf9fffe, ORANGE: 0xf9801d, MAGENTA: 0xc74ebd, LIGHT_BLUE: 0x3ab3da, YELLOW: 0xfed83d, LIME: 0x80c71f, PINK: 0xf38baa, GRAY: 0x474f52, BLACK: 0x1d1d21, RED: 0xb02e26, PURPLE: 0x8932b8, BLUE: 0x3c44aa };
+export function bannerPixels(base, pat, pc) {
+  const W = 20, H = 40, b = DYE[base] ?? 0x888888, p = DYE[pc] ?? 0xffffff, px = new Array(W * H).fill(b);
+  const mix = (a, c, k) => { const A = hex(a), C = hex(c); return ((A[0] + (C[0] - A[0]) * k) << 16) | ((A[1] + (C[1] - A[1]) * k) << 8) | (A[2] + (C[2] - A[2]) * k); };
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let c = b;
+    if (pat === "GRADIENT") c = mix(p, b, Math.min(1, y / (H * .85)));
+    else if (pat === "BORDER" && (x < 2 || x > W - 3 || y < 2 || y > H - 3)) c = p;
+    px[y * W + x] = c;
+  }
+  const put = (rows, ox, oy) => rows.forEach((r, j) => [...r].forEach((ch, i) => { if (ch === "#") for (let a = 0; a < 2; a++) for (let bb = 0; bb < 2; bb++) px[(oy + j * 2 + bb) * W + ox + i * 2 + a] = p; }));
+  if (pat === "CREEPER") put(["##..##", "##..##", "..##..", ".####.", ".#..#."], 4, 8);
+  if (pat === "SKULL") put(["..##..", ".####.", "#.##.#", ".####.", ".#..#.", "#....#"], 4, 7);
+  if (pat === "FLOWER") put(["..#...", ".###..", "#####.", ".###..", "..#..."], 4, 9);
+  // lehké stínování látky
+  for (let i = 0; i < px.length; i++) { const x = i % W; if (x % 5 === 0) px[i] = mix(px[i], 0, .08); }
+  return { W, H, px };
+}
+function addBanner(out, m, bn) {
+  const { W, H, px } = bn, w = 9, h = 19;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const x0 = -w / 2 + w * x / W, x1 = -w / 2 + w * (x + 1) / W, y0 = -h * y / H, y1 = -h * (y + 1) / H;
+    out.push({ p: [[x0, y0, 0], [x1, y0, 0], [x1, y1, 0], [x0, y1, 0]].map((p) => ap(m, p)), c: hex(px[y * W + x]) });
   }
 }
 
@@ -131,15 +183,10 @@ export function startStage(canvas) {
     let t = 0;
     if (emote) { t = (now - t0) / 1000; if (t > RIG.anims[emote].len) { emote = null; api.emoteId = null; } }
     const mats = boneMats(emote, t);
-    const q = [], hp = pixelHeadData(st.nick || "Steve");
-    const skin = hp.skin, hair = hp.hair, shirt = "#3aa6b9", pants = "#3b4aa8", shoe = "#4a4a52";
-    const col = { pc_chest: shirt, pw_waist: shirt, phip_hip: pants, pra_right_arm: shirt, pla_left_arm: shirt, prfa_right_forearm: skin, plfa_left_forearm: skin, prl_right_leg: pants, pll_left_leg: pants, prfl_right_foreleg: pants, plfl_left_foreleg: pants };
-    for (const [n, b] of Object.entries(BONE)) for (const [f, to] of b.b) {
-      if (n === "h_ph_head") addBox(q, mats[n], f, to, (fn, i, j, k) => fn === "north" ? hp.px[j * 8 + (7 - i)] : fn === "up" ? hair : fn === "down" ? skin : (fn === "south" ? (j < 6 ? hair : skin) : (j < 2 ? hair : skin)), 8);
-      else addBox(q, mats[n], f, to, (fn) => (n.includes("foreleg") && fn === "down") ? shoe : (col[n] || shirt));
-    }
-    // plášť (za zády, kývá se)
-    if (st.cape) { const sw = Math.sin(now / 600) * 6 + (emote ? 12 : 0); const m = mul(mats.pc_chest, mul(T(0, 22.5, 2.1), mul(RX(-sw * D), T(0, -22.5, -2.1)))); addBox(q, m, [-3.75, 6, 2.1], [3.75, 22.4, 2.7], () => st.cape); }
+    const q = [];
+    for (const [n, b] of Object.entries(BONE)) if (SKINMAP[n]) for (const [f, to] of b.b) addSkinBox(q, mats[n], f, to, SKINMAP[n], SKIN);
+    // plášť = banner ze serveru (za zády, vlní se)
+    if (st.cape) { const sw = Math.sin(now / 600) * 5 + 4 + (emote ? 12 : 0); addBanner(q, mul(mats.pc_chest, mul(T(0, 22.6, 3.1), RX(sw * D))), st.cape); }
     // čepice: model z resource packu na hlavě
     if (st.hat?.model) {
       const mm = MODELS[st.hat.model], s = .625 * mm.h[1] * .9375;
