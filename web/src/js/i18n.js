@@ -59,7 +59,7 @@ function apply(l) {
 export function startLang() {
   let saved = null; try { saved = localStorage.getItem("ss_lang"); } catch {}
   const box = document.createElement("div"); box.className = "modal on"; box.id = "langPick";
-  box.innerHTML = `<div class="glass mbox lang"><h3>Vyber jazyk · Choose language</h3><div class="langs">
+  box.innerHTML = `<div class="glass mbox lang"><h3>Vyber jazyk</h3><p class="sub2">Choose language</p><div class="langs">
     <button data-l="cs"><img src="${ICON.flag_cz}" alt=""><b>Čeština</b></button><button data-l="en"><img src="${ICON.flag_en}" alt=""><b>English</b></button></div></div>`;
   if (!saved) document.body.appendChild(box); else if (saved === "en") apply("en");
   box.addEventListener("click", (e) => { const b = e.target.closest("[data-l]"); if (!b) return; box.remove(); if (b.dataset.l === "en") { sw.innerHTML = `<img src="${ICON.flag_en}" alt="">`; apply("en"); } else { try { localStorage.setItem("ss_lang", "cs"); } catch {} } });

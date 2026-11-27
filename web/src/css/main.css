@@ -592,3 +592,4 @@ a.buy{display:block;text-align:center;text-decoration:none;line-height:22px}
 .langsw{width:40px;height:40px;border-radius:10px;border:1px solid #ffffff2e;background:#ffffff12;cursor:pointer;display:grid;place-items:center}
 .langsw img{width:24px;image-rendering:pixelated}
 .try{font:14px var(--mono);color:#5ee7ff}
+.mbox.lang h3{margin-bottom:2px}.mbox.lang .sub2{font:15px var(--px);color:var(--muted);margin-bottom:18px}

@@ -6,7 +6,23 @@ OUT = "/home/claude/squarestar-/web/src/js/"
 tex_cache = {}
 def tex(name):
     n = name.split(":")[-1].replace("item/", "")
-    if n not in tex_cache: tex_cache[n] = Image.open(f"{RP}/textures/item/{n}.png").convert("RGBA")
+    if n not in tex_cache:
+        p = f"{RP}/textures/item/{n}.png"
+        if not os.path.exists(p): p = f"/tmp/rp/assets/squarestar/textures/item/{n}.png"
+        if not os.path.exists(p):
+            print("chybí textura", name)
+            base = (240, 240, 236) if "chicken" in n else (110, 200, 90) if "slime" in n else (22, 20, 28) if "enderman" in n else (236, 220, 190) if "cat" in n else (52, 44, 40)
+            im = Image.new("RGBA", (16, 16), base + (255,))
+            for x in range(16):
+                for y in range(16):
+                    if (x * 7 + y * 3) % 5 == 0: im.putpixel((x, y), tuple(int(c * .88) for c in base) + (255,))
+            if "enderman_eyes" in n:
+                im = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+                for x, y in [(4, 7), (5, 7), (10, 7), (11, 7)]: im.putpixel((x, y), (210, 90, 255, 255))
+            if "spider" in n:
+                for x, y in [(5, 6), (10, 6), (4, 8), (11, 8)]: im.putpixel((x, y), (200, 30, 30, 255))
+            tex_cache[n] = im
+        else: tex_cache[n] = Image.open(p).convert("RGBA")
     return tex_cache[n]
 def avg(img, uv, ts):
     W, H = img.size; sx, sy = W / 16, H / 16
@@ -51,8 +67,32 @@ def voxel_model(name, res=1.0):
             flat.append(col)
     disp = d.get("display", {}).get("head", {})
     return {"q": flat, "h": [disp.get("translation", [0, 0, 0])[1], disp.get("scale", [1, 1, 1])[0]]}
+def texel_model(name):
+    d = json.load(open(f"/tmp/rp/assets/squarestar/models/item/{name}.json")); texs = d["textures"]; flat = []
+    for e in d["elements"]:
+        f, t = e["from"], e["to"]
+        for fn, face in e["faces"].items():
+            img = tex(texs.get(face.get("texture", "#0")[1:], texs.get("0"))); W, H = img.size; sx, sy = W / 16, H / 16
+            u0, v0, u1, v1 = face.get("uv", [0, 0, 16, 16])
+            pts = [rot((f[0] + (t[0] - f[0]) * c[0], f[1] + (t[1] - f[1]) * c[1], f[2] + (t[2] - f[2]) * c[2]), e.get("rotation")) for c in FACES[fn]]
+            ext = sorted([abs(t[0] - f[0]), abs(t[1] - f[1]), abs(t[2] - f[2])], reverse=True)
+            nu = max(1, min(round(abs(u1 - u0) * sx), round(ext[0] * 1.5) or 1)); nv = max(1, min(round(abs(v1 - v0) * sy), round(ext[1] * 1.5) or 1))
+            fx, fy = abs(u1 - u0) * sx / nu, abs(v1 - v0) * sy / nv
+            def at(a, b):
+                top = [pts[0][k] + (pts[1][k] - pts[0][k]) * a for k in range(3)]; bot = [pts[3][k] + (pts[2][k] - pts[3][k]) * a for k in range(3)]
+                return [top[k] + (bot[k] - top[k]) * b for k in range(3)]
+            for i in range(nu):
+                for j in range(nv):
+                    px = int(min(u0, u1) * sx + ((i if u1 >= u0 else nu - 1 - i) + .5) * fx); py = int(min(v0, v1) * sy + ((j if v1 >= v0 else nv - 1 - j) + .5) * fy)
+                    c = img.getpixel((min(W - 1, px), min(H - 1, py)))
+                    if c[3] < 40: continue
+                    q = [at(i / nu, j / nv), at((i + 1) / nu, j / nv), at((i + 1) / nu, (j + 1) / nv), at(i / nu, (j + 1) / nv)]
+                    flat += [round(v, 2) for p in q for v in p] + [(c[0] << 16) | (c[1] << 8) | c[2]]
+    disp = d.get("display", {}).get("head", {})
+    return {"q": flat, "h": [disp.get("translation", [0, 0, 0])[1], disp.get("scale", [1, 1, 1])[0]]}
 def model(name):
     if name == "earth": return voxel_model(name)
+    if name.startswith("pet_"): return texel_model(name)
     d = json.load(open(f"{RP}/models/item/{name}.json")); ts = d.get("texture_size", [16, 16]); texs = d["textures"]
     quads = []
     for e in d["elements"]:
@@ -72,7 +112,7 @@ def model(name):
     disp = d.get("display", {}).get("head", {})
     return {"q": flat, "h": [disp.get("translation", [0, 0, 0])[1], disp.get("scale", [1, 1, 1])[0]]}
 names = ["hat_rocket", "hat_ufo", "earth", "oxygen_helmet", "star_shard", "hat_crown", "hat_halo", "hat_alien", "hat_saturn", "hat_propeller", "hat_satellite", "hat_mars", "hat_witch", "hat_santa",
-         "balloon_red", "balloon_blue", "balloon_purple", "balloon_gold", "balloon_green", "balloon_white", "crate_common", "crate_rare", "crate_legendary"]
+         "balloon_red", "balloon_blue", "balloon_purple", "balloon_gold", "balloon_green", "balloon_white", "crate_common", "crate_rare", "crate_legendary"] + ["pet_" + p for p in ["spider", "chicken", "slime", "fox", "endy", "cat", "raccoon", "cthulhu", "pigeon"]]
 M = {n: model(n) for n in names}
 for n in names: print(n, len(M[n]["q"]) // 13)
 open(OUT + "models3d.js", "w").write("// 3D modely ze serverového resource packu (předpočítané stěny: 4 body + barva). Vygenerováno tools/prep3d.py\nexport const MODELS = " + json.dumps(M, separators=(",", ":")) + ";\n")

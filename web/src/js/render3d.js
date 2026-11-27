@@ -183,17 +183,17 @@ function sample(keys, t) {
   if (!keys || !keys.length) return null;
   if (t <= keys[0][0]) return keys[0].slice(1);
   for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) {
-    const a = keys[i - 1], b = keys[i], k = (t - a[0]) / (b[0] - a[0] || 1), e = k * k * (3 - 2 * k);
+    const a = keys[i - 1], b = keys[i], k = (t - a[0]) / (b[0] - a[0] || 1), e = k * k * k * (k * (k * 6 - 15) + 10);
     return [a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e, a[3] + (b[3] - a[3]) * e];
   }
   return keys[keys.length - 1].slice(1);
 }
-function boneMats(anim, t, extra = {}) {
+function boneMats(anim, t, extra = {}, wgt = 1) {
   const tr = anim ? RIG.anims[anim]?.t || {} : {}, mats = {};
   const get = (n) => {
     if (mats[n]) return mats[n];
     const b = BONE[n], parent = b.p ? get(b.p) : I(), o = b.o, ch = tr[n] || {};
-    const r = (sample(ch.rotation, t) || [0, 0, 0]).slice(), p = sample(ch.position, t) || [0, 0, 0];
+    const r = (sample(ch.rotation, t) || [0, 0, 0]).map((v) => v * wgt), p = (sample(ch.position, t) || [0, 0, 0]).map((v) => v * wgt);
     if (extra[n]) { r[0] += extra[n][0]; r[1] += extra[n][1]; r[2] += extra[n][2]; }
     let m = mul(parent, T(o[0] - p[0], o[1] + p[1], o[2] + p[2]));
     m = mul(m, mul(RZ(r[2] * D), mul(RY(-r[1] * D), RX(-r[0] * D))));
@@ -210,7 +210,7 @@ export const EMOTE_LEN = Object.fromEntries(Object.entries(RIG.anims).map(([k, v
  */
 export function startStage(canvas) {
   const ctx = canvas.getContext("2d");
-  let st = {}, emote = null, t0 = 0, yaw = -20 * D, run = true, parts = [], syms = [];
+  let walkW = 0, st = {}, emote = null, t0 = 0, yaw = -20 * D, run = true, parts = [], syms = [];
   const api = {
     set(s) { st = s; }, get yaw() { return yaw; }, set yaw(v) { yaw = v; },
     play(id) { emote = RIG.anims[id] ? id : null; t0 = performance.now(); api.emoteId = id; },
@@ -225,13 +225,17 @@ export function startStage(canvas) {
     let t = 0;
     if (emote) { t = (now - t0) / 1000; if (t > RIG.anims[emote].len) { emote = null; api.emoteId = null; } }
     // chůze: postava chodí po plošině, když má stopu (ať je stopa vidět jako ve hře)
-    const walk = !!st.trail && !emote, wt = now / 1000;
+    const wantWalk = !!st.trail && !emote, wt = now / 1000;
+    walkW += ((wantWalk ? 1 : 0) - walkW) * .06; const walk = walkW > .01;
+    const ew = emote ? Math.max(0, Math.min(1, t / .22, (RIG.anims[emote].len - t) / .22)) : 0;
     const ang = wt * .45, P = walk ? [Math.sin(ang) * 9, 0, Math.cos(ang) * 6] : [0, 0, 0];
-    const head = walk ? Math.atan2(-Math.cos(ang) * 9, Math.sin(ang) * 6) : 0;
-    const sw = walk ? Math.sin(wt * 7) * 32 : 0, bob = walk ? Math.abs(Math.cos(wt * 7)) * .6 : 0;
+    const head = Math.atan2(-Math.cos(ang) * 9, Math.sin(ang) * 6) * walkW;
+    const sw = Math.sin(wt * 7) * 32 * walkW, bob = Math.abs(Math.cos(wt * 7)) * .6 * walkW, br = Math.sin(wt * 2.2);
+    const idle = { pra_right_arm: [0, 0, 2.5 + br * 2], pla_left_arm: [0, 0, -2.5 - br * 2], h_ph_head: [br * 2, Math.sin(wt * .7) * 6, 0], pc_chest: [br * 1.2, 0, 0] };
     const extra = walk ? { prl_right_leg: [sw, 0, 0], pll_left_leg: [-sw, 0, 0], pra_right_arm: [-sw * .8, 0, 0], pla_left_arm: [sw * .8, 0, 0], prfl_right_foreleg: [Math.max(0, -sw) * .5, 0, 0], plfl_left_foreleg: [Math.max(0, sw) * .5, 0, 0] } : {};
+    for (const k in idle) { const a = extra[k] || [0, 0, 0]; extra[k] = a.map((v, i) => v + idle[k][i] * (1 - ew)); }
     const Wm = mul(T(P[0], bob, P[2]), RY(head));
-    const mats0 = boneMats(emote, t, extra), mats = {};
+    const mats0 = boneMats(emote, t, extra, ew || 1), mats = {};
     for (const k in mats0) mats[k] = mul(Wm, mats0[k]);
     const q = [], SK = makeSkin(st.nick || "Steve");
     for (const [n, b] of Object.entries(BONE)) if (SKINMAP[n]) for (const [f, to] of b.b) addSkinBox(q, mats[n], f, to, SKINMAP[n], SK);

@@ -51,7 +51,7 @@ function sprite(name, col = "#3a8bff") {
 const T = (id, n, sp, c) => ({ id: "trail:" + id, n, slot: "stopa", sp, colors: [c] });
 const HM = { HELMET: "oxygen_helmet", ROCKET: "hat_rocket", UFO: "hat_ufo", EARTH: "earth", STAR: "star_shard", CROWN: "hat_crown", HALO: "hat_halo", ALIEN: "hat_alien", SATURN: "hat_saturn", PROPELLER: "hat_propeller", SATELLITE: "hat_satellite", MARS: "hat_mars", WITCH: "hat_witch", SANTA: "hat_santa" };
 const H = (id, n, sp, c) => ({ id: "hat:" + id, n, slot: "hlava", sp, model: HM[id], colors: [c] });
-const P = (id, n, sp, c) => ({ id: "hat:" + id, n, slot: "hlava", pet: 1, sp, colors: [c] });
+const P = (id, n, sp, c) => ({ id: "hat:" + id, n, slot: "hlava", pet: 1, sp, model: id.toLowerCase(), colors: [c] });
 const B = (id, n, c) => ({ id: "balloon:" + id, n, slot: "balonek", sp: "balloon", model: "balloon_" + id.toLowerCase(), colors: [c] });
 const CAPE = { RED: ["RED"], BLUE: ["BLUE"], BLACK: ["BLACK", "BORDER", "RED"], MARS: ["ORANGE", "GRADIENT", "RED"], GALAXY: ["PURPLE", "GRADIENT", "BLACK"], ROYAL: ["PURPLE", "BORDER", "YELLOW"], CREEPER: ["LIME", "CREEPER", "BLACK"], SKULL: ["BLACK", "SKULL", "WHITE"], FLOWER: ["PINK", "FLOWER", "MAGENTA"], ICE: ["LIGHT_BLUE", "GRADIENT", "WHITE"] };
 const C = (id, n, c) => ({ id: "cape:" + id, n, slot: "plast", sp: "cape", banner: bannerPixels(...CAPE[id]), colors: [c] });
@@ -155,8 +155,7 @@ function renderRig() {
   const e = eq(), hat = e.hlava && item(e.hlava), tr = e.stopa && item(e.stopa);
   stage.set({
     nick: S.user || "Steve",
-    hat: hat && !hat.pet ? { model: hat.model } : null,
-    pet: hat && hat.pet ? petImg(hat) : null,
+    hat: hat ? { model: hat.model } : null,
     
     balloon: e.balonek ? item(e.balonek).model : null,
     trail: tr ? { shape: SHAPE[tr.sp] || "✦", color: colOf(tr) } : null,
