@@ -310,6 +310,20 @@ export function startMarsCube(canvas) {
       ctx.fillStyle = `rgba(0,0,0,${1 - light})`; ctx.fillRect(0, 0, N, N);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // kopule lobby na vršku: skleněná polokoule z voxelů + rám
+    const R = 10, vs = 1.4 / 2 / R, dq = [];
+    for (let x = -R; x < R; x++) for (let z = -R; z < R; z++) for (let y = 0; y < R; y++) {
+      const d = Math.hypot(x + .5, y + .5, z + .5); if (d > R || d < R - 1.2) continue;
+      const c = [(x + .5) * vs * 2 / 2, 1 + (y + .5) * vs, (z + .5) * vs];
+      const frame = (Math.abs(x + .5) < .6 || Math.abs(z + .5) < .6 || y === 4);
+      const tp = ap(m, c); dq.push({ p: [cx - tp[0] * s, cy - tp[1] * s], z: tp[2], f: frame, y });
+    }
+    dq.sort((a, b) => b.z - a.z);
+    const px = vs * s * 1.15;
+    for (const q of dq) { ctx.fillStyle = q.f ? "rgba(235,245,255,.95)" : `rgba(150,225,255,${.16 + q.y * .012})`; ctx.fillRect((q.p[0] - px / 2) * dpr, (q.p[1] - px / 2) * dpr, px * dpr, px * dpr); }
+    // vnitřní záře lobby
+    const top = ap(m, [0, 1.15, 0]), gx = (cx - top[0] * s) * dpr, gy = (cy - top[1] * s) * dpr, gr = ctx.createRadialGradient(gx, gy, 2, gx, gy, s * .6 * dpr);
+    gr.addColorStop(0, "#ffd27a66"); gr.addColorStop(1, "#ffd27a00"); ctx.fillStyle = gr; ctx.fillRect(gx - s * dpr, gy - s * dpr, 2 * s * dpr, 2 * s * dpr);
   };
   render(); new ResizeObserver(render).observe(canvas);
 }
