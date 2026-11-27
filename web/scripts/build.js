@@ -13,7 +13,8 @@ const code = order.map((n) => rd(`js/${n}.js`)
 const js = `(async()=>{\n${code}\n})();`;
 const fav = "data:image/svg+xml;base64," + Buffer.from(rd("favicon.svg")).toString("base64");
 let html = rd("index.html")
-  .replace('<link rel="stylesheet" href="css/main.css">', `<style>\n${rd("css/main.css")}\n</style>`)
+  .replace(/<link rel="preload"[^>]*>\n?/g, "")
+  .replace('<link rel="stylesheet" href="css/main.css">', `<style>\n${rd("css/main.css").replace(/url\(\.\.\/fonts\/([\w-]+\.woff2)\)/g, (_, f) => "url(data:font/woff2;base64," + fs.readFileSync(path.join(R, "src/fonts", f)).toString("base64") + ")")}\n</style>`)
   .replace('href="favicon.svg"', `href="${fav}"`)
   .replace('<script type="module" src="js/main.js"></script>', `<script>\n${js}\n</script>`);
 fs.mkdirSync(path.join(R, "dist"), { recursive: true });

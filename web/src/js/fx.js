@@ -14,15 +14,57 @@ export function renderCategories() {
 }
 
 export function startStars() {
-  const c = $("stars"), x = c.getContext("2d"); let s = [];
-  const rs = () => { c.width = c.offsetWidth * devicePixelRatio; c.height = c.offsetHeight * devicePixelRatio; s = Array.from({ length: 160 }, () => ({ x: Math.random() * c.width, y: Math.random() * c.height * .8, r: Math.random() * 1.3 * devicePixelRatio + .3, p: Math.random() * 6 })); };
+  const c = $("stars"), x = c.getContext("2d"); let s = [], m = [];
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const rs = () => { c.width = innerWidth * dpr; c.height = innerHeight * dpr; s = Array.from({ length: 170 }, () => ({ x: Math.random() * c.width, y: Math.random() * c.height, r: Math.random() * 1.2 * dpr + .4, p: Math.random() * 6, z: Math.random() * .5 + .2 })); };
   rs(); addEventListener("resize", rs);
-  const still = matchMedia("(prefers-reduced-motion:reduce)").matches;
-  (function f(t) { x.clearRect(0, 0, c.width, c.height); for (const a of s) { x.globalAlpha = .3 + .7 * Math.abs(Math.sin(a.p + (still ? 0 : t / 1400))); x.fillStyle = "#fff"; x.beginPath(); x.arc(a.x, a.y, a.r, 0, 7); x.fill(); } if (!still) requestAnimationFrame(f); })(0);
+  if (matchMedia("(prefers-reduced-motion:reduce)").matches) { for (const a of s) { x.globalAlpha = .6; x.fillStyle = "#fff"; x.fillRect(a.x, a.y, a.r, a.r); } return; }
+  (function f(t) {
+    x.clearRect(0, 0, c.width, c.height);
+    const sy = scrollY * dpr;
+    for (const a of s) { x.globalAlpha = .25 + .75 * Math.abs(Math.sin(a.p + t / 1400)); x.fillStyle = "#fff"; const y = ((a.y - sy * a.z) % c.height + c.height) % c.height; x.fillRect(a.x, y, a.r * 1.4, a.r * 1.4); }
+    if (Math.random() < .012 && m.length < 3) m.push({ x: Math.random() * c.width * .9 + c.width * .2, y: -20, v: (6 + Math.random() * 5) * dpr, l: 1 });
+    for (const k of m) {
+      k.x -= k.v * .8; k.y += k.v * .55; k.l -= .009;
+      const g = x.createLinearGradient(k.x, k.y, k.x + 120 * dpr, k.y - 80 * dpr);
+      g.addColorStop(0, "#ffd84a"); g.addColorStop(.3, "#ff7a2a88"); g.addColorStop(1, "#ff3b2f00");
+      x.globalAlpha = Math.max(k.l, 0); x.strokeStyle = g; x.lineWidth = 3 * dpr; x.beginPath(); x.moveTo(k.x, k.y); x.lineTo(k.x + 120 * dpr, k.y - 80 * dpr); x.stroke();
+      x.fillStyle = "#fff5c0"; x.fillRect(k.x - 2 * dpr, k.y - 2 * dpr, 5 * dpr, 5 * dpr);
+    }
+    m = m.filter((k) => k.l > 0 && k.y < c.height + 50);
+    requestAnimationFrame(f);
+  })(0);
+}
+
+/* 3D náklon dlaždic + světlo za myší */
+export function startTilt() {
+  if (matchMedia("(hover:none),(prefers-reduced-motion:reduce)").matches) return;
+  document.querySelectorAll(".tile,.gc").forEach((el) => {
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
+      el.style.setProperty("--mx", px * 100 + "%"); el.style.setProperty("--my", py * 100 + "%");
+      el.style.transform = `perspective(900px) rotateX(${(.5 - py) * 7}deg) rotateY(${(px - .5) * 9}deg) translateY(-4px)`;
+    });
+    el.addEventListener("pointerleave", () => { el.style.transform = ""; });
+  });
+}
+
+/* běžící pruh s hráči online */
+export function renderTicker(d) {
+  const t = $("ticker");
+  const items = !d ? ["● Server je offline – přistaň, až bude zpátky!"] : !d.players.length ? ["● Zrovna nikdo nehraje – buď první na Marsu!"]
+    : d.players.map((p) => `● ${p.name} · Lv ${p.level} · ${p.playing || "Lobby"}`);
+  const html = items.map((s) => `<span>${s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</span>`).join("");
+  if (t._h === html) return; t._h = html;
+  t.innerHTML = html + html;
+  t.style.animationDuration = Math.max(18, items.length * 7) + "s";
 }
 
 export function startReveal() {
   addEventListener("scroll", () => $("nav").classList.toggle("sc", scrollY > 20), { passive: true });
+  const secs = [...document.querySelectorAll("main section[id]")], links = [...document.querySelectorAll("#nlinks a")];
+  const so = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle("act", a.getAttribute("href") === "#" + e.target.id)); }), { rootMargin: "-45% 0px -50% 0px" });
+  secs.forEach((s) => so.observe(s));
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .1 });
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 }

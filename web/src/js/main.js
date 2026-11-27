@@ -2,26 +2,28 @@ import { $ } from "./util.js";
 import { loadConfig } from "./config.js";
 import { startLive } from "./live.js";
 import { state, renderPlayers, renderTop, renderStats, renderPill, showModal, closeModal } from "./render.js";
-import { renderCategories, startStars, startReveal, toast } from "./fx.js";
+import { renderCategories, startStars, startReveal, startTilt, renderTicker, toast } from "./fx.js";
 
 const cfg = await loadConfig();
 $("y").textContent = new Date().getFullYear();
 if (cfg.serverIp) $("ip").textContent = cfg.serverIp;
 if (cfg.discord) { const a = $("discord"); a.href = cfg.discord; a.hidden = false; }
-renderCategories(); startStars(); startReveal();
+renderCategories(); startStars(); startReveal(); startTilt();
 
 let mode = "offline";
 startLive(cfg, {
-  onData(d) { state.data = d; renderStats(); renderPlayers(); renderTop(); renderPill(mode); },
+  onData(d) { state.data = d; renderTicker(d); renderStats(); renderPlayers(); renderTop(); renderPill(mode); },
   onState(m) {
     if (m === "offline") state.data = null;
     const changed = m !== mode; mode = m;
-    if (changed || !state.data) { renderPill(m); if (!state.data) { renderStats(); renderPlayers(); renderTop(); } }
+    if (changed || !state.data) { renderPill(m); if (!state.data) { renderTicker(null); renderStats(); renderPlayers(); renderTop(); } }
   },
 });
 
 document.addEventListener("click", (e) => {
   const a = e.target.closest("[data-action]")?.dataset.action;
+  if (a === "menu") return $("nav").classList.toggle("open");
+  if (e.target.closest("#nlinks a")) $("nav").classList.remove("open");
   if (a === "copy-ip") { const done = () => toast(); try { navigator.clipboard.writeText($("ip").textContent).then(done, done); } catch { done(); } return; }
   if (a === "close" || e.target === $("modal")) return closeModal();
   const pl = e.target.closest(".pl[data-name]");

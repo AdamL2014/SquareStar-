@@ -7,9 +7,7 @@
 <meta name="description" content="SquareStar – Minecraft minihry na Marsu s nízkou gravitací. Přes 20 miniher, denní odměny, party a žebříčky. Java 1.21.11.">
 <meta name="theme-color" content="#1c1e2d">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/minecraftia">
-<link rel="stylesheet" href="https://fonts.cdnfonts.com/css/minecrafter-alt">
+<link rel="preload" href="fonts/mc.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
@@ -44,11 +42,13 @@
 <canvas id="stars" aria-hidden="true"></canvas>
 
 <nav id="nav">
- <a class="nbtn" href="#tiles"><svg class="ic"><use href="#i-pack"/></svg><span>Menu</span></a>
- <div class="nright"><span class="pill"><span class="dot" id="dot"></span><span id="livetxt">Načítám…</span></span></div>
+ <a class="nlogo" href="#top"><svg class="mk" viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="8" width="24" height="24" rx="3" fill="url(#lg)" transform="rotate(45 20 20)"/><path d="M20 11l2.6 6.4L29 20l-6.4 2.6L20 29l-2.6-6.4L11 20l6.4-2.6z" fill="#1c1e2d"/></svg><b>SQUARESTAR</b></a>
+ <div class="nlinks" id="nlinks"><a href="#online">Online</a><a href="#zebricky">Žebříčky</a><a href="#minihry">Minihry</a><a href="#funkce">Funkce</a><a href="#pripojit">Jak hrát</a></div>
+ <div class="nright"><span class="pill"><span class="dot" id="dot"></span><span id="livetxt">Načítám…</span></span><button class="burger" data-action="menu" aria-label="Menu"><i></i><i></i><i></i></button></div>
 </nav>
 
-<header class="hero">
+<header class="hero" id="top">
+ <div class="mars" aria-hidden="true"><div class="ring"></div><div class="planet"></div></div>
  <div class="banner">
   <button class="bside play" data-action="copy-ip" aria-label="Kopírovat IP">
    <span class="bico"><svg class="ic"><use href="#i-play"/></svg></span>
@@ -70,23 +70,24 @@
   </a>
   </div>
  </div>
+ <div class="ticker" aria-label="Hráči online"><div class="tk" id="ticker"><span>● Načítám hráče…</span></div></div>
 </header>
 
 <main class="wrap">
  <div class="tiles" id="tiles">
-  <a class="tile t-orange big" href="#online">
+  <a class="reveal tile t-orange big" href="#online">
    <i class="shine"></i>
    <svg class="art" viewBox="0 0 24 24"><use href="#i-users"/></svg>
    <div class="tx"><span class="bar"></span><h2>ONLINE</h2><p class="big-num"><b id="tOnline">–</b><span>hráčů právě hraje</span></p></div>
   </a>
-  <a class="tile t-pink" href="#zebricky"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-trophy"/></svg><div class="tx"><span class="bar"></span><h2>ŽEBŘÍČKY</h2><p>Klikni pro zobrazení →</p></div></a>
-  <a class="tile t-purple" href="#minihry"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-game"/></svg><div class="tx"><span class="bar"></span><h2>MINIHRY</h2><p>Klikni pro zobrazení →</p></div></a>
-  <a class="tile t-blue" href="#pripojit"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-rocket"/></svg><div class="tx"><span class="bar"></span><h2>JAK HRÁT</h2><p class="gold">Java 1.21.11 · zdarma →</p></div></a>
-  <a class="tile t-red" href="#funkce"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-gift"/></svg><div class="tx"><span class="bar"></span><h2>FUNKCE</h2><p>Klikni pro zobrazení →</p></div></a>
+  <a class="reveal tile t-pink" href="#zebricky"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-trophy"/></svg><div class="tx"><span class="bar"></span><h2>ŽEBŘÍČKY</h2><p>Klikni pro zobrazení →</p></div></a>
+  <a class="reveal tile t-purple" href="#minihry"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-game"/></svg><div class="tx"><span class="bar"></span><h2>MINIHRY</h2><p>Klikni pro zobrazení →</p></div></a>
+  <a class="reveal tile t-blue" href="#pripojit"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-rocket"/></svg><div class="tx"><span class="bar"></span><h2>JAK HRÁT</h2><p class="gold">Java 1.21.11 · zdarma →</p></div></a>
+  <a class="reveal tile t-red" href="#funkce"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-gift"/></svg><div class="tx"><span class="bar"></span><h2>FUNKCE</h2><p>Klikni pro zobrazení →</p></div></a>
  </div>
 
- <section id="online" class="panel">
-  <div class="ph"><h2>PRÁVĚ ONLINE</h2><p>Data přímo z pluginu. Klikni na hráče pro statistiky. <span class="upd" id="upd"></span></p></div>
+ <section id="online" class="panel reveal">
+  <div class="phd"><h2>PRÁVĚ ONLINE</h2><p>Data přímo z pluginu. Klikni na hráče pro statistiky. <span class="upd" id="upd"></span></p></div>
   <div class="stats">
    <div class="stat"><div class="si"><svg class="ic"><use href="#i-users"/></svg></div><div><b id="sOnline">–</b><span>hráčů online</span></div></div>
    <div class="stat"><div class="si"><svg class="ic"><use href="#i-play"/></svg></div><div><b id="sGames">–</b><span>běžících her</span></div></div>
@@ -96,8 +97,8 @@
   <div class="players" id="players" aria-live="polite"><div class="empty">Načítám…</div></div>
  </section>
 
- <section id="zebricky" class="panel">
-  <div class="ph"><h2>ŽEBŘÍČKY</h2><p>Nejlepší hráči SquareStaru. Dostaneš se mezi ně i ty?</p></div>
+ <section id="zebricky" class="panel reveal">
+  <div class="phd"><h2>ŽEBŘÍČKY</h2><p>Nejlepší hráči SquareStaru. Dostaneš se mezi ně i ty?</p></div>
   <div class="tabs" id="tabs">
    <button data-k="xpTotal" class="act"><svg class="ic"><use href="#i-star"/></svg>Level</button>
    <button data-k="wins"><svg class="ic"><use href="#i-crown"/></svg>Výhry</button>
@@ -108,13 +109,13 @@
   <div class="lbw"><div class="podium" id="podium"></div><div class="list" id="lb"><div class="empty">Načítám…</div></div></div>
  </section>
 
- <section id="minihry" class="panel">
-  <div class="ph"><h2>MINIHRY</h2><p>Přes 20 miniher rozdělených do kategorií stejně jako ve hře.</p></div>
+ <section id="minihry" class="panel reveal">
+  <div class="phd"><h2>MINIHRY</h2><p>Přes 20 miniher rozdělených do kategorií stejně jako ve hře.</p></div>
   <div class="gcat" id="gcat"></div>
  </section>
 
- <section id="funkce" class="panel">
-  <div class="ph"><h2>FUNKCE</h2><p>Všechno je napsané na míru od AdrrexStudio.</p></div>
+ <section id="funkce" class="panel reveal">
+  <div class="phd"><h2>FUNKCE</h2><p>Všechno je napsané na míru od AdrrexStudio.</p></div>
   <div class="feat">
    <div class="fc"><div class="fi"><svg class="ic"><use href="#i-rocket"/></svg></div><h3>Nízká gravitace Marsu</h3><p>Skáčeš dál a výš, padáš pomaleji. Každá minihra se hraje jinak než jinde.</p></div>
    <div class="fc"><div class="fi"><svg class="ic"><use href="#i-gift"/></svg></div><h3>Denní odměny a úkoly</h3><p>Každý den odměna se sérií, 3 nové úkoly a 7. den vzácný klíč.</p></div>
@@ -125,8 +126,8 @@
   </div>
  </section>
 
- <section id="pripojit" class="panel">
-  <div class="ph"><h2>JAK SE PŘIPOJIT</h2><p>Čtyři kroky a můžeš hrát.</p></div>
+ <section id="pripojit" class="panel reveal">
+  <div class="phd"><h2>JAK SE PŘIPOJIT</h2><p>Čtyři kroky a můžeš hrát.</p></div>
   <div class="steps">
    <div class="st"><b>1</b><h3>Spusť Minecraft</h3><p>Java Edition 1.21.11 → Multiplayer → Přidat server.</p></div>
    <div class="st"><b>2</b><h3>Vlož IP adresu</h3><p>Zkopíruj IP tlačítkem Hrát nahoře a vlož ji do „Adresa serveru".</p></div>
