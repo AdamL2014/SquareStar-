@@ -399,3 +399,20 @@ body:not([data-page=home]) .page.show{display:block;margin-top:34px;animation:pa
 .bal span{display:block;font:13px var(--mono);color:var(--muted)}.bal b{font:30px var(--fun);color:var(--gold);font-weight:400}
 #shopTabs{margin-bottom:16px}
 #shop .tile{animation:pageIn .45s both}
+
+/* ===== telefon: ranky a karty se vejdou ===== */
+.rkimg{max-width:100%;object-fit:contain}
+.pod{min-width:0}.pod .rkimg{height:auto;max-height:20px;max-width:100%}
+.nm{flex-wrap:wrap;row-gap:4px}
+.row .nm{min-width:0;flex:1}
+@media(max-width:620px){
+ .podium{gap:6px}.pod{padding-left:6px;padding-right:6px}.pod .n{font-size:13px;max-width:100%}
+ .row{gap:10px;padding:10px 12px}
+ .row .nm{flex-direction:column;align-items:flex-start;gap:3px}
+ .row .nm em{max-width:100%}
+ .rkimg{height:15px}
+ .pl .rkimg{height:16px}
+ .stat{padding:12px;gap:10px}.stat .si{width:34px;height:34px}.stat b{font-size:22px}.stat span{font-size:11px;line-height:1.3;display:block}
+ .tk .head{width:18px;height:18px}
+}
+@media(max-width:380px){.rkimg{height:13px}.pod .face.head{width:44px;height:44px}.pod.p1 .face.head{width:56px;height:56px}}
