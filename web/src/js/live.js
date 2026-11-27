@@ -17,7 +17,7 @@ export function startLive(cfg, { onData, onState }) {
   function stopPolling() { clearInterval(timer); timer = null; }
 
   function connect() {
-    if (closed || !("EventSource" in window)) return startPolling();
+    if (closed || cfg.stream === false || !("EventSource" in window)) return startPolling();
     es = new EventSource(base + "/api/stream");
     es.addEventListener("status", (e) => { stopPolling(); try { ok(JSON.parse(e.data)); } catch { /* špatný paket */ } });
     es.addEventListener("offline", () => fail());

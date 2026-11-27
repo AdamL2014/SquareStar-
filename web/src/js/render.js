@@ -61,7 +61,7 @@ function setStat(id, v) {
 }
 export function renderStats() {
   const d = state.data;
-  setStat("sOnline", d?.online); setStat("sGames", d?.games); setStat("sReg", d?.registered); setStat("sTps", d?.tps);
+  setStat("sOnline", d?.online); setStat("tOnline", d?.online); setStat("sGames", d?.games); setStat("sReg", d?.registered); setStat("sTps", d?.tps);
 }
 export function renderPill(mode) {
   const d = state.data, dot = $("dot"), t = $("livetxt"), u = $("upd");

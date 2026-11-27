@@ -1,0 +1,7 @@
+name = "squarestar-web"
+compatibility_date = "2025-01-01"
+pages_build_output_dir = "public"
+
+[vars]
+# Adresa HTTP portu pluginu (config.yml -> web.port, výchozí 8123), kam se Pages Function připojuje
+PLUGIN_URL = "http://IP_SERVERU:8123"

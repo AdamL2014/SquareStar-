@@ -1,5 +1,5 @@
 // Konfigurace webu. Pořadí: /config.json ze serveru (server.js) -> window.SS_CONFIG -> výchozí hodnoty.
-const defaults = { serverIp: "", apiBase: "", pollMs: 4000 };
+const defaults = { serverIp: "", apiBase: "", pollMs: 4000, discord: "", stream: true };
 
 export async function loadConfig() {
   let cfg = { ...defaults, ...(window.SS_CONFIG || {}) };

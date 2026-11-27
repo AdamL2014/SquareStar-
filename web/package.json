@@ -4,11 +4,14 @@
   "private": true,
   "type": "module",
   "description": "Web serveru SquareStar se živým zobrazením hráčů",
-  "engines": { "node": ">=22.9" },
+  "engines": {
+    "node": ">=22.9"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env server.js",
     "mock": "node scripts/mock-plugin.js",
     "dev": "node scripts/mock-plugin.js & node server.js",
-    "build": "node scripts/build.js"
+    "build": "node scripts/build.js",
+    "build:pages": "node scripts/pages.js"
   }
 }

@@ -10,7 +10,7 @@ export const CATS = [
 const word = (n) => (n === 1 ? "hra" : n < 5 ? "hry" : "her");
 
 export function renderCategories() {
-  $("gcat").innerHTML = CATS.map((k, n) => `<div class="gc reveal"><div class="top"><svg class="bgp" viewBox="0 0 200 130" preserveAspectRatio="none"><defs><linearGradient id="cg${n}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${k.c[0]}"/><stop offset="1" stop-color="${k.c[1]}"/></linearGradient></defs><rect width="200" height="130" fill="url(#cg${n})"/>${Array.from({ length: 7 }, (_, j) => { const x = (j * 41 + n * 23) % 185, y = (j * 29 + n * 37) % 100, s = 8 + (j % 3) * 7; return `<rect x="${x}" y="${y}" width="${s}" height="${s}" rx="2" fill="#fff" opacity="0.${1 + j % 2}" transform="rotate(${j * 23} ${x} ${y})"/>`; }).join("")}<path d="M0 108 Q50 92 100 104 T200 98 V130 H0Z" fill="#0d060566"/></svg><div class="gi"><svg class="ic"><use href="#i-${k.i}"/></svg></div></div><div class="bd"><h3>${k.t}</h3><div class="cnt">${k.g.length} ${word(k.g.length)}</div><div class="chips">${k.g.map((x) => `<span class="chip">${x}</span>`).join("")}</div></div></div>`).join("");
+  $("gcat").innerHTML = CATS.map((k) => `<div class="gc" style="--c1:${k.c[0]};--c2:${k.c[1]}"><div class="gh"><svg class="ic"><use href="#i-${k.i}"/></svg><h3>${k.t}</h3><span>${k.g.length} ${word(k.g.length)}</span></div><ul>${k.g.map((g) => `<li>${g}</li>`).join("")}</ul></div>`).join("");
 }
 
 export function startStars() {

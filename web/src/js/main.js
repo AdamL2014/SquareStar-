@@ -7,6 +7,7 @@ import { renderCategories, startStars, startReveal, toast } from "./fx.js";
 const cfg = await loadConfig();
 $("y").textContent = new Date().getFullYear();
 if (cfg.serverIp) $("ip").textContent = cfg.serverIp;
+if (cfg.discord) { const a = $("discord"); a.href = cfg.discord; a.hidden = false; }
 renderCategories(); startStars(); startReveal();
 
 let mode = "offline";

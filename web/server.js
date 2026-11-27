@@ -49,7 +49,7 @@ setInterval(() => { for (const c of clients) c.write(": ping\n\n"); if (latest) 
 const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".ico": "image/x-icon", ".txt": "text/plain; charset=utf-8" };
 const HEAD = {
   "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Content-Security-Policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src * data:; connect-src 'self'; script-src 'self'; base-uri 'none'; frame-ancestors 'none'",
+  "Content-Security-Policy": "default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.cdnfonts.com; font-src https://fonts.cdnfonts.com; img-src * data:; connect-src 'self'; script-src 'self'; base-uri 'none'; frame-ancestors 'none'",
 };
 function send(req, res, code, type, body, extra = {}) {
   const h = { "Content-Type": type, ...HEAD, ...extra };
