@@ -278,30 +278,36 @@ export function startStage(canvas) {
   return api;
 }
 
-/* ---------- Mars jako minecraftí blok (rotující kostka 16×16 texelů) ---------- */
+/* ---------- Mars jako minecraftí blok: statický, 32×32 texelů, měkký šum + krátery ---------- */
 export function startMarsCube(canvas) {
-  const ctx = canvas.getContext("2d");
-  let h = 1337; const rnd = () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296);
-  const PAL = [0xf7a95a, 0xf29a4c, 0xe88a40, 0xfbb768, 0xd9783a, 0xffc27a, 0xe0814a], DARK = [0xc66a32, 0xb85e2c];
-  const tex = Array.from({ length: 6 }, () => { const t = []; for (let i = 0; i < 256; i++) t.push(rnd() < .06 ? DARK[(rnd() * 2) | 0] : PAL[(rnd() * PAL.length) | 0]); return t; });
+  const ctx = canvas.getContext("2d"), N = 32;
+  let h = 4242; const rnd = () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296);
+  const g = Array.from({ length: 9 * 9 }, rnd);                       // hrubá mřížka pro hladký šum
+  const noise = (x, y) => { const X = x * 8, Y = y * 8, i = X | 0, j = Y | 0, fx = X - i, fy = Y - j, s = (t) => t * t * (3 - 2 * t);
+    const a = g[j * 9 + i], b = g[j * 9 + i + 1], c = g[(j + 1) * 9 + i], d = g[(j + 1) * 9 + i + 1];
+    return a + (b - a) * s(fx) + (c - a) * s(fy) + (a - b - c + d) * s(fx) * s(fy); };
+  const face = (seed, craters) => { const t = [];
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      let v = noise(((i + seed * 7) % N) / N * .99, ((j + seed * 3) % N) / N * .99) * .6 + rnd() * .4;
+      for (const [cx, cy, r] of craters) { const d = Math.hypot(i - cx, j - cy) / r; if (d < 1) v -= (1 - d) * .55; else if (d < 1.35) v += .18; }
+      t.push(Math.max(0, Math.min(1, v)));
+    } return t; };
+  const LUT = (v) => { const A = [226, 112, 48], B = [255, 196, 120]; return ((A[0] + (B[0] - A[0]) * v) << 16) | ((A[1] + (B[1] - A[1]) * v) << 8) | (A[2] + (B[2] - A[2]) * v); };
   const faces = [
-    (u, v) => [u, 1 - v, 0], (u, v) => [1 - u, 1 - v, 1], (u, v) => [0, 1 - v, 1 - u], (u, v) => [1, 1 - v, u], (u, v) => [u, 1, v], (u, v) => [u, 0, 1 - v],
+    [(u, v) => [u, 1 - v, 0], face(1, [[10, 12, 3], [22, 20, 2]])], [(u, v) => [1 - u, 1 - v, 1], face(2, [])],
+    [(u, v) => [0, 1 - v, 1 - u], face(3, [[14, 18, 3]])], [(u, v) => [1, 1 - v, u], face(4, [[8, 9, 2], [20, 22, 3]])],
+    [(u, v) => [u, 1, v], face(5, [[16, 14, 4], [6, 24, 2]])], [(u, v) => [u, 0, 1 - v], face(6, [])],
   ];
   const quads = [];
-  faces.forEach((map, fi) => { for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
+  faces.forEach(([map, tx]) => { for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
     const P = (a, b) => map(a, b).map((x) => (x - .5) * 16);
-    quads.push({ p: [P(i / 16, j / 16), P((i + 1) / 16, j / 16), P((i + 1) / 16, (j + 1) / 16), P(i / 16, (j + 1) / 16)], c: hex(tex[fi][j * 16 + i]) });
+    quads.push({ p: [P(i / N, j / N), P((i + 1) / N, j / N), P((i + 1) / N, (j + 1) / N), P(i / N, (j + 1) / N)], c: hex(LUT(tx[j * N + i])) });
   } });
-  const still = matchMedia("(prefers-reduced-motion:reduce)").matches;
-  function frame(now) {
-    const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
-    if (!W) return requestAnimationFrame(frame);
-    if (canvas.width !== W * dpr) { canvas.width = W * dpr; canvas.height = H * dpr; }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    const t = still ? 0 : now / 1000, m = mul(RY(t * .25), RX(.45 + Math.sin(t * .3) * .08));
-    const q = quads.map((x) => ({ p: x.p.map((p) => ap(m, p)), c: x.c }));
-    draw(ctx, q, { w: W, h: H, cy: H * .42, yaw: 0, pitch: 0, scale: W / 46 });
-    if (!still) requestAnimationFrame(frame);
-  }
-  requestAnimationFrame(frame);
+  const render = () => {
+    const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(2, devicePixelRatio || 1); if (!W) return;
+    canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const m = mul(RX(-26 * D), RY(-38 * D));
+    draw(ctx, quads.map((x) => ({ p: x.p.map((p) => ap(m, p)), c: x.c })), { w: W, h: H, cy: H * .5, yaw: 0, pitch: 0, scale: W / 30 });
+  };
+  render(); new ResizeObserver(render).observe(canvas);
 }
