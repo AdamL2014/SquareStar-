@@ -292,13 +292,24 @@ export function startMarsCube(canvas) {
     if (light < 1) { x.fillStyle = `rgba(0,0,0,${1 - light})`; x.fillRect(0, 0, N, N); }
     return c;
   }
-  const top = tex(1), left = tex(.8), right = tex(.62);
+  const T = [tex(1), tex(1), tex(1), tex(1), tex(1), tex(1)];
+  // stěny krychle: [roh, osa u, osa v, normála]
+  const F = [[[-1, 1, -1], [2, 0, 0], [0, -2, 0], [0, 0, -1]], [[1, 1, 1], [-2, 0, 0], [0, -2, 0], [0, 0, 1]], [[-1, 1, 1], [0, 0, -2], [0, -2, 0], [-1, 0, 0]],
+             [[1, 1, -1], [0, 0, 2], [0, -2, 0], [1, 0, 0]], [[-1, 1, 1], [2, 0, 0], [0, 0, -2], [0, 1, 0]], [[-1, -1, -1], [2, 0, 0], [0, 0, 2], [0, -1, 0]]];
   const render = () => {
     const W = canvas.clientWidth, Hh = canvas.clientHeight, dpr = Math.min(2, devicePixelRatio || 1); if (!W) return;
-    canvas.width = W * dpr; canvas.height = Hh * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, Hh);
-    const s = W * .36, cx = W / 2, cy = Hh * .5, ax = Math.cos(Math.PI / 6) * s, ay = Math.sin(Math.PI / 6) * s, T0 = [cx, cy - ay - s / 2];
-    const put = (img, o, ux, uy, vx, vy) => { ctx.save(); ctx.imageSmoothingEnabled = false; ctx.setTransform(dpr * ux / N, dpr * uy / N, dpr * vx / N, dpr * vy / N, dpr * o[0], dpr * o[1]); ctx.drawImage(img, 0, 0); ctx.restore(); };
-    put(top, T0, ax, ay, -ax, ay); put(left, [T0[0] - ax, T0[1] + ay], ax, ay, 0, s); put(right, [T0[0], T0[1] + ay * 2], ax, -ay, 0, s);
+    canvas.width = W * dpr; canvas.height = Hh * dpr; ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const m = mul(RZ(-8 * D), mul(RX(-24 * D), RY(-32 * D))), s = W * .22, cx = W / 2, cy = Hh * .5;
+    const P = (p) => { const v = ap(m, p); return [cx - v[0] * s, cy - v[1] * s, v[2]]; };
+    const vis = F.map((f, i) => ({ f, i, n: ap(m, f[3].concat()).map((x, k) => x - ap(m, [0, 0, 0])[k]) })).filter((o) => o.n[2] < 0);
+    for (const { f, i, n } of vis) {
+      const o = P(f[0]), u = P(f[0].map((x, k) => x + f[1][k])), v = P(f[0].map((x, k) => x + f[2][k]));
+      const light = Math.max(.45, Math.min(1, .62 + n[1] * .38 - n[0] * .12));
+      ctx.setTransform(dpr * (u[0] - o[0]) / N, dpr * (u[1] - o[1]) / N, dpr * (v[0] - o[0]) / N, dpr * (v[1] - o[1]) / N, dpr * o[0], dpr * o[1]);
+      ctx.imageSmoothingEnabled = false; ctx.drawImage(T[i], 0, 0);
+      ctx.fillStyle = `rgba(0,0,0,${1 - light})`; ctx.fillRect(0, 0, N, N);
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
   };
   render(); new ResizeObserver(render).observe(canvas);
 }
