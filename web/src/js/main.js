@@ -1,6 +1,8 @@
 import { $ } from "./util.js";
 import { loadConfig } from "./config.js";
 import { startLive } from "./live.js";
+import { startDemo } from "./demo.js";
+import { startAccount } from "./account.js";
 import { state, renderPlayers, renderTop, renderStats, renderPill, showModal, closeModal } from "./render.js";
 import { renderCategories, startStars, startReveal, startTilt, renderTicker, toast } from "./fx.js";
 
@@ -11,14 +13,16 @@ if (cfg.discord) { const a = $("discord"); a.href = cfg.discord; a.hidden = fals
 renderCategories(); startStars(); startReveal(); startTilt();
 
 let mode = "offline";
-startLive(cfg, {
+const live = {
   onData(d) { state.data = d; renderTicker(d); renderStats(); renderPlayers(); renderTop(); renderPill(mode); },
   onState(m) {
     if (m === "offline") state.data = null;
     const changed = m !== mode; mode = m;
     if (changed || !state.data) { renderPill(m); if (!state.data) { renderTicker(null); renderStats(); renderPlayers(); renderTop(); } }
   },
-});
+};
+if (cfg.demo) { mode = "live"; startDemo((d) => live.onData(d)); } else startLive(cfg, live);
+startAccount(cfg);
 
 document.addEventListener("click", (e) => {
   const a = e.target.closest("[data-action]")?.dataset.action;

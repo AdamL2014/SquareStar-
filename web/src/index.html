@@ -43,8 +43,8 @@
 
 <nav id="nav">
  <a class="nlogo" href="#top"><svg class="mk" viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="8" width="24" height="24" rx="3" fill="url(#lg)" transform="rotate(45 20 20)"/><path d="M20 11l2.6 6.4L29 20l-6.4 2.6L20 29l-2.6-6.4L11 20l6.4-2.6z" fill="#1c1e2d"/></svg><b>SQUARESTAR</b></a>
- <div class="nlinks" id="nlinks"><a href="#online">Online</a><a href="#zebricky">Žebříčky</a><a href="#minihry">Minihry</a><a href="#funkce">Funkce</a><a href="#pripojit">Jak hrát</a></div>
- <div class="nright"><span class="pill"><span class="dot" id="dot"></span><span id="livetxt">Načítám…</span></span><button class="burger" data-action="menu" aria-label="Menu"><i></i><i></i><i></i></button></div>
+ <div class="nlinks" id="nlinks"><a href="#online">Online</a><a href="#obchod">Obchod</a><a href="#pratele">Přátelé</a><a href="#zebricky">Žebříčky</a><a href="#minihry">Minihry</a><a href="#pripojit">Jak hrát</a></div>
+ <div class="nright"><span class="coins" id="coins" hidden></span><button class="acc" id="accBtn" data-action="account">Přihlásit</button><span class="pill"><span class="dot" id="dot"></span><span id="livetxt">Načítám…</span></span><button class="burger" data-action="menu" aria-label="Menu"><i></i><i></i><i></i></button></div>
 </nav>
 
 <header class="hero" id="top">
@@ -80,10 +80,12 @@
    <svg class="art" viewBox="0 0 24 24"><use href="#i-users"/></svg>
    <div class="tx"><span class="bar"></span><h2>ONLINE</h2><p class="big-num"><b id="tOnline">–</b><span>hráčů právě hraje</span></p></div>
   </a>
+  <a class="reveal tile t-gold" href="#obchod"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-gift"/></svg><div class="tx"><span class="bar"></span><h2>OBCHOD</h2><p>Ranky, klíče, kosmetika →</p></div></a>
+  <a class="reveal tile t-indigo" href="#pratele"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-party"/></svg><div class="tx"><span class="bar"></span><h2>PŘÁTELÉ</h2><p>Přidej kamarády z webu →</p></div></a>
   <a class="reveal tile t-pink" href="#zebricky"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-trophy"/></svg><div class="tx"><span class="bar"></span><h2>ŽEBŘÍČKY</h2><p>Klikni pro zobrazení →</p></div></a>
   <a class="reveal tile t-purple" href="#minihry"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-game"/></svg><div class="tx"><span class="bar"></span><h2>MINIHRY</h2><p>Klikni pro zobrazení →</p></div></a>
   <a class="reveal tile t-blue" href="#pripojit"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-rocket"/></svg><div class="tx"><span class="bar"></span><h2>JAK HRÁT</h2><p class="gold">Java 1.21.11 · zdarma →</p></div></a>
-  <a class="reveal tile t-red" href="#funkce"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-gift"/></svg><div class="tx"><span class="bar"></span><h2>FUNKCE</h2><p>Klikni pro zobrazení →</p></div></a>
+  <a class="reveal tile t-red" href="#funkce"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-spark"/></svg><div class="tx"><span class="bar"></span><h2>FUNKCE</h2><p>Klikni pro zobrazení →</p></div></a>
  </div>
 
  <section id="online" class="panel reveal">
@@ -95,6 +97,22 @@
    <div class="stat"><div class="si"><svg class="ic"><use href="#i-cpu"/></svg></div><div><b id="sTps">–</b><span>TPS (max 20)</span></div></div>
   </div>
   <div class="players" id="players" aria-live="polite"><div class="empty">Načítám…</div></div>
+ </section>
+
+ <section id="obchod" class="panel reveal">
+  <div class="phd"><h2>OBCHOD</h2><p>Kupuj za mince ze hry. Věc se ti hned objeví na serveru.</p></div>
+  <div class="shop" id="shop"></div>
+  <div class="cartbar"><span id="cartInfo">Košík je prázdný</span><span class="msg" id="buyMsg"></span><button class="gbtn" data-action="checkout" id="checkoutBtn">Koupit</button></div>
+ </section>
+
+ <section id="pratele" class="panel reveal">
+  <div class="phd"><h2>PŘÁTELÉ</h2><p>Přidávej kamarády a hned uvidíš, kdo je online a co hraje.</p></div>
+  <div id="frLocked" class="locked"><p>Pro přátele se nejdřív přihlas přes svůj Minecraft účet.</p><button class="gbtn green" data-action="account">Přihlásit se</button></div>
+  <div id="frBox" hidden>
+   <form class="addfr" id="addFr"><label for="frName" class="sr">Jméno hráče</label><input id="frName" maxlength="16" placeholder="Napiš jméno hráče…" autocomplete="off"><button class="gbtn indigo" type="submit">Poslat žádost</button></form>
+   <div id="frReq"></div>
+   <div class="frlist" id="frList"></div>
+  </div>
  </section>
 
  <section id="zebricky" class="panel reveal">
@@ -144,6 +162,16 @@
 </footer>
 
 <div class="toast" id="toast">IP zkopírována ✓</div>
+<div class="modal" id="login"><div class="mbox login">
+ <button class="x" data-action="close-login" aria-label="Zavřít">×</button>
+ <h3>PŘIHLÁŠENÍ</h3>
+ <div id="lgStep1"><p>Napiš svoje jméno z Minecraftu. <b>Heslo nikdy nezadáváš.</b></p>
+  <form id="lgNick"><label for="lgN">Minecraft jméno</label><input id="lgN" maxlength="16" placeholder="např. Adrrex" autocomplete="off"><button class="gbtn green" type="submit">Pokračovat</button></form></div>
+ <div id="lgStep2" hidden><p>Připoj se na server a napiš do hry:</p><div class="cmd">/web</div>
+  <p>Ve hře ti vyskočí 6místný kód (funguje i se skrytým chatem). Opiš ho sem:</p>
+  <form id="lgCode"><label for="lgC">Kód ze hry</label><input id="lgC" inputmode="numeric" maxlength="6" placeholder="123456" class="code" autocomplete="one-time-code"><button class="gbtn green" type="submit">Přihlásit</button></form>
+  <p class="hint" id="lgHint"></p></div>
+</div></div>
 <div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
 <noscript><p style="text-align:center;padding:20px">Pro živé zobrazení hráčů zapni JavaScript.</p></noscript>
 <script type="module" src="js/main.js"></script>

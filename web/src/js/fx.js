@@ -37,9 +37,9 @@ export function startStars() {
 }
 
 /* 3D náklon dlaždic + světlo za myší */
-export function startTilt() {
+export function startTilt(sel = ".tile,.gc") {
   if (matchMedia("(hover:none),(prefers-reduced-motion:reduce)").matches) return;
-  document.querySelectorAll(".tile,.gc").forEach((el) => {
+  document.querySelectorAll(sel).forEach((el) => {
     el.addEventListener("pointermove", (e) => {
       const r = el.getBoundingClientRect(), px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
       el.style.setProperty("--mx", px * 100 + "%"); el.style.setProperty("--my", py * 100 + "%");
@@ -69,4 +69,4 @@ export function startReveal() {
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 }
 
-export function toast() { const x = $("toast"); x.classList.add("on"); setTimeout(() => x.classList.remove("on"), 1800); }
+export function toast(t = "IP zkopírována ✓") { const x = $("toast"); x.textContent = t; clearTimeout(x._t); x.classList.add("on"); x._t = setTimeout(() => x.classList.remove("on"), 2000); }
