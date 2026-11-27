@@ -280,23 +280,31 @@ export function startStage(canvas) {
 
 /* ---------- Mars jako minecraftí blok: statický, 32×32 texelů, měkký šum + krátery ---------- */
 export function startMarsCube(canvas) {
-  const ctx = canvas.getContext("2d"), N = 32;
+  const ctx = canvas.getContext("2d"), N = 48;
   let h = 4242; const rnd = () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296);
-  const g = Array.from({ length: 9 * 9 }, rnd);                       // hrubá mřížka pro hladký šum
-  const noise = (x, y) => { const X = x * 8, Y = y * 8, i = X | 0, j = Y | 0, fx = X - i, fy = Y - j, s = (t) => t * t * (3 - 2 * t);
-    const a = g[j * 9 + i], b = g[j * 9 + i + 1], c = g[(j + 1) * 9 + i], d = g[(j + 1) * 9 + i + 1];
+  const grid = (n) => Array.from({ length: (n + 1) * (n + 1) }, rnd);
+  const oct = [[4, grid(4), .5], [8, grid(8), .28], [16, grid(16), .14], [32, grid(32), .08]];
+  const vn = (G, n, x, y) => { const X = x * n, Y = y * n, i = Math.min(n - 1, X | 0), j = Math.min(n - 1, Y | 0), fx = X - i, fy = Y - j, s = (t) => t * t * (3 - 2 * t), w = n + 1;
+    const a = G[j * w + i], b = G[j * w + i + 1], c = G[(j + 1) * w + i], d = G[(j + 1) * w + i + 1];
     return a + (b - a) * s(fx) + (c - a) * s(fy) + (a - b - c + d) * s(fx) * s(fy); };
-  const face = (seed, craters) => { const t = [];
+  const fbm = (x, y) => oct.reduce((s, [n, G, amp]) => s + vn(G, n, x, y) * amp, 0);
+  const face = (seed, craters) => { const t = [], ox = seed * .137, oy = seed * .311;
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-      let v = noise(((i + seed * 7) % N) / N * .99, ((j + seed * 3) % N) / N * .99) * .6 + rnd() * .4;
-      for (const [cx, cy, r] of craters) { const d = Math.hypot(i - cx, j - cy) / r; if (d < 1) v -= (1 - d) * .55; else if (d < 1.35) v += .18; }
+      const x = ((i / N) + ox) % 1, y = ((j / N) + oy) % 1;
+      let v = fbm(x, y) * 1.15 - .1;
+      if (fbm((x * 2.3) % 1, (y * 2.3) % 1) > .78) v -= .25;                 // tmavé skvrny (čedič)
+      for (const [cx, cy, r] of craters) { const d = Math.hypot(i - cx, j - cy) / r, lx = (i - cx) / r;
+        if (d < 1) v -= (1 - d * d) * .45 - lx * .12; else if (d < 1.4) v += (1.4 - d) * .45 + lx * .05; }
+      v += (rnd() - .5) * .07;                                               // prach / zrnitost
       t.push(Math.max(0, Math.min(1, v)));
     } return t; };
-  const LUT = (v) => { const A = [226, 112, 48], B = [255, 196, 120]; return ((A[0] + (B[0] - A[0]) * v) << 16) | ((A[1] + (B[1] - A[1]) * v) << 8) | (A[2] + (B[2] - A[2]) * v); };
+  const STOPS = [[0, [92, 34, 18]], [.3, [150, 58, 28]], [.55, [196, 92, 44]], [.75, [222, 130, 70]], [1, [246, 182, 120]]];
+  const LUT = (v) => { let k = 0; while (k < STOPS.length - 2 && v > STOPS[k + 1][0]) k++; const [a, A] = STOPS[k], [b, B] = STOPS[k + 1], f = (v - a) / (b - a);
+    return ((A[0] + (B[0] - A[0]) * f) << 16) | ((A[1] + (B[1] - A[1]) * f) << 8) | (A[2] + (B[2] - A[2]) * f); };
   const faces = [
-    [(u, v) => [u, 1 - v, 0], face(1, [[10, 12, 3], [22, 20, 2]])], [(u, v) => [1 - u, 1 - v, 1], face(2, [])],
-    [(u, v) => [0, 1 - v, 1 - u], face(3, [[14, 18, 3]])], [(u, v) => [1, 1 - v, u], face(4, [[8, 9, 2], [20, 22, 3]])],
-    [(u, v) => [u, 1, v], face(5, [[16, 14, 4], [6, 24, 2]])], [(u, v) => [u, 0, 1 - v], face(6, [])],
+    [(u, v) => [u, 1 - v, 0], face(1, [[14, 16, 6], [34, 30, 4], [30, 10, 2.5]])], [(u, v) => [1 - u, 1 - v, 1], face(2, [[20, 24, 5]])],
+    [(u, v) => [0, 1 - v, 1 - u], face(3, [[22, 26, 6], [8, 10, 3]])], [(u, v) => [1, 1 - v, u], face(4, [[12, 14, 4], [32, 34, 5]])],
+    [(u, v) => [u, 1, v], face(5, [[24, 20, 7], [9, 36, 3.5], [38, 8, 3]])], [(u, v) => [u, 0, 1 - v], face(6, [])],
   ];
   const quads = [];
   faces.forEach(([map, tx]) => { for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
@@ -307,7 +315,7 @@ export function startMarsCube(canvas) {
     const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(2, devicePixelRatio || 1); if (!W) return;
     canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     const m = mul(RX(-26 * D), RY(-38 * D));
-    draw(ctx, quads.map((x) => ({ p: x.p.map((p) => ap(m, p)), c: x.c })), { w: W, h: H, cy: H * .5, yaw: 0, pitch: 0, scale: W / 30 });
+    draw(ctx, quads.map((x) => ({ p: x.p.map((p) => ap(m, p)), c: x.c })), { w: W, h: H, cy: H * .5, yaw: 0, pitch: 0, scale: W / 25 });
   };
   render(); new ResizeObserver(render).observe(canvas);
 }
