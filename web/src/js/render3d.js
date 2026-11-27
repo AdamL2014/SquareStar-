@@ -2,6 +2,7 @@
 import { MODELS } from "./models3d.js";
 import { RIG } from "./rig3d.js";
 import { pixelHeadData } from "./util.js";
+import { SKIN } from "./skin.js";
 
 
 /* ---------- matice 4×4 (sloupcové pole 16 čísel) ---------- */
@@ -25,7 +26,9 @@ function addModel(out, name, m, tint) {
   const q = MODELS[name].q;
   for (let i = 0; i < q.length; i += 13) {
     const pts = [ap(m, [q[i], q[i + 1], q[i + 2]]), ap(m, [q[i + 3], q[i + 4], q[i + 5]]), ap(m, [q[i + 6], q[i + 7], q[i + 8]]), ap(m, [q[i + 9], q[i + 10], q[i + 11]])];
-    const cc = q[i + 12]; out.push({ p: pts, c: tint ? tint(cc & 0xffffff) : parse(cc & 0xffffff), a: cc > 0xffffff ? .4 : 1 });
+    const cc = q[i + 12], rgb = hex(cc & 0xffffff), glass = name === "oxygen_helmet" && rgb[2] > 150 && rgb[2] > rgb[0] + 40;
+    if (glass) { out.push({ p: pts, c: rgb, a: .28 }); continue; }
+    out.push({ p: pts, c: tint ? tint(cc & 0xffffff) : parse(cc & 0xffffff), a: cc > 0xffffff ? .4 : 1 });
   }
 }
 // kvádr; faces = funkce (jméno stěny, u, v) -> barva; div = dělení stěny (pro pixely hlavy)
@@ -51,7 +54,7 @@ function addSkinBox(out, m, f, t, P0, skin) {
   const X = (a) => f[0] + (t[0] - f[0]) * a, Y = (a) => f[1] + (t[1] - f[1]) * a, Z = (a) => f[2] + (t[2] - f[2]) * a;
   const face = (ru, rv, C, R, map) => {
     for (let i = 0; i < C; i++) for (let j = 0; j < R; j++) {
-      const c = skin[(rv + j) * 64 + ru + i]; if (c === undefined) continue;
+      const c = skin[(rv + j) * 64 + ru + i]; if (c == null) continue;
       const q = [map(i / C, j / R), map((i + 1) / C, j / R), map((i + 1) / C, (j + 1) / R), map(i / C, (j + 1) / R)].map((p) => ap(m, p));
       out.push({ p: q, c: hex(c) });
     }
@@ -139,20 +142,21 @@ function addBanner(out, m, bn) {
 
 /* ---------- vykreslení ---------- */
 function draw(ctx, quads, cam, extra) {
-  const { w, h, yaw, pitch, scale, cy } = cam;
+  const { w, h, yaw, pitch, scale, cy, oy = 0 } = cam;
   const V = mul(RX(pitch), RY(yaw)), dist = 140;
-  const proj = (p) => { const v = ap(V, p); const k = dist / (dist + v[2]); return [w / 2 - v[0] * scale * k, cy - v[1] * scale * k, v[2]]; };
+  const proj = (p) => { const v = ap(V, [p[0], p[1] - oy, p[2]]); const k = dist / (dist + v[2]); return [w / 2 - v[0] * scale * k, cy - v[1] * scale * k, v[2]]; };
   const list = [];
   for (const q of quads) {
     const s = q.p.map(proj);
     const z = (s[0][2] + s[1][2] + s[2][2] + s[3][2]) / 4;
     // normála ve světě kamery -> světlo
-    const a = ap(V, q.p[0]), b = ap(V, q.p[1]), c = ap(V, q.p[2]);
+    const a = ap(V, q.p[0]), b = ap(V, q.p[1]), c = ap(V, q.p[2]); // normála
     const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
     let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+    if (q.L && nz > 0 !== !!q.flip) continue;
     if (nz > 0) { nx = -nx; ny = -ny; nz = -nz; }
     const k = .62 + .38 * Math.max(0, -nz * .7 + ny * .5 - nx * .25);
-    list.push({ s, z, col: lit(q.c, k), a: q.a || 1 });
+    list.push({ s, z: z - (q.L ? 1e4 : 0), col: lit(q.c, k), a: q.a || 1 });
   }
   if (extra) for (const e of extra) { const s = proj(e.p); list.push({ pt: e, s, z: s[2] }); }
   list.sort((x, y) => y.z - x.z);
@@ -210,9 +214,9 @@ export const EMOTE_LEN = Object.fromEntries(Object.entries(RIG.anims).map(([k, v
  */
 export function startStage(canvas) {
   const ctx = canvas.getContext("2d");
-  let walkW = 0, st = {}, emote = null, t0 = 0, yaw = -20 * D, run = true, parts = [], syms = [];
+  let pitch = 14 * D, walkW = 0, st = {}, emote = null, t0 = 0, yaw = -20 * D, run = true, parts = [], syms = [];
   const api = {
-    set(s) { st = s; }, get yaw() { return yaw; }, set yaw(v) { yaw = v; },
+    set(s) { st = s; }, get yaw() { return yaw; }, set yaw(v) { yaw = v; }, get pitch() { return pitch; }, set pitch(v) { pitch = Math.max(-35 * D, Math.min(60 * D, v)); },
     play(id) { emote = RIG.anims[id] ? id : null; t0 = performance.now(); api.emoteId = id; },
     stop() { run = false; }, resume() { if (!run) { run = true; requestAnimationFrame(frame); } },
   };
@@ -237,13 +241,13 @@ export function startStage(canvas) {
     const Wm = mul(T(P[0], bob, P[2]), RY(head));
     const mats0 = boneMats(emote, t, extra, ew || 1), mats = {};
     for (const k in mats0) mats[k] = mul(Wm, mats0[k]);
-    const q = [], SK = makeSkin(st.nick || "Steve");
+    const q = [], SK = SKIN;
     for (const [n, b] of Object.entries(BONE)) if (SKINMAP[n]) for (const [f, to] of b.b) addSkinBox(q, mats[n], f, to, SKINMAP[n], SK);
     // čepice: model z resource packu na hlavě
     if (st.hat?.model) {
       const mm = MODELS[st.hat.model], s = .625 * mm.h[1] * .9375;
       const m = mul(mats.h_ph_head, mul(T(0, 26.25 + mm.h[0] * .625 * .9375, 0), mul(RY(0), mul(S(s), T(-8, -8, -8)))));
-      addModel(q, st.hat.model, m);
+      const n0 = q.length; addModel(q, st.hat.model, m); for (let i = n0; i < q.length; i++) q[i].L = 1;
     }
     const ex = [];
     // balónek
@@ -264,7 +268,7 @@ export function startStage(canvas) {
       parts = parts.filter((p) => (p.l -= .006) > 0);
       for (const p of parts) { p.p[1] += p.vy; ex.push({ p: p.p, draw: ((pp) => (cx, x, y, sc) => { cx.globalAlpha = pp.l; glyph(st.trail.shape, st.trail.color, .6 + pp.l * .5)(cx, x, y, sc); cx.globalAlpha = 1; })(p) }); }
     } else parts = [];
-    const proj = draw(ctx, q, { w: W, h: H, cy: H * .86, yaw, pitch: 14 * D, scale: H / (st.trail ? 64 : 52) }, ex);
+    const proj = draw(ctx, q, { w: W, h: H, cy: H * .86 - 16 * H / (st.trail ? 64 : 52), oy: 16, yaw, pitch, scale: H / (st.trail ? 64 : 52) }, ex);
     // provázek balónku
     for (const e of ex) if (e.line) { const a = proj(e.line.slice(0, 3)), b = proj(e.line.slice(3)); ctx.strokeStyle = "#ddd9"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2 + 6, (a[1] + b[1]) / 2, b[0], b[1]); ctx.stroke(); }
     // symboly emotu nad hlavou (jako ve hře)

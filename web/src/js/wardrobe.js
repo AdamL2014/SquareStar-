@@ -174,8 +174,8 @@ export function startWardrobe() {
   $("wdSearch").addEventListener("input", (e) => { W.q = e.target.value.trim(); renderGrid(); });
   // otáčení tažením
   const st = $("stage"); let drag = null;
-  st.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; drag = { x: e.clientX, a: W.angle }; st.setPointerCapture(e.pointerId); st.classList.add("drag"); });
-  st.addEventListener("pointermove", (e) => { if (drag) setAngle(drag.a + (e.clientX - drag.x) * .8); });
+  st.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; drag = { x: e.clientX, y: e.clientY, a: W.angle, p: stage ? stage.pitch : 0 }; st.setPointerCapture(e.pointerId); st.classList.add("drag"); });
+  st.addEventListener("pointermove", (e) => { if (drag) { setAngle(drag.a + (e.clientX - drag.x) * .8); if (stage) stage.pitch = drag.p + (e.clientY - drag.y) * .01; } });
   const end = () => { drag = null; st.classList.remove("drag"); };
   st.addEventListener("pointerup", end); st.addEventListener("pointercancel", end);
   $("kosmetika").addEventListener("click", (e) => {
@@ -200,6 +200,7 @@ export function startWardrobe() {
     else if (a === "prev" || a === "next") { W.oi = (W.oi + (a === "next" ? 1 : -1) + W.outfits.length) % W.outfits.length; renderAll(); }
     else if (a === "new") { W.outfits.push({ name: `Outfit ${W.outfits.length + 1}`, eq: {} }); W.oi = W.outfits.length - 1; renderAll(); toast("Nový outfit vytvořen"); }
     else if (a === "front" || a === "back") { document.querySelectorAll(".wd-rot button").forEach((x) => x.classList.toggle("on", x === b)); turnTo(a === "front" ? 20 : 200); }
+    else if (a === "bg") { const s = $("stage"), ow = s.classList.toggle("ow"); b.textContent = ow ? "🔴" : "🌍"; toast(ow ? "Pozadí: Overworld" : "Pozadí: Mars"); }
     else if (a === "spin") { let t0 = null; const s = W.angle; const f = (t) => { t0 ??= t; const k = Math.min(1, (t - t0) / 1200); setAngle(s + 360 * (1 - (1 - k) ** 3)); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
   });
 }

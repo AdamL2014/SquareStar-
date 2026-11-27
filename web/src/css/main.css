@@ -600,3 +600,10 @@ a.buy{display:block;text-align:center;text-decoration:none;line-height:22px}
 @media(max-width:620px){.mars{width:260px;height:260px}}
 
 @media(max-width:620px){.mars{width:360px;height:360px;top:-20px}}
+
+/* pozadí náhledu: Overworld */
+.stage{transition:background .5s}
+.stage.ow{background:linear-gradient(#7fb8ff 0%,#a9d3ff 55%,#cfe7ff 70%,#5a9a3a 70.5%,#4a8a2e 100%)}
+.stage.ow .orbit{display:none}
+.stage.ow .plat{background:linear-gradient(#6cc04a 0 30%,#8a5a34 30%);box-shadow:0 0 0 2px #3f7a28,0 10px 0 #5a3a20}
+.stage.ow:before{content:"";position:absolute;top:12%;left:12%;width:90px;height:22px;background:#fff;box-shadow:24px -12px 0 #fff,60px 0 0 #fff,190px 30px 0 #fffd,220px 18px 0 #fffd;opacity:.9}
