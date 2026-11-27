@@ -12,6 +12,7 @@
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd84a"/><stop offset=".5" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ff3b2f"/></linearGradient></defs>
  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
  <symbol id="i-cpu" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
@@ -56,7 +57,7 @@
    <span class="btxt"><b>Hrát</b><small id="ipLabel">Kopírovat IP</small></span>
   </button>
   <div class="logo3d">
-   <svg class="mk" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd84a"/><stop offset=".5" stop-color="#ff8a1f"/><stop offset="1" stop-color="#ff3b2f"/></linearGradient></defs><rect x="8" y="8" width="24" height="24" rx="3" fill="url(#lg)" transform="rotate(45 20 20)"/><path d="M20 11l2.6 6.4L29 20l-6.4 2.6L20 29l-2.6-6.4L11 20l6.4-2.6z" fill="#1c1e2d"/></svg>
+   <svg class="mk" viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="8" width="24" height="24" rx="3" fill="url(#lg)" transform="rotate(45 20 20)"/><path d="M20 11l2.6 6.4L29 20l-6.4 2.6L20 29l-2.6-6.4L11 20l6.4-2.6z" fill="#1c1e2d"/></svg>
    <h1><span class="lg1">SQUARE</span><span class="lg2">STAR</span></h1>
    <code class="ipchip" id="ip">IP_ADRESA_SERVERU</code>
   </div>
@@ -100,13 +101,17 @@
   <div class="players" id="players" aria-live="polite"><div class="empty">Načítám…</div></div>
  </section>
 
- <section id="obchod" class="panel reveal">
-  <div class="phd"><h2>OBCHOD</h2><p>Kupuj za mince ze hry. Věc se ti hned objeví na serveru.</p></div>
+ <section id="obchod" class="panel page">
+  <a class="back" href="#top">← Zpět na hlavní stránku</a>
+  <div class="shophero glass"><div><h2>OBCHOD</h2><p>Kupuj za mince ze hry. Věc se ti hned objeví na serveru.</p></div>
+   <div class="bal"><span>Tvoje mince</span><b id="balance">Přihlas se</b></div></div>
+  <div class="tabs" id="shopTabs"><button data-cat="" class="act">Vše</button><button data-cat="Rank">Ranky</button><button data-cat="Klíč">Klíče</button><button data-cat="Kosmetika">Kosmetika</button></div>
   <div class="shop" id="shop"></div>
   <div class="glass cartbar"><span id="cartInfo">Košík je prázdný</span><span class="msg" id="buyMsg"></span><button class="gbtn" data-action="checkout" id="checkoutBtn">Koupit</button></div>
  </section>
 
- <section id="pratele" class="panel reveal">
+ <section id="pratele" class="panel page">
+  <a class="back" href="#top">← Zpět na hlavní stránku</a>
   <div class="phd"><h2>PŘÁTELÉ</h2><p>Přidávej kamarády a hned uvidíš, kdo je online a co hraje.</p></div>
   <div id="frLocked" class="locked"><p>Pro přátele se nejdřív přihlas přes svůj Minecraft účet.</p><button class="gbtn green" data-action="account">Přihlásit se</button></div>
   <div id="frBox" hidden>

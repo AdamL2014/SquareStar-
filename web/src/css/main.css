@@ -1,5 +1,9 @@
 @font-face{font-family:MC;src:url(../fonts/mc.woff2) format("woff2");font-display:swap}
 @font-face{font-family:"MC Ten";src:url(../fonts/mc-ten.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Rubik;src:url(../fonts/rubik.woff2) format("woff2");font-weight:300 900;font-display:swap}
+@font-face{font-family:Lucky;src:url(../fonts/lucky.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Lemon;src:url(../fonts/lemon.woff2) format("woff2");font-display:swap}
+@font-face{font-family:Block;src:url(../fonts/block.woff2) format("woff2");font-display:swap}
 :root{--bg:#1c1e2d;--bg2:#161827;--card:#23263a;--card2:#2b2f47;--line:#ffffff14;--line2:#ffffff26;--text:#fff;--muted:#c0c1c4;--dim:#7d8099;--gold:#ffd84a;--ok:#3ddc84;--o:#ff9a2a;--rad:12px;--logo:"MC Ten",MC,monospace;--px:MC,ui-monospace,monospace;--tx:MC,ui-monospace,monospace}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -322,3 +326,76 @@ nav{background:linear-gradient(180deg,#1c1e2dcc,#1c1e2d88) !important;border-wid
 .buy:not(.on):not(:disabled){animation:none}
 .tile.item:hover .art{transform:scale(1.15) rotate(-8deg)}
 @media(prefers-reduced-motion:reduce){.orbs i,.tile .art,.pod.p1 .face.head,.mbox .face.head{animation:none}}
+
+/* ===== víc písem ===== */
+:root{--body:Rubik,system-ui,sans-serif;--head:Lemon,MC,sans-serif;--fun:Lucky,MC,sans-serif;--mono:Block,MC,monospace}
+body{font-family:var(--body);font-size:16px;-webkit-font-smoothing:antialiased}
+.phd h2{font-family:var(--head);font-size:clamp(24px,3.4vw,36px);letter-spacing:.5px;background:linear-gradient(180deg,#fff,#c9cbe0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.phd p{font-size:16px}
+.tile.item h2,.big-num b,.stat b,.mgrid b,.pod .v,.row .v{font-family:var(--fun);letter-spacing:.5px}
+.tile.item h2{font-size:30px;line-height:1}
+.stat b{font-size:28px}
+.tag,.rk,.sm,.tk span,.gh span,.stat span,.hint,.upd,.pill{font-family:var(--mono)}
+.fc h3,.st h3{font-family:var(--head);font-size:15px}
+.fc p,.st p,.tile p,.locked p,.mbox.login p{font-family:var(--body)}
+.tile p{font-size:15px;font-weight:500}
+
+/* ===== minihry s ikonami ===== */
+.gcat{display:flex;flex-direction:column;gap:22px}
+.gsec h3{display:flex;align-items:center;gap:10px;font-family:var(--head);font-size:18px;margin-bottom:12px}
+.gsec h3 .dot{width:14px;height:14px;border-radius:3px;background:var(--c1);box-shadow:0 0 12px var(--c1)}
+.gsec h3 small{font:13px var(--mono);color:var(--dim);margin-left:4px}
+.ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.game{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 12px 14px;border-radius:14px;text-align:center;color:#fff;cursor:default;
+ background:linear-gradient(160deg,#ffffff1c,#ffffff06) ;border:1px solid #ffffff26;backdrop-filter:blur(14px) saturate(160%);box-shadow:inset 0 1px 0 #ffffff4d,0 10px 26px -12px #000a;transition:transform .25s cubic-bezier(.3,1.5,.5,1),box-shadow .25s}
+.game:hover{transform:translateY(-6px);box-shadow:inset 0 1px 0 #ffffff66,0 18px 34px -12px var(--c1)}
+.gi{width:64px;height:64px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#ffffff3a,#0000 45%),linear-gradient(135deg,var(--c1),var(--c2));box-shadow:inset 0 1px 0 #fff6,inset 0 -5px 0 #0003,0 6px 0 #0004;transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.gi svg{width:36px;height:36px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 2px 0 #0004)}
+.game:hover .gi{transform:rotate(-8deg) scale(1.12)}
+.game b{font-family:var(--px);font-weight:400;font-size:16px;line-height:1.2}
+.game span{font:12px var(--mono);color:var(--muted)}
+
+/* ===== ranky jako ve hře ===== */
+.rkimg{height:18px;width:auto;image-rendering:pixelated;flex:none;filter:drop-shadow(0 2px 0 #0005)}
+.pod .rkimg{height:20px;margin:6px auto 0}
+.rkbig{height:34px;width:auto;image-rendering:pixelated;margin-bottom:10px;filter:drop-shadow(0 3px 0 #0004);animation:float 4s ease-in-out infinite}
+
+/* ===== žebříčky: animace ===== */
+.podium{align-items:end;min-height:300px}
+.pod{display:flex;flex-direction:column;align-items:center;overflow:visible;padding-bottom:0}
+.pod .step{width:calc(100% + 16px);margin:14px -8px 0;border-radius:0 0 var(--rad) var(--rad);background:linear-gradient(180deg,#ffffff22,#ffffff05);border-top:1px solid #ffffff33}
+.pod.p1 .step{height:70px;background:linear-gradient(180deg,#ffd84a55,#ffd84a08)}
+.pod.p2 .step{height:44px;background:linear-gradient(180deg,#d9d9d955,#d9d9d908)}
+.pod.p3 .step{height:28px;background:linear-gradient(180deg,#e08a4a55,#e08a4a08)}
+.crown{position:absolute;top:-30px;left:50%;width:40px;height:40px;margin-left:-20px;fill:#ffd84a;stroke:#b8860b;stroke-width:1;filter:drop-shadow(0 0 12px #ffd84a);animation:crown 2.4s ease-in-out infinite}
+@keyframes crown{50%{transform:translateY(-4px) rotate(-6deg)}}
+.pod.p1{overflow:visible}
+.pod.p1:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(115deg,#0000 35%,#fff3 50%,#0000 65%);background-size:250% 100%;animation:sheen 3.5s ease-in-out infinite}
+@keyframes sheen{0%,60%{background-position:150% 0}100%{background-position:-50% 0}}
+.podium.anim .pod{animation:rise .7s cubic-bezier(.2,1.3,.4,1) both}
+.podium.anim .pod.p1{animation-delay:.25s}.podium.anim .pod.p2{animation-delay:.1s}.podium.anim .pod.p3{animation-delay:.4s}
+@keyframes rise{from{opacity:0;transform:translateY(60px) scaleY(.6);transform-origin:bottom}}
+.lb .row,.list.anim .row{animation:none}
+#lb.anim .row{animation:slideIn .5s cubic-bezier(.2,.9,.3,1.1) both;animation-delay:var(--d)}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}}
+.row{transition:background .2s,transform .2s}
+.row:hover{transform:translateX(4px)}
+.row .pos{font-family:var(--fun);font-size:18px}
+.tabs button{transition:transform .2s,background .2s,color .2s}
+.tabs button.act{animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+@media(prefers-reduced-motion:reduce){.crown,.pod.p1:after,.rkbig{animation:none}}
+
+/* ===== samostatné stránky ===== */
+.page{display:none}
+body:not([data-page=home]) .hero,body:not([data-page=home]) main > :not(.page.show){display:none}
+body:not([data-page=home]) .page.show{display:block;margin-top:34px;animation:pageIn .5s cubic-bezier(.2,.9,.3,1)}
+@keyframes pageIn{from{opacity:0;transform:translateY(24px)}}
+.back{display:inline-flex;align-items:center;gap:6px;font:15px var(--px);color:var(--muted);margin-bottom:16px;padding:8px 0;transition:color .15s,transform .15s}
+.back:hover{color:#fff;transform:translateX(-3px)}
+.shophero{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;border-radius:18px;padding:30px 32px;margin-bottom:18px;overflow:hidden}
+.shophero h2{font-family:var(--head);font-size:clamp(34px,6vw,64px);line-height:1;background:linear-gradient(180deg,#fff2a8,#ffb92a 55%,#e8601c);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 0 #0005)}
+.shophero p{margin-top:8px;font-size:16px}
+.bal{background:#0003;border:1px solid #ffd84a55;border-radius:14px;padding:14px 20px;text-align:right}
+.bal span{display:block;font:13px var(--mono);color:var(--muted)}.bal b{font:30px var(--fun);color:var(--gold);font-weight:400}
+#shopTabs{margin-bottom:16px}
+#shop .tile{animation:pageIn .45s both}

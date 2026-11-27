@@ -1,16 +1,45 @@
 import { $, pixelHead } from "./util.js";
 
+// Ikony miniher (24×24, tahy)
+const GI = {
+  duel: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4"/><path d="M9.5 17.5 21 6V3h-3L6.5 14.5M11 19l-6-6M8 16l-4 4"/>',
+  ffa: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',
+  team: '<circle cx="7" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M1 20c0-3 3-5 6-5s6 2 6 5M11 20c0-3 3-5 6-5s6 2 6 5"/>',
+  army: '<path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5z"/><path d="m8 12 3 3 5-6"/>',
+  sumo: '<circle cx="12" cy="12" r="10"/><circle cx="9" cy="12" r="2.5"/><circle cx="15" cy="12" r="2.5"/><path d="M5 17h14"/>',
+  bed: '<path d="M2 18V7M2 13h20v5M22 13a4 4 0 0 0-4-4h-7v4"/><circle cx="6.5" cy="10" r="1.8"/>',
+  egg: '<path d="M12 3c4 0 7 6.5 7 11a7 7 0 0 1-14 0c0-4.5 3-11 7-11z"/><path d="m8 13 2 2 2-2 2 2 2-2"/>',
+  bridge: '<path d="M2 17h20M4 17V9M20 17V9M4 9q8 6 16 0M8 17v-4M12 17v-3M16 17v-4"/>',
+  anni: '<path d="M12 2v6M9 5h6"/><path d="M4 22l3-9h10l3 9z"/><path d="M9 13V9h6v4"/>',
+  swords: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/>',
+  sky: '<path d="M3 15h7l-2 5h8l-2-5h7"/><path d="M7 15V9l5-5 5 5v6"/>',
+  apple: '<path d="M12 7c-2-2-7-1.5-7 4 0 5 3 10 5 10 1 0 1.5-.6 2-.6s1 .6 2 .6c2 0 5-5 5-10 0-5.5-5-6-7-4z"/><path d="M12 7c0-2 1-4 3-4"/>',
+  zombie: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 10h2M14 10h2M8 15h8M10 15v2M14 15v2"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+  knife: '<path d="M3 21 14 10M14 10l6-6c1 3 0 6-3 8z"/><path d="m5 17 2 2"/>',
+  build: '<path d="m3 21 4-1 11-11-3-3L4 17z"/><path d="m14 6 3 3M17 3l4 4"/>',
+  parkour: '<path d="M3 20h4v-4h4v-4h4V8h4V4h2"/><circle cx="18" cy="3" r="1"/>',
+  up: '<path d="M12 21V5M5 12l7-7 7 7"/><path d="M5 21h14"/>',
+  drop: '<path d="M12 3v14M6 11l6 6 6-6"/><path d="M4 21h16"/>',
+  rover: '<rect x="3" y="8" width="18" height="7" rx="2"/><circle cx="7" cy="18" r="2.5"/><circle cx="17" cy="18" r="2.5"/><path d="M12 8V4h4"/>',
+  clock: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M10 2h4"/>',
+  beat: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  shovel: '<path d="M14 10 21 3M17 7l-3-3M5 13l6 6-3 3c-3 0-6-3-6-6z"/>',
+  tnt: '<rect x="4" y="7" width="16" height="13" rx="1"/><path d="M4 12h16M8 7V4M8 4c2 0 2-2 4-2"/><path d="M8 16h2M12 16v-2M15 16h2"/>',
+  lucky: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M10 9.5a2 2 0 1 1 3 1.7c-.7.4-1 1-1 1.8M12 16h.01"/>',
+};
 export const CATS = [
-  { t: "PvP", i: "sword", c: ["#ff3b2f", "#5a0c08"], g: ["1v1", "Všichni proti všem", "5v5", "10v10", "Sumo"] },
-  { t: "Bojové", i: "shield", c: ["#ff8a1f", "#5e2706"], g: ["BedWars", "EggWars", "The Bridge", "AnniRun", "Duels", "SkyWars", "UHC Run", "Zombies"] },
-  { t: "Schovávací", i: "eye", c: ["#a66bff", "#2e1258"], g: ["Schovka", "Vrah mezi námi", "Stavitelská bitva"] },
-  { t: "Závodní", i: "flag", c: ["#3ddc84", "#0b4a2a"], g: ["Parkour", "Only Up", "Dropper", "Rover závod", "Speedrun", "Beat"] },
-  { t: "Zábavné", i: "smile", c: ["#5ee7ff", "#0b3f52"], g: ["Spleef", "Útěk před TNT", "Lucky Tower"] },
+  { t: "PvP", c: ["#ff4b3a", "#a3160c"], g: [["1v1", "duel"], ["Všichni proti všem", "ffa"], ["5v5", "team"], ["10v10", "army"], ["Sumo", "sumo"]] },
+  { t: "Bojové", c: ["#ff9a2a", "#b4500e"], g: [["BedWars", "bed"], ["EggWars", "egg"], ["The Bridge", "bridge"], ["AnniRun", "anni"], ["Duels", "swords"], ["SkyWars", "sky"], ["UHC Run", "apple"], ["Zombies", "zombie"]] },
+  { t: "Schovávací", c: ["#b06bff", "#5a22b0"], g: [["Schovka", "eye"], ["Vrah mezi námi", "knife"], ["Stavitelská bitva", "build"]] },
+  { t: "Závodní", c: ["#3ddc84", "#138a4a"], g: [["Parkour", "parkour"], ["Only Up", "up"], ["Dropper", "drop"], ["Rover závod", "rover"], ["Speedrun", "clock"], ["Beat", "beat"]] },
+  { t: "Zábavné", c: ["#45d4ff", "#1576b8"], g: [["Spleef", "shovel"], ["Útěk před TNT", "tnt"], ["Lucky Tower", "lucky"]] },
 ];
 const word = (n) => (n === 1 ? "hra" : n < 5 ? "hry" : "her");
 
 export function renderCategories() {
-  $("gcat").innerHTML = CATS.map((k) => `<div class="gc" style="--c1:${k.c[0]};--c2:${k.c[1]}"><div class="gh"><svg class="ic"><use href="#i-${k.i}"/></svg><h3>${k.t}</h3><span>${k.g.length} ${word(k.g.length)}</span></div><ul>${k.g.map((g) => `<li>${g}</li>`).join("")}</ul></div>`).join("");
+  $("gcat").innerHTML = CATS.map((k) => `<div class="gsec" style="--c1:${k.c[0]};--c2:${k.c[1]}"><h3><span class="dot"></span>${k.t}<small>${k.g.length} ${word(k.g.length)}</small></h3>
+    <div class="ggrid">${k.g.map(([n, i]) => `<div class="game"><div class="gi"><svg viewBox="0 0 24 24" aria-hidden="true">${GI[i]}</svg></div><b>${n}</b><span>${k.t}</span></div>`).join("")}</div></div>`).join("");
 }
 
 export function startStars() {
@@ -64,7 +93,7 @@ export function renderTicker(d) {
 export function startReveal() {
   addEventListener("scroll", () => $("nav").classList.toggle("sc", scrollY > 20), { passive: true });
   const secs = [...document.querySelectorAll("main section[id]")], links = [...document.querySelectorAll("#nlinks a")];
-  const so = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle("act", a.getAttribute("href") === "#" + e.target.id)); }), { rootMargin: "-45% 0px -50% 0px" });
+  const so = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting && document.body.dataset.page === "home") links.forEach((a) => a.classList.toggle("act", a.getAttribute("href") === "#" + e.target.id)); }), { rootMargin: "-45% 0px -50% 0px" });
   secs.forEach((s) => so.observe(s));
   const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .1 });
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));

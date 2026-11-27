@@ -1,4 +1,5 @@
 import { $, esc, time, safeColor, pixelHead } from "./util.js";
+import { RANK_IMG } from "./ranks.js";
 
 export const state = { data: null, tab: "xpTotal" };
 
@@ -7,7 +8,11 @@ export function face(p, size) {
   const u = esc(p.skin), bs = size * 8;
   return `<div class="face" style="width:${size}px;height:${size}px;background-image:url('${u}');background-size:${bs}px ${bs}px;background-position:-${size}px -${size}px"><i style="background-image:url('${u}');background-size:${bs}px ${bs}px;background-position:-${size * 5}px -${size}px"></i></div>`;
 }
-export function rank(p) { const c = safeColor(p.rankColor); return `<span class="rk" style="color:${c};background:${c}1f">${esc(p.rank)}</span>`; }
+export function rank(p) {
+  const k = String(p.rank || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (RANK_IMG[k]) return `<img class="rkimg" src="${RANK_IMG[k]}" alt="${esc(p.rank)}">`;
+  const c = safeColor(p.rankColor); return `<span class="rk" style="color:${c};background:${c}1f">${esc(p.rank)}</span>`;
+}
 
 const cardHtml = (p) => `${face(p, 54)}<div style="flex:1;min-width:0"><div class="nm"><em>${esc(p.name)}</em>${rank(p)}</div>
   <div class="sm"><span>Level ${p.level}</span><span>${time(p.minutes)}</span><span>${esc(p.playing)}</span></div>
@@ -34,12 +39,18 @@ export function renderPlayers() {
 }
 
 const val = (p, k) => (k === "xpTotal" ? "Lv " + p.level : k === "minutes" ? time(p.minutes) : p[k]);
+let lastTop = "", lastTab = "";
 export function renderTop() {
   const l = state.data?.top?.[state.tab];
-  if (!l?.length) { $("podium").innerHTML = ""; $("lb").innerHTML = '<div class="empty">Zatím tu nikdo není.</div>'; return; }
-  $("podium").innerHTML = [1, 0, 2].filter((i) => l[i]).map((i) => `<div class="pod p${i + 1}" data-top="${i}"><div class="medal">${i + 1}</div>${face(l[i], i === 0 ? 72 : 56)}<div class="n">${esc(l[i].name)}</div><div class="v">${val(l[i], state.tab)}</div></div>`).join("");
-  const rest = l.slice(3);
-  $("lb").innerHTML = rest.length ? rest.map((p, j) => `<div class="row" data-top="${j + 3}"><div class="pos">${j + 4}</div>${face(p, 34)}<div class="nm"><em>${esc(p.name)}</em>${rank(p)}</div><div class="v">${val(p, state.tab)}</div></div>`).join("") : '<div class="empty">Další místa jsou volná – můžou být tvoje!</div>';
+  if (!l?.length) { $("podium").innerHTML = ""; $("lb").innerHTML = '<div class="empty">Zatím tu nikdo není.</div>'; lastTop = ""; return; }
+  const pod = [1, 0, 2].filter((i) => l[i]).map((i) => `<div class="pod p${i + 1}" data-top="${i}">${i === 0 ? '<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 8 5 4 5-8 5 8 5-4-2 12H4z"/></svg>' : ""}<div class="medal">${i + 1}</div>${face(l[i], i === 0 ? 72 : 56)}<div class="n">${esc(l[i].name)}</div>${rank(l[i])}<div class="v">${val(l[i], state.tab)}</div><div class="step"></div></div>`).join("");
+  const rest = l.slice(3, 10);
+  const rows = rest.length ? rest.map((p, j) => `<div class="row" data-top="${j + 3}" style="--d:${j * 60}ms"><div class="pos">${j + 4}</div>${face(p, 34)}<div class="nm"><em>${esc(p.name)}</em>${rank(p)}</div><div class="v">${val(p, state.tab)}</div></div>`).join("") : '<div class="empty">Další místa jsou volná – můžou být tvoje!</div>';
+  const key = state.tab + pod + rows;
+  if (key === lastTop) return;
+  const anim = state.tab !== lastTab; lastTop = key; lastTab = state.tab;
+  $("podium").innerHTML = pod; $("lb").innerHTML = rows;
+  for (const id of ["podium", "lb"]) { const el = $(id); el.classList.remove("anim"); if (anim) { void el.offsetWidth; el.classList.add("anim"); } }
 }
 
 export function showModal(p) {

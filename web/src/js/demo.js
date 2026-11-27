@@ -1,7 +1,7 @@
 // Ukázková data (náhled bez serveru): hráči se sami připojují a odpojují.
 const NAMES = ["AdrrexStudio", "Kuba123", "MarsKing", "Terka_CZ", "PixelPavel", "NoName07", "Lenka", "RedFox"];
-const RANKS = [["OWNER", "#ff5555"], ["VIP", "#ffaa00"], ["HRÁČ", "#aaaaaa"]];
-const mk = (n, i) => ({ name: n, rank: RANKS[i % 3][0], rankColor: RANKS[i % 3][1], level: 3 + i * 4, xp: 40 + i * 9, xpNeed: 120, minutes: 90 + i * 130, playing: i % 2 ? "BedWars" : "Lobby", wins: i * 3, kills: i * 7, gamesPlayed: i * 5, xpTotal: 500 + i * 300, skin: "" });
+const RANKS = [["OWNER", "#ff5555"], ["VIP", "#55ff55"], ["HRAC", "#aaaaaa"], ["MVP", "#55ffff"], ["YOUTUBER", "#ff5555"], ["LEGENDA", "#ff55ff"], ["VIDRIFTER", "#55ffff"], ["HELPER", "#55ff55"]];
+const mk = (n, i) => ({ name: n, rank: RANKS[i % 8][0], rankColor: RANKS[i % 8][1], level: 3 + i * 4, xp: 40 + i * 9, xpNeed: 120, minutes: 90 + i * 130, playing: i % 2 ? "BedWars" : "Lobby", wins: i * 3, kills: i * 7, gamesPlayed: i * 5, xpTotal: 500 + i * 300, skin: "" });
 export function startDemo(onData) {
   let online = ["AdrrexStudio", "Kuba123", "MarsKing", "Terka_CZ"];
   const tick = () => {

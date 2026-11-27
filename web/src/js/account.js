@@ -2,17 +2,18 @@
 // V náhledu (cfg.demo) vše běží jen v prohlížeči. Napojení na server: viz komentáře "API:".
 import { $, esc, pixelHead } from "./util.js";
 import { startTilt, toast } from "./fx.js";
+import { RANK_IMG } from "./ranks.js";
 
 const SHOP = [
-  { id: "vip", cat: "Rank", name: "VIP", desc: "Barevné jméno, /fly v lobby a 2 emoty navíc", price: 1500, c: "t-blue", icon: "crown" },
-  { id: "mvp", cat: "Rank", name: "MVP", desc: "Vše z VIP + vlastní částice a 2× denní odměna", price: 4000, c: "t-purple", icon: "star" },
-  { id: "key", cat: "Klíč", name: "Legendární klíč", desc: "Otevře legendární bednu v lobby", price: 600, c: "t-pink", icon: "gift" },
+  { id: "vip", cat: "Rank", name: "VIP", desc: "Barevné jméno, /fly v lobby a 2 emoty navíc", price: 1500, c: "t-green", icon: "crown", rk: "vip" },
+  { id: "mvp", cat: "Rank", name: "MVP", desc: "Vše z VIP + vlastní částice a 2× denní odměna", price: 4000, c: "t-pink", icon: "star", rk: "mvp" },
+  { id: "key", cat: "Klíč", name: "Legendární klíč", desc: "Otevře legendární bednu v lobby", price: 600, c: "t-purple", icon: "gift" },
   { id: "keys5", cat: "Klíč", name: "5× Vzácný klíč", desc: "Balíček vzácných klíčů", price: 900, c: "t-red", icon: "pack" },
   { id: "emotes", cat: "Kosmetika", name: "Balíček emotů", desc: "6 animovaných emotů do lobby", price: 450, c: "t-green", icon: "smile" },
   { id: "trail", cat: "Kosmetika", name: "Raketová stopa", desc: "Ohnivá stopa za tebou při skoku", price: 350, c: "t-orange", icon: "rocket" },
 ];
 
-const S = { user: null, coins: 0, cart: new Set(), owned: new Set(),
+const S = { cat: "", user: null, coins: 0, cart: new Set(), owned: new Set(),
   friends: [{ name: "Kuba123", on: true, play: "BedWars" }, { name: "Terka_CZ", on: true, play: "Lobby" }, { name: "MarsKing", on: false, play: "" }],
   requests: ["PixelPavel"], pendingNick: "" };
 
@@ -25,15 +26,16 @@ function renderAcc() {
   const b = $("accBtn"), c = $("coins");
   if (S.user) { b.innerHTML = `<img class="av head" src="${pixelHead(S.user)}" alt="">${esc(S.user)}`; c.hidden = false; c.textContent = S.coins + " mincí"; }
   else { b.textContent = "Přihlásit"; c.hidden = true; }
+  $("balance").textContent = S.user ? S.coins + " mincí" : "Přihlas se";
   $("frLocked").hidden = !!S.user; $("frBox").hidden = !S.user;
 }
 
 function renderShop() {
-  $("shop").innerHTML = SHOP.map((it) => {
+  $("shop").innerHTML = SHOP.filter((it) => !S.cat || it.cat === S.cat).map((it) => {
     const own = S.owned.has(it.id), inCart = S.cart.has(it.id);
     const lbl = own ? "Vlastníš" : inCart ? "V košíku · zrušit" : `${it.price} mincí · Do košíku`;
     return `<div class="tile item ${it.c}"><i class="shine"></i><svg class="art" viewBox="0 0 24 24"><use href="#i-${it.icon}"/></svg>
-      <span class="tag">${it.cat}</span><div class="tx"><h2>${it.name}</h2><p>${it.desc}</p>
+      <span class="tag">${it.cat}</span><div class="tx">${it.rk ? `<img class="rkbig" src="${RANK_IMG[it.rk]}" alt="Rank ${it.name}">` : ""}<h2>${it.name}</h2><p>${it.desc}</p>
       <button class="buy${own || inCart ? " on" : ""}" data-action="cart" data-id="${it.id}" ${own ? "disabled" : ""}>${lbl}</button></div></div>`;
   }).join("");
   const sel = SHOP.filter((i) => S.cart.has(i.id)), total = sel.reduce((a, i) => a + i.price, 0);
@@ -53,8 +55,20 @@ function renderFriends() {
 
 const all = () => { renderAcc(); renderShop(); renderFriends(); };
 
+/* samostatné stránky: #obchod a #pratele */
+const PAGES = ["obchod", "pratele"];
+function route() {
+  const p = location.hash.slice(1), page = PAGES.includes(p) ? p : "home";
+  if (document.body.dataset.page === page && page === "home") return;
+  const was = document.body.dataset.page; document.body.dataset.page = page;
+  document.querySelectorAll("#nlinks a").forEach((a) => a.classList.toggle("act", a.getAttribute("href") === "#" + page));
+  if (page !== "home") { document.querySelectorAll(".page").forEach((s) => s.classList.toggle("show", s.id === page)); scrollTo({ top: 0, behavior: "instant" }); }
+  else if (was && was !== "home") { const t = p && document.getElementById(p); if (t) requestAnimationFrame(() => t.scrollIntoView({ behavior: "instant" })); else scrollTo({ top: 0, behavior: "instant" }); }
+}
+
 export function startAccount(cfg) {
-  all();
+  all(); route(); addEventListener("hashchange", route);
+  $("shopTabs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; S.cat = b.dataset.cat; $("shopTabs").querySelectorAll("button").forEach((x) => x.classList.toggle("act", x === b)); renderShop(); });
   $("lgNick").addEventListener("submit", (e) => {
     e.preventDefault();
     const n = $("lgN").value.trim();
