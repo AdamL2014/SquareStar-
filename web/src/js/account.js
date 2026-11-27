@@ -12,7 +12,7 @@ const SHOP = [
   { id: "key-common", model: "crate_common", cat: "Klíč", name: "Obyčejný klíč", desc: "Otevře obyčejnou bednu na spawnu", price: 60, c: "t-green", icon: "gift" },
   { id: "key-rare", model: "crate_rare", cat: "Klíč", name: "Vzácný klíč", desc: "Otevře vzácnou bednu na spawnu", price: 150, c: "t-blue", icon: "gift" },
   { id: "key-legendary", model: "crate_legendary", cat: "Klíč", name: "Legendární klíč", desc: "Otevře legendární bednu na spawnu", price: 400, c: "t-gold", icon: "gift" },
-  { id: "cos", cat: "Kosmetika", name: "Šatník", desc: "Čepice, pety, pláště, balónky, stopy a aury", price: 0, link: "#kosmetika", c: "t-purple", icon: "spark" },
+  { id: "cos", cat: "Kosmetika", name: "Šatník", desc: "Čepice, pety, balónky, stopy, aury a emoty", price: 0, link: "#kosmetika", c: "t-purple", icon: "spark" },
 ];
 export const coin = (n) => `${Number(n).toLocaleString("cs-CZ")}<i class="coin" title="Mars Coin"></i>`;
 const MC = "Mars Coinů";

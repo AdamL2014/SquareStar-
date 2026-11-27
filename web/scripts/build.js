@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const R = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const rd = (f) => fs.readFileSync(path.join(R, "src", f), "utf8");
 
-const order = ["util", "config", "live", "demo", "ranks", "icons", "models3d", "rig3d", "skin", "fx", "render", "render3d", "account", "wardrobe", "main"];
+const order = ["util", "config", "live", "demo", "ranks", "icons", "models3d", "rig3d", "fx", "render", "render3d", "account", "wardrobe", "i18n", "main"];
 // každý modul ve vlastním rozsahu (žádné kolize jmen), importy -> const { … } = __modul
 const mod = (n) => {
   let src = rd(`js/${n}.js`);

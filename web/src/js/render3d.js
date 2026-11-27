@@ -2,7 +2,7 @@
 import { MODELS } from "./models3d.js";
 import { RIG } from "./rig3d.js";
 import { pixelHeadData } from "./util.js";
-import { SKIN } from "./skin.js";
+
 
 /* ---------- matice 4×4 (sloupcové pole 16 čísel) ---------- */
 const I = () => [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
@@ -68,6 +68,47 @@ const SKINMAP = {
   pra_right_arm: [40, 16, 4, 12, 4, 0, 6], prfa_right_forearm: [40, 16, 4, 12, 4, 6, 12], pla_left_arm: [32, 48, 4, 12, 4, 0, 6], plfa_left_forearm: [32, 48, 4, 12, 4, 6, 12],
   prl_right_leg: [0, 16, 4, 12, 4, 0, 6], prfl_right_foreleg: [0, 16, 4, 12, 4, 6, 12], pll_left_leg: [16, 48, 4, 12, 4, 0, 6], plfl_left_foreleg: [16, 48, 4, 12, 4, 6, 12],
 };
+
+/* ---------- skin 64×64 vygenerovaný z nicku (čistý, bez cizích textur) ---------- */
+const SKINS = new Map();
+export function makeSkin(nick) {
+  if (SKINS.has(nick)) return SKINS.get(nick);
+  const hp = pixelHeadData(nick), px = new Array(4096), H2 = (c) => (typeof c === "number" ? c : c[0] === "#" ? parseInt(c.slice(1), 16) : (() => { const m = c.match(/\d+/g); return (+m[0] << 16) | (+m[1] << 8) | +m[2]; })());
+  let h = 7; for (const ch of nick) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const SH = [0x2f9fb6, 0xd84a3a, 0x3a7bd8, 0x3aa65a, 0x8a4ad8, 0xe0a020, 0x2a2a34], PA = [0x3b4aa8, 0x2a2a34, 0x5a4030, 0x30507a, 0x4a4a52];
+  const shirt = SH[h % SH.length], pants = PA[(h >> 4) % PA.length], skin = H2(hp.skin), hair = H2(hp.hair), shoe = 0x3a3a40;
+  const n = (c, k) => { const v = hex(c), f = (x) => Math.max(0, Math.min(255, Math.round(x * k))); return (f(v[0]) << 16) | (f(v[1]) << 8) | f(v[2]); };
+  const rnd = () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296);
+  const fill = (x, y, w, hh, fn) => { for (let j = 0; j < hh; j++) for (let i = 0; i < w; i++) px[(y + j) * 64 + x + i] = fn(i, j); };
+  // hlava: předek = obličej, vršek vlasy, boky a záda vlasy nahoře
+  fill(8, 8, 8, 8, (i, j) => H2(hp.px[j * 8 + i]));
+  fill(8, 0, 8, 8, () => n(hair, .9 + rnd() * .2)); fill(16, 0, 8, 8, () => n(skin, .85));
+  fill(0, 8, 8, 8, (i, j) => j < 3 ? n(hair, .9 + rnd() * .2) : n(skin, .9 + rnd() * .1));
+  fill(16, 8, 8, 8, (i, j) => j < 3 ? n(hair, .9 + rnd() * .2) : n(skin, .9 + rnd() * .1));
+  fill(24, 8, 8, 8, (i, j) => j < 6 ? n(hair, .9 + rnd() * .2) : n(skin, .9));
+  // tělo, ruce, nohy (box u,v,w,h,d)
+  const part = (u, v, w, hh, d, col) => { fill(u + d, v, w, d, (i, j) => col(i, 0, true)); fill(u + d + w, v, w, d, (i, j) => col(i, hh - 1, true)); fill(u, v + d, d + w + d + w, hh, (i, j) => col(i, j, false)); };
+  part(16, 16, 8, 12, 4, (i, j) => j > 10 ? n(pants, .9) : n(shirt, .88 + rnd() * .16));
+  const arm = (i, j) => j < 4 ? n(shirt, .88 + rnd() * .16) : n(skin, .9 + rnd() * .1);
+  part(40, 16, 4, 12, 4, arm); part(32, 48, 4, 12, 4, arm);
+  const leg = (i, j) => j > 9 ? n(shoe, .9 + rnd() * .2) : n(pants, .85 + rnd() * .2);
+  part(0, 16, 4, 12, 4, leg); part(16, 48, 4, 12, 4, leg);
+  SKINS.set(nick, px); return px;
+}
+
+/* ---------- aury (podle Cosmetics.Aura na serveru) ---------- */
+function auraPts(id, c, now, P) {
+  const o = [], t = now / 1000, at = (x, y, z, g, s = 1) => o.push({ p: [P[0] + x, y, P[2] + z], g, c, s });
+  if (id === "ORBIT") for (let i = 0; i < 3; i++) { const a = t * 2.2 + i * 2.09; at(Math.cos(a) * 8, 15 + Math.sin(t * 3 + i) * 2, Math.sin(a) * 8, "●", 1.4); }
+  else if (id === "HALO") for (let i = 0; i < 16; i++) { const a = t * 1.5 + i * Math.PI / 8; at(Math.cos(a) * 4.5, 34, Math.sin(a) * 4.5, "●", .7); }
+  else if (id === "FLAMES") for (let i = 0; i < 12; i++) { const k = (t * .6 + i / 12) % 1, a = i * 2.4 + t * 2; at(Math.cos(a) * 6, k * 30, Math.sin(a) * 6, "▲", 1 - k * .6); }
+  else if (id === "STORM") { for (let i = 0; i < 10; i++) { const a = t * 4 + i * .63; at(Math.cos(a) * 9, 33 + Math.sin(i) * 1.5, Math.sin(a) * 9, "☁", 1); } if ((now / 120 | 0) % 9 === 0) for (let k = 0; k < 6; k++) at(Math.sin(k * 3) * 2, 32 - k * 5, 0, "⚡", 1.2); }
+  else if (id === "GALAXY") for (let i = 0; i < 24; i++) { const r = 2 + (i % 12) * .8, a = t * 1.4 + (i % 12) * .45 + (i < 12 ? 0 : Math.PI); at(Math.cos(a) * r, 1, Math.sin(a) * r, "✦", .9); }
+  else if (id === "LOVE") for (let i = 0; i < 6; i++) { const a = t * 1.6 + i * 1.047; at(Math.cos(a) * 9, 16 + Math.sin(t * 2 + i) * 4, Math.sin(a) * 9, "❤", 1.2); }
+  else if (id === "SAKURA") for (let i = 0; i < 14; i++) { const k = (t * .25 + i / 14) % 1; at(Math.sin(i * 7.3 + t) * 10, 36 - k * 36, Math.cos(i * 3.1) * 10, "✿", 1); }
+  else if (id === "FROST") for (let i = 0; i < 10; i++) { const a = -t * 1.2 + i * .628; at(Math.cos(a) * 10, 6 + (i % 5) * 6, Math.sin(a) * 10, "❄", 1.1); }
+  return o;
+}
 
 /* ---------- banner (plášť ze serveru: barva + vzor) 20×40 px ---------- */
 const DYE = { WHITE: 0xf9fffe, ORANGE: 0xf9801d, MAGENTA: 0xc74ebd, LIGHT_BLUE: 0x3ab3da, YELLOW: 0xfed83d, LIME: 0x80c71f, PINK: 0xf38baa, GRAY: 0x474f52, BLACK: 0x1d1d21, RED: 0xb02e26, PURPLE: 0x8932b8, BLUE: 0x3c44aa };
@@ -147,12 +188,13 @@ function sample(keys, t) {
   }
   return keys[keys.length - 1].slice(1);
 }
-function boneMats(anim, t) {
+function boneMats(anim, t, extra = {}) {
   const tr = anim ? RIG.anims[anim]?.t || {} : {}, mats = {};
   const get = (n) => {
     if (mats[n]) return mats[n];
     const b = BONE[n], parent = b.p ? get(b.p) : I(), o = b.o, ch = tr[n] || {};
-    const r = sample(ch.rotation, t) || [0, 0, 0], p = sample(ch.position, t) || [0, 0, 0];
+    const r = (sample(ch.rotation, t) || [0, 0, 0]).slice(), p = sample(ch.position, t) || [0, 0, 0];
+    if (extra[n]) { r[0] += extra[n][0]; r[1] += extra[n][1]; r[2] += extra[n][2]; }
     let m = mul(parent, T(o[0] - p[0], o[1] + p[1], o[2] + p[2]));
     m = mul(m, mul(RZ(r[2] * D), mul(RY(-r[1] * D), RX(-r[0] * D))));
     return (mats[n] = mul(m, T(-o[0], -o[1], -o[2])));
@@ -182,11 +224,17 @@ export function startStage(canvas) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     let t = 0;
     if (emote) { t = (now - t0) / 1000; if (t > RIG.anims[emote].len) { emote = null; api.emoteId = null; } }
-    const mats = boneMats(emote, t);
-    const q = [];
-    for (const [n, b] of Object.entries(BONE)) if (SKINMAP[n]) for (const [f, to] of b.b) addSkinBox(q, mats[n], f, to, SKINMAP[n], SKIN);
-    // plášť = banner ze serveru (za zády, vlní se)
-    if (st.cape) { const sw = Math.sin(now / 600) * 5 + 4 + (emote ? 12 : 0); addBanner(q, mul(mats.pc_chest, mul(T(0, 22.6, 3.1), RX(sw * D))), st.cape); }
+    // chůze: postava chodí po plošině, když má stopu (ať je stopa vidět jako ve hře)
+    const walk = !!st.trail && !emote, wt = now / 1000;
+    const ang = wt * .45, P = walk ? [Math.sin(ang) * 9, 0, Math.cos(ang) * 6] : [0, 0, 0];
+    const head = walk ? Math.atan2(-Math.cos(ang) * 9, Math.sin(ang) * 6) : 0;
+    const sw = walk ? Math.sin(wt * 7) * 32 : 0, bob = walk ? Math.abs(Math.cos(wt * 7)) * .6 : 0;
+    const extra = walk ? { prl_right_leg: [sw, 0, 0], pll_left_leg: [-sw, 0, 0], pra_right_arm: [-sw * .8, 0, 0], pla_left_arm: [sw * .8, 0, 0], prfl_right_foreleg: [Math.max(0, -sw) * .5, 0, 0], plfl_left_foreleg: [Math.max(0, sw) * .5, 0, 0] } : {};
+    const Wm = mul(T(P[0], bob, P[2]), RY(head));
+    const mats0 = boneMats(emote, t, extra), mats = {};
+    for (const k in mats0) mats[k] = mul(Wm, mats0[k]);
+    const q = [], SK = makeSkin(st.nick || "Steve");
+    for (const [n, b] of Object.entries(BONE)) if (SKINMAP[n]) for (const [f, to] of b.b) addSkinBox(q, mats[n], f, to, SKINMAP[n], SK);
     // čepice: model z resource packu na hlavě
     if (st.hat?.model) {
       const mm = MODELS[st.hat.model], s = .625 * mm.h[1] * .9375;
@@ -196,25 +244,25 @@ export function startStage(canvas) {
     const ex = [];
     // balónek
     if (st.balloon) {
-      const bob = Math.sin(now / 700) * 1.2, bp = [-13, 34 + bob, 3];
+      const bb2 = Math.sin(now / 700) * 1.2, bp = ap(Wm, [-13, 34 + bb2, 3]);
       addModel(q, st.balloon, mul(T(bp[0], bp[1], bp[2]), mul(S(.45), T(-8, 0, -8))));
       const hand = ap(mats.plfa_left_forearm, [-5.6, 11.5, 0]);
       ex.push({ p: [(bp[0] + hand[0]) / 2, (bp[1] - 7 + hand[1]) / 2, (bp[2] + hand[2]) / 2], draw: () => {} , line: [bp[0], bp[1] - 7.2, bp[2], ...hand] });
     }
     // pet (obrázek) u hlavy
     if (st.pet) { const hpnt = ap(mats.h_ph_head, [9, 30 + Math.sin(now / 500) * 1.5, -1]); ex.push({ p: hpnt, draw: (c, x, y, sc) => { const z = 9 * sc; c.imageSmoothingEnabled = false; c.drawImage(st.pet, x - z / 2, y - z / 2, z, z); } }); }
-    // aura: kroužící světla
-    if (st.aura) for (let i = 0; i < 10; i++) { const a = now / 900 + i * Math.PI / 5, y = 14 + Math.sin(now / 400 + i) * 6; ex.push({ p: [Math.cos(a) * 11, y, Math.sin(a) * 11], draw: (c, x, yy, sc) => { const r = .9 * sc; c.fillStyle = st.aura; c.shadowColor = st.aura; c.shadowBlur = 10; c.beginPath(); c.arc(x, yy, r, 0, 7); c.fill(); c.shadowBlur = 0; } }); }
-    const proj = draw(ctx, q, { w: W, h: H, cy: H * .9, yaw, pitch: 10 * D, scale: H / 52 }, ex);
+    // aura podle typu
+    const glyph = (g, c, s) => (cx, x, y, sc) => { cx.fillStyle = c; cx.shadowColor = c; cx.shadowBlur = 8; cx.font = `${Math.max(6, sc * 2.2 * s)}px sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(g, x, y); cx.shadowBlur = 0; cx.textAlign = "start"; cx.textBaseline = "alphabetic"; };
+    if (st.aura) for (const a of auraPts(st.aura.id, st.aura.color, now, P)) ex.push({ p: a.p, draw: glyph(a.g, a.c, a.s) });
+    // stopa: částice zůstávají na zemi tam, kudy postava šla
+    if (st.trail) {
+      if (walk && Math.random() < .7) parts.push({ p: [P[0] + (Math.random() - .5) * 4, .5, P[2] + (Math.random() - .5) * 3], l: 1, vy: .02 + Math.random() * .05 });
+      parts = parts.filter((p) => (p.l -= .006) > 0);
+      for (const p of parts) { p.p[1] += p.vy; ex.push({ p: p.p, draw: ((pp) => (cx, x, y, sc) => { cx.globalAlpha = pp.l; glyph(st.trail.shape, st.trail.color, .6 + pp.l * .5)(cx, x, y, sc); cx.globalAlpha = 1; })(p) }); }
+    } else parts = [];
+    const proj = draw(ctx, q, { w: W, h: H, cy: H * .86, yaw, pitch: 14 * D, scale: H / (st.trail ? 64 : 52) }, ex);
     // provázek balónku
     for (const e of ex) if (e.line) { const a = proj(e.line.slice(0, 3)), b = proj(e.line.slice(3)); ctx.strokeStyle = "#ddd9"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo((a[0] + b[0]) / 2 + 6, (a[1] + b[1]) / 2, b[0], b[1]); ctx.stroke(); }
-    // stopa: částice od nohou
-    if (st.trail) {
-      if (Math.random() < .5) { const f = proj([(Math.random() - .5) * 10, 0, (Math.random() - .5) * 6]); parts.push({ x: f[0], y: f[1], vy: -(.4 + Math.random() * .8), vx: (Math.random() - .5) * .5, l: 1 }); }
-      parts = parts.filter((p) => (p.l -= .012) > 0);
-      for (const p of parts) { p.x += p.vx; p.y += p.vy; ctx.globalAlpha = p.l; ctx.fillStyle = st.trail.color; ctx.font = `${10 + 6 * p.l}px sans-serif`; ctx.fillText(st.trail.shape, p.x, p.y); }
-      ctx.globalAlpha = 1;
-    }
     // symboly emotu nad hlavou (jako ve hře)
     if (emote && SYM[emote] && Math.random() < .05) { const h = proj(ap(mats.h_ph_head, [0, 32, 0])); syms.push({ x: h[0] + (Math.random() - .5) * 30, y: h[1], l: 1, s: SYM[emote] }); }
     syms = syms.filter((s) => (s.l -= .01) > 0);

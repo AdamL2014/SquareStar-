@@ -65,8 +65,6 @@ const ITEMS = [
   P("PET_SPIDER", "Malý pavouk", "spider", "#2b2d36"), P("PET_CHICKEN", "Kuřátko", "bird", "#f4f4f4"), P("PET_SLIME", "Slime", "slime", "#6fdc5a"), P("PET_FOX", "Liška", "pet", "#e8812a"),
   P("PET_ENDY", "Little Endy", "endy", "#2b2d36"), P("PET_CAT", "Kočka", "pet", "#c9a06a"), P("PET_RACCOON", "Mýval", "pet", "#7a7f8c"), P("PET_CTHULHU", "Mini Cthulhu", "pet", "#3f9e7a"), P("PET_PIGEON", "Holub", "bird", "#8a93a8"),
   B("RED", "Červený balónek", "#e23b3b"), B("BLUE", "Modrý balónek", "#2f86ff"), B("PURPLE", "Fialový balónek", "#a05cff"), B("GOLD", "Zlatý balónek", "#ffc83d"), B("GREEN", "Zelený balónek", "#2fd24a"), B("WHITE", "Bílý balónek", "#eef0f4"),
-  C("RED", "Rudý plášť", "#c8282e"), C("BLUE", "Modrý plášť", "#2f5fd8"), C("BLACK", "Černý plášť", "#24242c"), C("MARS", "Marsovský plášť", "#d4501c"), C("GALAXY", "Galaxie", "#5b2a9e"),
-  C("ROYAL", "Královský plášť", "#7b32d6"), C("CREEPER", "Creeper plášť", "#4fc04a"), C("SKULL", "Pirátský plášť", "#1c1c22"), C("FLOWER", "Květinový plášť", "#ff7ac8"), C("ICE", "Ledový plášť", "#8fd8ff"),
   T("FLAME", "Ohnivá stopa", "flames", "#ff7a1f"), T("HEARTS", "Srdíčka", "hearts", "#ff4b6a"), T("NOTES", "Noty", "notes", "#3ddc84"), T("STARS", "Hvězdný prach", "sparkle", "#fff3b0"),
   T("SOUL", "Duše", "flames", "#4fd8ff"), T("CHERRY", "Sakura", "sparkle", "#ffb0d0"), T("COSMIC", "Vesmírná magie", "sparkle", "#b06bff"), T("RAINBOW", "Duha", "sparkle", "#ff5a5a"),
   T("SNOW", "Sněžení", "snow", "#eef6ff"), T("ELECTRIC", "Elektřina", "sparkle", "#7ad8ff"), T("CLOUD", "Obláček", "snow", "#e8ecf2"), T("SCULK", "Sculk duše", "flames", "#1fb0a8"),
@@ -89,8 +87,8 @@ const EMO_SYM = { cheer: "★", hi: "HI", dance: "♪", twerk: "♫", spin: "↻
 const EMOTES = [["Jásání", "cheer"], ["Mávání", "hi"], ["Tanec", "dance"], ["Twerk", "twerk"], ["Tornádo", "spin"], ["Spaní", "sleep"], ["Plavání vzduchem", "swim"], ["Letadlo", "fly"], ["Sednout", "sit"], ["Mrtvý (naoko)", "dead"], ["Poklona", "bow"], ["GG", "gg"], ["Láska", "love"], ["Tleskání", "clap"], ["Vztek", "rage"], ["Odlet na Mars", "rocket"]];
 
 const RAR = { b: ["Běžné", "#9aa3b5"], v: ["Vzácné", "#3ddc84"], e: ["Epické", "#b06bff"], l: ["Legendární", "#ffc83d"], a: ["Advent", "#5ee7ff"] };
-const TABS = [["hlava", "Čepice a pety", "rocket"], ["plast", "Pláště", "cape"], ["balonek", "Balónky", "balloon"], ["stopa", "Stopy", "flames"], ["aura", "Aury", "ring"], ["emoty", "Emoty", null]];
-const SLOTS = [["hlava", "Hlava"], ["plast", "Plášť"], ["balonek", "Balónek"], ["stopa", "Stopa"], ["aura", "Aura"]];
+const TABS = [["hlava", "Čepice a pety", "rocket"], ["balonek", "Balónky", "balloon"], ["stopa", "Stopy", "flames"], ["aura", "Aury", "ring"], ["emoty", "Emoty", null]];
+const SLOTS = [["hlava", "Hlava"], ["balonek", "Balónek"], ["stopa", "Stopa"], ["aura", "Aura"]];
 const W = { tab: "hlava", q: "", sel: "hat:HELMET", owned: new Set(["hat:HELMET"]), color: {}, outfits: [{ name: "Můj vzhled", eq: { hlava: "hat:HELMET" } }], oi: 0, angle: 20, ownEm: new Set(EMOTES.map(([n]) => n)) };
 const eq = () => W.outfits[W.oi].eq;
 const item = (id) => ITEMS.find((i) => i.id === id);
@@ -133,6 +131,7 @@ function renderPanel() {
   if (it && W.tab !== "emoty" && W.tab !== "outfity") {
     const own = W.owned.has(it.id), on = eq()[it.slot] === it.id;
     act = own ? `<button class="gbtn ${on ? "ghost" : "green"} sm" data-wd="equip">${on ? "Sundat" : "Nasadit"}</button>`
+      : on && it.price >= 0 ? `<span class="try">Zkoušíš</span><button class="gbtn sm" data-wd="buy">Koupit za ${coin(it.price)}</button>`
       : it.price < 0 ? `<span class="gbtn ghost sm">Jen z adventního kalendáře</span>` : `<button class="gbtn sm" data-wd="buy">Koupit za ${coin(it.price)}</button>`;
     act = `<span class="wd-sel" style="--rc:${RAR[it.r || "b"][1]}">${esc(it.n)}<small>${RAR[it.r || "b"][0]}</small></span>` + act;
   }
@@ -158,10 +157,10 @@ function renderRig() {
     nick: S.user || "Steve",
     hat: hat && !hat.pet ? { model: hat.model } : null,
     pet: hat && hat.pet ? petImg(hat) : null,
-    cape: e.plast ? item(e.plast).banner : null,
+    
     balloon: e.balonek ? item(e.balonek).model : null,
     trail: tr ? { shape: SHAPE[tr.sp] || "✦", color: colOf(tr) } : null,
-    aura: e.aura ? colOf(item(e.aura)) : null,
+    aura: e.aura ? { id: e.aura.split(":")[1], color: colOf(item(e.aura)) } : null,
   });
 }
 function turnTo(target) { const s = W.angle, t0 = performance.now(); const f = (t) => { const k = Math.min(1, (t - t0) / 500), e = 1 - (1 - k) ** 3; setAngle(s + (target - s) * e); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }
@@ -184,7 +183,7 @@ export function startWardrobe() {
     const b = e.target.closest("[data-wd]"); if (!b) return;
     const a = b.dataset.wd, v = b.dataset.v, it = item(W.sel);
     if (a === "tab") { W.tab = v; W.q = ""; $("wdSearch").value = ""; const cur = eq()[v], first = ITEMS.find((i) => i.slot === v); if (cur || first) W.sel = cur || first.id; renderAll(); }
-    else if (a === "item") { W.sel = v; const x = item(v); if (W.owned.has(v)) eq()[x.slot] = v; renderGrid(); renderPanel(); }
+    else if (a === "item") { const x = item(v), s = eq(); if (W.sel === v && s[x.slot] === v) delete s[x.slot]; else s[x.slot] = v; W.sel = v; renderGrid(); renderPanel(); }
     else if (a === "color") { W.color[it.id] = v; renderGrid(); renderPanel(); }
     else if (a === "equip") { const s = eq(); if (s[it.slot] === it.id) delete s[it.slot]; else s[it.slot] = it.id; renderGrid(); renderPanel(); }
     else if (a === "unequip") { delete eq()[v]; renderGrid(); renderPanel(); }
