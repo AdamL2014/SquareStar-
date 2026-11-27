@@ -40,6 +40,7 @@
 </svg>
 
 <canvas id="stars" aria-hidden="true"></canvas>
+<div class="orbs" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <nav id="nav">
  <a class="nlogo" href="#top"><svg class="mk" viewBox="0 0 40 40" aria-hidden="true"><rect x="8" y="8" width="24" height="24" rx="3" fill="url(#lg)" transform="rotate(45 20 20)"/><path d="M20 11l2.6 6.4L29 20l-6.4 2.6L20 29l-2.6-6.4L11 20l6.4-2.6z" fill="#1c1e2d"/></svg><b>SQUARESTAR</b></a>
@@ -49,7 +50,7 @@
 
 <header class="hero" id="top">
  <div class="mars" aria-hidden="true"><div class="ring"></div><div class="planet"></div></div>
- <div class="banner">
+ <div class="banner glass">
   <button class="bside play" data-action="copy-ip" aria-label="Kopírovat IP">
    <span class="bico"><svg class="ic"><use href="#i-play"/></svg></span>
    <span class="btxt"><b>Hrát</b><small id="ipLabel">Kopírovat IP</small></span>
@@ -70,7 +71,7 @@
   </a>
   </div>
  </div>
- <div class="ticker" aria-label="Hráči online"><div class="tk" id="ticker"><span>● Načítám hráče…</span></div></div>
+ <div class="glass ticker" aria-label="Hráči online"><div class="tk" id="ticker"><span>● Načítám hráče…</span></div></div>
 </header>
 
 <main class="wrap">
@@ -102,7 +103,7 @@
  <section id="obchod" class="panel reveal">
   <div class="phd"><h2>OBCHOD</h2><p>Kupuj za mince ze hry. Věc se ti hned objeví na serveru.</p></div>
   <div class="shop" id="shop"></div>
-  <div class="cartbar"><span id="cartInfo">Košík je prázdný</span><span class="msg" id="buyMsg"></span><button class="gbtn" data-action="checkout" id="checkoutBtn">Koupit</button></div>
+  <div class="glass cartbar"><span id="cartInfo">Košík je prázdný</span><span class="msg" id="buyMsg"></span><button class="gbtn" data-action="checkout" id="checkoutBtn">Koupit</button></div>
  </section>
 
  <section id="pratele" class="panel reveal">
@@ -162,7 +163,7 @@
 </footer>
 
 <div class="toast" id="toast">IP zkopírována ✓</div>
-<div class="modal" id="login"><div class="mbox login">
+<div class="modal" id="login"><div class="glass mbox login">
  <button class="x" data-action="close-login" aria-label="Zavřít">×</button>
  <h3>PŘIHLÁŠENÍ</h3>
  <div id="lgStep1"><p>Napiš svoje jméno z Minecraftu. <b>Heslo nikdy nezadáváš.</b></p>
@@ -172,7 +173,7 @@
   <form id="lgCode"><label for="lgC">Kód ze hry</label><input id="lgC" inputmode="numeric" maxlength="6" placeholder="123456" class="code" autocomplete="one-time-code"><button class="gbtn green" type="submit">Přihlásit</button></form>
   <p class="hint" id="lgHint"></p></div>
 </div></div>
-<div class="modal" id="modal"><div class="mbox" id="mbox"></div></div>
+<div class="modal" id="modal"><div class="glass mbox" id="mbox"></div></div>
 <noscript><p style="text-align:center;padding:20px">Pro živé zobrazení hráčů zapni JavaScript.</p></noscript>
 <script type="module" src="js/main.js"></script>
 </body>

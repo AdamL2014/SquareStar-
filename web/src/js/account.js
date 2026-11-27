@@ -1,6 +1,6 @@
 // Účet (přihlášení kódem ze hry /web), obchod za herní mince a přátelé.
 // V náhledu (cfg.demo) vše běží jen v prohlížeči. Napojení na server: viz komentáře "API:".
-import { $, esc } from "./util.js";
+import { $, esc, pixelHead } from "./util.js";
 import { startTilt, toast } from "./fx.js";
 
 const SHOP = [
@@ -23,7 +23,7 @@ const needLogin = () => { if (S.user) return false; open(); return true; };
 
 function renderAcc() {
   const b = $("accBtn"), c = $("coins");
-  if (S.user) { b.innerHTML = `<span class="av">${esc(S.user[0].toUpperCase())}</span>${esc(S.user)}`; c.hidden = false; c.textContent = S.coins + " mincí"; }
+  if (S.user) { b.innerHTML = `<img class="av head" src="${pixelHead(S.user)}" alt="">${esc(S.user)}`; c.hidden = false; c.textContent = S.coins + " mincí"; }
   else { b.textContent = "Přihlásit"; c.hidden = true; }
   $("frLocked").hidden = !!S.user; $("frBox").hidden = !S.user;
 }
@@ -45,7 +45,7 @@ function renderShop() {
 function renderFriends() {
   $("frReq").innerHTML = S.requests.map((n) => `<div class="req"><span>${esc(n)} ti poslal žádost o přátelství</span>
     <button class="gbtn green sm" data-action="fr-accept" data-n="${esc(n)}">Přijmout</button><button class="gbtn ghost sm" data-action="fr-deny" data-n="${esc(n)}">Odmítnout</button></div>`).join("");
-  $("frList").innerHTML = S.friends.length ? S.friends.map((f) => `<div class="fr"><span class="fav${f.on ? " on" : ""}">${esc(f.name[0])}</span>
+  $("frList").innerHTML = S.friends.length ? S.friends.map((f) => `<div class="fr"><span class="fav${f.on ? " on" : ""}"><img class="head" src="${pixelHead(f.name.replace(" (čeká)", ""))}" alt=""></span>
     <div class="fi2"><b>${esc(f.name)}</b><span class="${f.on ? "on" : ""}">${f.wait ? "Žádost odeslána…" : f.on ? "Online · " + esc(f.play) : "Offline"}</span></div>
     <button class="rm" data-action="fr-rm" data-n="${esc(f.name)}" aria-label="Odebrat ${esc(f.name)}">×</button></div>`).join("")
     : '<div class="empty">Zatím nemáš žádné přátele. Přidej prvního!</div>';

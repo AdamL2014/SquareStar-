@@ -1,9 +1,9 @@
-import { $, esc, time, safeColor } from "./util.js";
+import { $, esc, time, safeColor, pixelHead } from "./util.js";
 
 export const state = { data: null, tab: "xpTotal" };
 
 export function face(p, size) {
-  if (!p.skin) return `<div class="face ph" style="width:${size}px;height:${size}px;font-size:${Math.round(size / 2.4)}px">${esc((p.name || "?")[0].toUpperCase())}</div>`;
+  if (!p.skin) return `<img class="face head" src="${pixelHead(p.name || "?")}" width="${size}" height="${size}" alt="">`;
   const u = esc(p.skin), bs = size * 8;
   return `<div class="face" style="width:${size}px;height:${size}px;background-image:url('${u}');background-size:${bs}px ${bs}px;background-position:-${size}px -${size}px"><i style="background-image:url('${u}');background-size:${bs}px ${bs}px;background-position:-${size * 5}px -${size}px"></i></div>`;
 }
@@ -56,7 +56,15 @@ export const closeModal = () => $("modal").classList.remove("on");
 const prev = {};
 function setStat(id, v) {
   const el = $(id), s = String(v ?? "–");
-  if (el.textContent !== s) { el.textContent = s; if (prev[id] !== undefined) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); } }
+  if (el.textContent !== s) {
+    const from = parseFloat(prev[id]), to = parseFloat(s);
+    if (!isNaN(from) && !isNaN(to) && /^\d+$/.test(s) && !matchMedia("(prefers-reduced-motion:reduce)").matches) {
+      const t0 = performance.now(), d = 600;
+      const step = (t) => { const k = Math.min(1, (t - t0) / d), e = 1 - (1 - k) ** 3; el.textContent = Math.round(from + (to - from) * e); if (k < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    } else el.textContent = s;
+    if (prev[id] !== undefined) { el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); }
+  }
   prev[id] = s;
 }
 export function renderStats() {

@@ -1,4 +1,4 @@
-import { $ } from "./util.js";
+import { $, pixelHead } from "./util.js";
 
 export const CATS = [
   { t: "PvP", i: "sword", c: ["#ff3b2f", "#5a0c08"], g: ["1v1", "Všichni proti všem", "5v5", "10v10", "Sumo"] },
@@ -53,8 +53,9 @@ export function startTilt(sel = ".tile,.gc") {
 export function renderTicker(d) {
   const t = $("ticker");
   const items = !d ? ["● Server je offline – přistaň, až bude zpátky!"] : !d.players.length ? ["● Zrovna nikdo nehraje – buď první na Marsu!"]
-    : d.players.map((p) => `● ${p.name} · Lv ${p.level} · ${p.playing || "Lobby"}`);
-  const html = items.map((s) => `<span>${s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]))}</span>`).join("");
+    : d.players.map((p) => ({ h: pixelHead(p.name), t: `${p.name} · Lv ${p.level} · ${p.playing || "Lobby"}` }));
+  const e = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const html = items.map((s) => typeof s === "string" ? `<span>${e(s)}</span>` : `<span><img class="head" src="${s.h}" alt="">${e(s.t)}</span>`).join("");
   if (t._h === html) return; t._h = html;
   t.innerHTML = html + html;
   t.style.animationDuration = Math.max(18, items.length * 7) + "s";
