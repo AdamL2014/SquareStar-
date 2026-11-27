@@ -5,6 +5,7 @@ import { startDemo } from "./demo.js";
 import { startAccount } from "./account.js";
 import { startWardrobe } from "./wardrobe.js";
 import { startLang } from "./i18n.js";
+import { startMarsCube } from "./render3d.js";
 import { state, renderPlayers, renderTop, renderStats, renderPill, showModal, closeModal } from "./render.js";
 import { renderCategories, startStars, startReveal, startTilt, renderTicker, toast } from "./fx.js";
 
@@ -24,7 +25,7 @@ const live = {
   },
 };
 if (cfg.demo) { mode = "live"; startDemo((d) => live.onData(d)); } else startLive(cfg, live);
-startAccount(cfg); startWardrobe(); startLang();
+startAccount(cfg); startWardrobe(); startLang(); startMarsCube($("marsCube"));
 
 document.addEventListener("click", (e) => {
   const a = e.target.closest("[data-action]")?.dataset.action;

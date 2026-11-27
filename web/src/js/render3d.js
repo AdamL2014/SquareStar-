@@ -277,3 +277,31 @@ export function startStage(canvas) {
   requestAnimationFrame(frame);
   return api;
 }
+
+/* ---------- Mars jako minecraftí blok (rotující kostka 16×16 texelů) ---------- */
+export function startMarsCube(canvas) {
+  const ctx = canvas.getContext("2d");
+  let h = 1337; const rnd = () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296);
+  const PAL = [0xf7a95a, 0xf29a4c, 0xe88a40, 0xfbb768, 0xd9783a, 0xffc27a, 0xe0814a], DARK = [0xc66a32, 0xb85e2c];
+  const tex = Array.from({ length: 6 }, () => { const t = []; for (let i = 0; i < 256; i++) t.push(rnd() < .06 ? DARK[(rnd() * 2) | 0] : PAL[(rnd() * PAL.length) | 0]); return t; });
+  const faces = [
+    (u, v) => [u, 1 - v, 0], (u, v) => [1 - u, 1 - v, 1], (u, v) => [0, 1 - v, 1 - u], (u, v) => [1, 1 - v, u], (u, v) => [u, 1, v], (u, v) => [u, 0, 1 - v],
+  ];
+  const quads = [];
+  faces.forEach((map, fi) => { for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
+    const P = (a, b) => map(a, b).map((x) => (x - .5) * 16);
+    quads.push({ p: [P(i / 16, j / 16), P((i + 1) / 16, j / 16), P((i + 1) / 16, (j + 1) / 16), P(i / 16, (j + 1) / 16)], c: hex(tex[fi][j * 16 + i]) });
+  } });
+  const still = matchMedia("(prefers-reduced-motion:reduce)").matches;
+  function frame(now) {
+    const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+    if (!W) return requestAnimationFrame(frame);
+    if (canvas.width !== W * dpr) { canvas.width = W * dpr; canvas.height = H * dpr; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const t = still ? 0 : now / 1000, m = mul(RY(t * .25), RX(.45 + Math.sin(t * .3) * .08));
+    const q = quads.map((x) => ({ p: x.p.map((p) => ap(m, p)), c: x.c }));
+    draw(ctx, q, { w: W, h: H, cy: H * .42, yaw: 0, pitch: 0, scale: W / 46 });
+    if (!still) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
