@@ -1,5 +1,6 @@
 import { $, esc, time, safeColor, pixelHead } from "./util.js";
 import { RANK_IMG } from "./ranks.js";
+import { GI } from "./fx.js";
 
 export const state = { data: null, tab: "xpTotal" };
 
@@ -40,17 +41,27 @@ export function renderPlayers() {
 
 const val = (p, k) => (k === "xpTotal" ? "Lv " + p.level : k === "minutes" ? time(p.minutes) : p[k]);
 let lastTop = "", lastTab = "";
+const TAB_UNIT = { xpTotal: "LEVEL", wins: "VÝHER", kills: "ZABITÍ", minutes: "ODEHRÁNO", gamesPlayed: "HER" };
+const title = (lv) => lv >= 30 ? ["Legenda Marsu", "t-leg"] : lv >= 20 ? ["Bojový mistr", "t-ace"] : lv >= 10 ? ["Bojový specialista", "t-spec"] : ["Nováček", "t-new"];
+const MEDAL = ['<path d="m2 8 5 4 5-8 5 8 5-4-2 12H4z"/>', '<circle cx="12" cy="14" r="6"/><path d="M8 3h8l-2 5h-4z"/>', '<circle cx="12" cy="14" r="6"/><path d="M8 3h8l-2 5h-4z"/>'];
+const tierHtml = (t) => `<div class="tier tr${t.t[2]}" title="${esc(t.n)} · ${t.t}"><i><svg viewBox="0 0 24 24" aria-hidden="true">${GI[t.g] || ""}</svg></i><span>${t.t}</span></div>`;
 export function renderTop() {
   const l = state.data?.top?.[state.tab];
-  if (!l?.length) { $("podium").innerHTML = ""; $("lb").innerHTML = '<div class="empty">Zatím tu nikdo není.</div>'; lastTop = ""; return; }
-  const pod = [1, 0, 2].filter((i) => l[i]).map((i) => `<div class="pod p${i + 1}" data-top="${i}">${i === 0 ? '<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="m2 8 5 4 5-8 5 8 5-4-2 12H4z"/></svg>' : ""}<div class="medal">${i + 1}</div>${face(l[i], i === 0 ? 72 : 56)}<div class="n">${esc(l[i].name)}</div>${rank(l[i])}<div class="v">${val(l[i], state.tab)}</div><div class="step"></div></div>`).join("");
-  const rest = l.slice(3, 10);
-  const rows = rest.length ? rest.map((p, j) => `<div class="row" data-top="${j + 3}" style="--d:${j * 60}ms"><div class="pos">${j + 4}</div>${face(p, 34)}<div class="nm"><em>${esc(p.name)}</em>${rank(p)}</div><div class="v">${val(p, state.tab)}</div></div>`).join("") : '<div class="empty">Další místa jsou volná – můžou být tvoje!</div>';
-  const key = state.tab + pod + rows;
+  if (!l?.length) { $("lb").innerHTML = '<div class="empty">Zatím tu nikdo není.</div>'; lastTop = ""; return; }
+  $("lbCount").textContent = `${state.data.registered ?? l.length} hráčů v žebříčku`;
+  const rows = l.slice(0, 10).map((p, i) => {
+    const [tt, tc] = title(p.level), v = val(p, state.tab);
+    const pos = i < 3 ? `<div class="pos m${i + 1}"><svg viewBox="0 0 24 24" aria-hidden="true">${MEDAL[i]}</svg>${i + 1}</div>` : `<div class="pos">${i + 1}</div>`;
+    return `<div class="lr${i < 3 ? " top" + (i + 1) : ""}" data-top="${i}" style="--d:${i * 55}ms">${pos}${face(p, 44)}
+      <div class="who"><b>${esc(p.name)}</b><span class="ttl ${tc}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.8 1.2 6.9-6.2-3.3-6.2 3.3L7 14.1 2 9.3l6.9-1z"/></svg>${tt}</span></div>
+      <div class="pts"><b>${String(v).replace(/^Lv /, "")}</b><span>${TAB_UNIT[state.tab]}</span></div>
+      <div class="lrk">${rank(p)}</div>
+      <div class="tiers">${(p.tiers || []).map(tierHtml).join("")}</div></div>`;
+  }).join("");
+  const key = state.tab + rows;
   if (key === lastTop) return;
   const anim = state.tab !== lastTab; lastTop = key; lastTab = state.tab;
-  $("podium").innerHTML = pod; $("lb").innerHTML = rows;
-  for (const id of ["podium", "lb"]) { const el = $(id); el.classList.remove("anim"); if (anim) { void el.offsetWidth; el.classList.add("anim"); } }
+  const el = $("lb"); el.innerHTML = rows; el.classList.remove("anim"); if (anim) { void el.offsetWidth; el.classList.add("anim"); }
 }
 
 export function showModal(p) {

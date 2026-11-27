@@ -1,7 +1,7 @@
 import { $, pixelHead } from "./util.js";
 
 // Ikony miniher (24×24, tahy)
-const GI = {
+export const GI = {
   duel: '<path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4"/><path d="M9.5 17.5 21 6V3h-3L6.5 14.5M11 19l-6-6M8 16l-4 4"/>',
   ffa: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 1v5M12 18v5M1 12h5M18 12h5"/>',
   team: '<circle cx="7" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><path d="M1 20c0-3 3-5 6-5s6 2 6 5M11 20c0-3 3-5 6-5s6 2 6 5"/>',
