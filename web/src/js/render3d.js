@@ -278,44 +278,72 @@ export function startStage(canvas) {
   return api;
 }
 
-/* ---------- Mars jako minecraftí blok: statický, 32×32 texelů, měkký šum + krátery ---------- */
+/* ---------- Mars jako minecraftí blok: statický, 64×64 texelů s reliéfem (výšková mapa + světlo), AO na hranách ---------- */
 export function startMarsCube(canvas) {
-  const ctx = canvas.getContext("2d"), N = 48;
-  let h = 4242; const rnd = () => ((h = (h * 1103515245 + 12345) >>> 0) / 4294967296);
-  const grid = (n) => Array.from({ length: (n + 1) * (n + 1) }, rnd);
-  const oct = [[4, grid(4), .5], [8, grid(8), .28], [16, grid(16), .14], [32, grid(32), .08]];
-  const vn = (G, n, x, y) => { const X = x * n, Y = y * n, i = Math.min(n - 1, X | 0), j = Math.min(n - 1, Y | 0), fx = X - i, fy = Y - j, s = (t) => t * t * (3 - 2 * t), w = n + 1;
-    const a = G[j * w + i], b = G[j * w + i + 1], c = G[(j + 1) * w + i], d = G[(j + 1) * w + i + 1];
+  const ctx = canvas.getContext("2d"), N = 64;
+  let s0 = 9001; const rnd = () => ((s0 = (s0 * 1103515245 + 12345) >>> 0) / 4294967296);
+  const grid = (n) => Array.from({ length: n * n }, rnd);
+  const vn = (G, n, x, y) => { const X = x * n, Y = y * n, i = Math.floor(X), j = Math.floor(Y), fx = X - i, fy = Y - j, s = (t) => t * t * (3 - 2 * t), w = (a) => ((a % n) + n) % n;
+    const a = G[w(j) * n + w(i)], b = G[w(j) * n + w(i + 1)], c = G[w(j + 1) * n + w(i)], d = G[w(j + 1) * n + w(i + 1)];
     return a + (b - a) * s(fx) + (c - a) * s(fy) + (a - b - c + d) * s(fx) * s(fy); };
-  const fbm = (x, y) => oct.reduce((s, [n, G, amp]) => s + vn(G, n, x, y) * amp, 0);
-  const face = (seed, craters) => { const t = [], ox = seed * .137, oy = seed * .311;
+  const OCT = [[3, .45], [6, .25], [12, .14], [24, .09], [48, .05]].map(([n, a]) => [n, grid(n), a]);
+  const fbm = (x, y) => OCT.reduce((s, [n, G, a]) => s + vn(G, n, x, y) * a, 0);
+  // výšková mapa jedné stěny (krátery = mísy s valem)
+  function height(seed, craters) {
+    const H = new Float32Array(N * N);
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-      const x = ((i / N) + ox) % 1, y = ((j / N) + oy) % 1;
-      let v = fbm(x, y) * 1.15 - .1;
-      if (fbm((x * 2.3) % 1, (y * 2.3) % 1) > .78) v -= .25;                 // tmavé skvrny (čedič)
-      for (const [cx, cy, r] of craters) { const d = Math.hypot(i - cx, j - cy) / r, lx = (i - cx) / r;
-        if (d < 1) v -= (1 - d * d) * .45 - lx * .12; else if (d < 1.4) v += (1.4 - d) * .45 + lx * .05; }
-      v += (rnd() - .5) * .07;                                               // prach / zrnitost
-      t.push(Math.max(0, Math.min(1, v)));
-    } return t; };
-  const STOPS = [[0, [92, 34, 18]], [.3, [150, 58, 28]], [.55, [196, 92, 44]], [.75, [222, 130, 70]], [1, [246, 182, 120]]];
-  const LUT = (v) => { let k = 0; while (k < STOPS.length - 2 && v > STOPS[k + 1][0]) k++; const [a, A] = STOPS[k], [b, B] = STOPS[k + 1], f = (v - a) / (b - a);
-    return ((A[0] + (B[0] - A[0]) * f) << 16) | ((A[1] + (B[1] - A[1]) * f) << 8) | (A[2] + (B[2] - A[2]) * f); };
-  const faces = [
-    [(u, v) => [u, 1 - v, 0], face(1, [[14, 16, 6], [34, 30, 4], [30, 10, 2.5]])], [(u, v) => [1 - u, 1 - v, 1], face(2, [[20, 24, 5]])],
-    [(u, v) => [0, 1 - v, 1 - u], face(3, [[22, 26, 6], [8, 10, 3]])], [(u, v) => [1, 1 - v, u], face(4, [[12, 14, 4], [32, 34, 5]])],
-    [(u, v) => [u, 1, v], face(5, [[24, 20, 7], [9, 36, 3.5], [38, 8, 3]])], [(u, v) => [u, 0, 1 - v], face(6, [])],
-  ];
-  const quads = [];
-  faces.forEach(([map, tx]) => { for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-    const P = (a, b) => map(a, b).map((x) => (x - .5) * 16);
-    quads.push({ p: [P(i / N, j / N), P((i + 1) / N, j / N), P((i + 1) / N, (j + 1) / N), P(i / N, (j + 1) / N)], c: hex(LUT(tx[j * N + i])) });
-  } });
+      const x = i / N + seed * .23, y = j / N + seed * .41;
+      let v = fbm(x, y);
+      for (const [cx, cy, r] of craters) { const d = Math.hypot(i - cx, j - cy) / r; if (d < 1) v -= (1 - d * d) * .55; else if (d < 1.5) v += Math.cos((d - 1) * Math.PI) * .5 * .25 + .02; }
+      H[j * N + i] = v;
+    }
+    return H;
+  }
+  const STOPS = [[0, [74, 26, 14]], [.28, [128, 46, 22]], [.48, [176, 76, 36]], [.66, [206, 110, 58]], [.84, [230, 150, 92]], [1, [248, 196, 142]]];
+  const ramp = (v) => { v = Math.max(0, Math.min(1, v)); let k = 0; while (k < STOPS.length - 2 && v > STOPS[k + 1][0]) k++; const [a, A] = STOPS[k], [b, B] = STOPS[k + 1], f = (v - a) / (b - a); return A.map((c, i) => c + (B[i] - c) * f); };
+  function faceTex(seed, craters, light) {
+    const H = height(seed, craters), c = document.createElement("canvas"); c.width = c.height = N; const x = c.getContext("2d"), img = x.createImageData(N, N);
+    let mn = 1e9, mx = -1e9; for (const v of H) { mn = Math.min(mn, v); mx = Math.max(mx, v); }
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const h = (H[j * N + i] - mn) / (mx - mn), hx = H[j * N + Math.min(N - 1, i + 1)] - H[j * N + Math.max(0, i - 1)], hy = H[Math.min(N - 1, j + 1) * N + i] - H[Math.max(0, j - 1) * N + i];
+      const nx = -hx * 4, ny = -hy * 4, nz = 1, nl = Math.hypot(nx, ny, nz), sh = Math.max(.35, (nx * -.55 + ny * -.65 + nz * .55) / nl);     // světlo zleva shora
+      const edge = Math.min(i, j, N - 1 - i, N - 1 - j), ao = edge < 2 ? .78 + edge * .08 : 1;
+      const grain = .94 + rnd() * .12, col = ramp(h * .9 + .08);
+      const k = sh * 1.25 * ao * grain * light, p = (j * N + i) * 4;
+      img.data[p] = Math.min(255, col[0] * k); img.data[p + 1] = Math.min(255, col[1] * k); img.data[p + 2] = Math.min(255, col[2] * k); img.data[p + 3] = 255;
+    }
+    x.putImageData(img, 0, 0); return c;
+  }
+  const top = faceTex(5, [[30, 26, 11], [12, 48, 6], [50, 12, 5], [46, 46, 3.5]], 1.12);
+  const left = faceTex(1, [[22, 30, 9], [48, 16, 5], [44, 50, 4]], .82);
+  const right = faceTex(4, [[34, 22, 8], [14, 48, 5]], .55);
   const render = () => {
-    const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(2, devicePixelRatio || 1); if (!W) return;
-    canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    const m = mul(RX(-26 * D), RY(-38 * D));
-    draw(ctx, quads.map((x) => ({ p: x.p.map((p) => ap(m, p)), c: x.c })), { w: W, h: H, cy: H * .5, yaw: 0, pitch: 0, scale: W / 25 });
+    const W = canvas.clientWidth, Hh = canvas.clientHeight, dpr = Math.min(2, devicePixelRatio || 1); if (!W) return;
+    canvas.width = W * dpr; canvas.height = Hh * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, Hh);
+    // izometrie: střed nahoře, krychle hrana s
+    const s = W * .36, cx = W / 2, cy = Hh * .5, ax = Math.cos(Math.PI / 6) * s, ay = Math.sin(Math.PI / 6) * s;
+    const T0 = [cx, cy - ay - s / 2];                                   // horní roh
+    // stín pod blokem
+    const sg = ctx.createRadialGradient(cx, T0[1] + ay * 2 + s + 10, 4, cx, T0[1] + ay * 2 + s + 10, ax * 1.25);
+    sg.addColorStop(0, "#0007"); sg.addColorStop(1, "#0000"); ctx.fillStyle = sg; ctx.beginPath(); ctx.ellipse(cx, T0[1] + ay * 2 + s + 10, ax * 1.05, ay * .5, 0, 0, 7); ctx.fill();
+    const put = (img, o, ux, uy, vx, vy) => { ctx.save(); ctx.imageSmoothingEnabled = false; ctx.setTransform(dpr * ux / N, dpr * uy / N, dpr * vx / N, dpr * vy / N, dpr * o[0], dpr * o[1]); ctx.drawImage(img, 0, 0); ctx.restore(); };
+    put(top, T0, ax, ay, -ax, ay);                                       // vršek
+    put(left, [T0[0] - ax, T0[1] + ay], ax, ay, 0, s);                   // levá stěna
+    put(right, [T0[0], T0[1] + ay * 2], ax, -ay, 0, s);                  // pravá stěna
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // hloubka: boky tmavnou dolů a od hrany, vršek má odlesk
+    const poly = (pts, g) => { ctx.fillStyle = g; ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(...p) : ctx.moveTo(...p))); ctx.closePath(); ctx.fill(); };
+    const L = [[T0[0] - ax, T0[1] + ay], [T0[0], T0[1] + ay * 2], [T0[0], T0[1] + ay * 2 + s], [T0[0] - ax, T0[1] + ay + s]];
+    const R = [[T0[0], T0[1] + ay * 2], [T0[0] + ax, T0[1] + ay], [T0[0] + ax, T0[1] + ay + s], [T0[0], T0[1] + ay * 2 + s]];
+    const TP = [T0, [T0[0] + ax, T0[1] + ay], [T0[0], T0[1] + ay * 2], [T0[0] - ax, T0[1] + ay]];
+    let g = ctx.createLinearGradient(0, T0[1] + ay, 0, T0[1] + ay * 2 + s); g.addColorStop(0, "#0000"); g.addColorStop(1, "#0007"); poly(L, g); poly(R, g);
+    g = ctx.createLinearGradient(T0[0], 0, T0[0] + ax, 0); g.addColorStop(0, "#0000"); g.addColorStop(1, "#0006"); poly(R, g);
+    g = ctx.createLinearGradient(T0[0] - ax, T0[1], T0[0] + ax, T0[1] + ay * 2); g.addColorStop(0, "#fff3"); g.addColorStop(.5, "#fff0"); g.addColorStop(1, "#0003"); poly(TP, g);
+    // světlo na hranách
+    ctx.strokeStyle = "#ffe0b8aa"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(T0[0] - ax, T0[1] + ay); ctx.lineTo(T0[0], T0[1]); ctx.lineTo(T0[0] + ax, T0[1] + ay); ctx.stroke();
+    ctx.strokeStyle = "#ffd6a855"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(T0[0] - ax, T0[1] + ay); ctx.lineTo(T0[0], T0[1] + ay * 2); ctx.lineTo(T0[0] + ax, T0[1] + ay); ctx.moveTo(T0[0], T0[1] + ay * 2); ctx.lineTo(T0[0], T0[1] + ay * 2 + s); ctx.stroke();
   };
   render(); new ResizeObserver(render).observe(canvas);
 }
