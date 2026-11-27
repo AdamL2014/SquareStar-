@@ -596,7 +596,7 @@ a.buy{display:block;text-align:center;text-decoration:none;line-height:22px}
 
 .mars{opacity:.9;mask:none;-webkit-mask:none;filter:drop-shadow(0 0 60px #ff7a2a55)}#marsCube{width:100%;height:100%}
 
-.mars{width:760px;height:760px;top:-200px}#marsCube{filter:drop-shadow(0 0 60px #ff7a2a40)}
+.mars{width:760px;height:760px;top:-110px}#marsCube{filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 3px #fff) drop-shadow(0 0 14px #ffffffaa) drop-shadow(0 0 40px #ffffff55)}
 @media(max-width:620px){.mars{width:260px;height:260px}}
 
 @media(max-width:620px){.mars{width:360px;height:360px;top:-20px}}
