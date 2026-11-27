@@ -141,29 +141,47 @@ function addBanner(out, m, bn) {
 }
 
 /* ---------- vykreslení ---------- */
+/* Z-buffer rasterizér: žádné prosvítání modelů přes postavu */
+let ZB = null, IMG = null;
 function draw(ctx, quads, cam, extra) {
-  const { w, h, yaw, pitch, scale, cy, oy = 0 } = cam;
+  const { w, h, yaw, pitch, scale, cy, oy = 0 } = cam, dpr = ctx.getTransform().a || 1;
+  const PW = Math.round(w * dpr), PH = Math.round(h * dpr);
   const V = mul(RX(pitch), RY(yaw)), dist = 140;
   const proj = (p) => { const v = ap(V, [p[0], p[1] - oy, p[2]]); const k = dist / (dist + v[2]); return [w / 2 - v[0] * scale * k, cy - v[1] * scale * k, v[2]]; };
-  const list = [];
+  if (!ZB || ZB.length !== PW * PH) { ZB = new Float32Array(PW * PH); IMG = new ImageData(PW, PH); }
+  ZB.fill(1e9); const D8 = IMG.data; D8.fill(0);
+  const tri = (A, B, C, R, G, Bc, al) => {
+    const minX = Math.max(0, Math.floor(Math.min(A[0], B[0], C[0]))), maxX = Math.min(PW - 1, Math.ceil(Math.max(A[0], B[0], C[0])));
+    const minY = Math.max(0, Math.floor(Math.min(A[1], B[1], C[1]))), maxY = Math.min(PH - 1, Math.ceil(Math.max(A[1], B[1], C[1])));
+    const ar = (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0]); if (Math.abs(ar) < 1e-6) return; const ia = 1 / ar;
+    for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+      const px = x + .5, py = y + .5;
+      let w0 = ((B[0] - px) * (C[1] - py) - (B[1] - py) * (C[0] - px)) * ia, w1 = ((C[0] - px) * (A[1] - py) - (C[1] - py) * (A[0] - px)) * ia, w2 = 1 - w0 - w1;
+      if (w0 < -1e-4 || w1 < -1e-4 || w2 < -1e-4) continue;
+      const z = w0 * A[2] + w1 * B[2] + w2 * C[2], i = y * PW + x;
+      if (z >= ZB[i]) continue;
+      const o = i * 4;
+      if (al < 1) { D8[o] = D8[o] * (1 - al) + R * al; D8[o + 1] = D8[o + 1] * (1 - al) + G * al; D8[o + 2] = D8[o + 2] * (1 - al) + Bc * al; D8[o + 3] = Math.max(D8[o + 3], 255 * al + D8[o + 3] * (1 - al)); }
+      else { ZB[i] = z; D8[o] = R; D8[o + 1] = G; D8[o + 2] = Bc; D8[o + 3] = 255; }
+    }
+  };
+  const glass = [];
   for (const q of quads) {
-    const s = q.p.map(proj);
-    const z = (s[0][2] + s[1][2] + s[2][2] + s[3][2]) / 4;
-    // normála ve světě kamery -> světlo
-    const a = ap(V, q.p[0]), b = ap(V, q.p[1]), c = ap(V, q.p[2]); // normála
+    const s = q.p.map((p) => { const t = proj(p); return [t[0] * dpr, t[1] * dpr, t[2]]; });
+    const a = ap(V, q.p[0]), b = ap(V, q.p[1]), c = ap(V, q.p[2]);
     const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
     let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
-    if (q.L && nz > 0 !== !!q.flip) continue;
     if (nz > 0) { nx = -nx; ny = -ny; nz = -nz; }
     const k = .62 + .38 * Math.max(0, -nz * .7 + ny * .5 - nx * .25);
-    list.push({ s, z: z - (q.L ? 1e4 : 0), col: lit(q.c, k), a: q.a || 1 });
+    const R = Math.min(255, q.c[0] * k), G = Math.min(255, q.c[1] * k), B = Math.min(255, q.c[2] * k), al = q.a || 1;
+    if (al < 1) glass.push([s, R, G, B, al]); else { tri(s[0], s[1], s[2], R, G, B, 1); tri(s[0], s[2], s[3], R, G, B, 1); }
   }
-  if (extra) for (const e of extra) { const s = proj(e.p); list.push({ pt: e, s, z: s[2] }); }
-  list.sort((x, y) => y.z - x.z);
-  for (const it of list) {
-    if (it.pt) { it.pt.draw(ctx, it.s[0], it.s[1], scale * dist / (dist + it.s[2])); continue; }
-    const s = it.s; ctx.fillStyle = it.col; ctx.strokeStyle = it.col; ctx.lineWidth = it.a < 1 ? 0 : .6; ctx.globalAlpha = it.a;
-    ctx.beginPath(); ctx.moveTo(s[0][0], s[0][1]); ctx.lineTo(s[1][0], s[1][1]); ctx.lineTo(s[2][0], s[2][1]); ctx.lineTo(s[3][0], s[3][1]); ctx.closePath(); ctx.fill(); if (it.a === 1) ctx.stroke(); ctx.globalAlpha = 1;
+  for (const [s, R, G, B, al] of glass) { tri(s[0], s[1], s[2], R, G, B, al); tri(s[0], s[2], s[3], R, G, B, al); }
+  const tmp = draw._c || (draw._c = document.createElement("canvas")); tmp.width = PW; tmp.height = PH; tmp.getContext("2d").putImageData(IMG, 0, 0);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(tmp, 0, 0); ctx.restore();
+  if (extra) {
+    const list = extra.map((e) => ({ e, s: proj(e.p) })).sort((x, y) => y.s[2] - x.s[2]);
+    for (const { e, s } of list) { const i = Math.round(s[1] * dpr) * PW + Math.round(s[0] * dpr); if (ZB[i] < s[2] - 1) continue; e.draw(ctx, s[0], s[1], scale * dist / (dist + s[2])); }
   }
   return proj;
 }
@@ -223,7 +241,7 @@ export function startStage(canvas) {
   const SYM = { dance: "♪", twerk: "♫", love: "❤", sleep: "z", gg: "GG", clap: "✦", rage: "⚡", hi: "✌", cheer: "★", bow: "✦", rocket: "▲", spin: "★" };
   function frame(now) {
     if (!run) return;
-    const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+    const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(1.5, devicePixelRatio || 1);
     if (canvas.width !== W * dpr || canvas.height !== H * dpr) { canvas.width = W * dpr; canvas.height = H * dpr; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     let t = 0;

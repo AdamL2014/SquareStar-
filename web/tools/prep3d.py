@@ -68,7 +68,8 @@ def voxel_model(name, res=1.0):
     disp = d.get("display", {}).get("head", {})
     return {"q": flat, "h": [disp.get("translation", [0, 0, 0])[1], disp.get("scale", [1, 1, 1])[0]]}
 def texel_model(name):
-    d = json.load(open(f"/tmp/rp/assets/squarestar/models/item/{name}.json")); texs = d["textures"]; flat = []
+    p0 = f"{RP}/models/item/{name}.json"
+    d = json.load(open(p0 if os.path.exists(p0) else f"/tmp/rp/assets/squarestar/models/item/{name}.json")); texs = d["textures"]; flat = []; ts = d.get("texture_size", [16, 16])
     for e in d["elements"]:
         f, t = e["from"], e["to"]
         for fn, face in e["faces"].items():
@@ -92,7 +93,7 @@ def texel_model(name):
     return {"q": flat, "h": [disp.get("translation", [0, 0, 0])[1], disp.get("scale", [1, 1, 1])[0]]}
 def model(name):
     if name == "earth": return voxel_model(name)
-    if name.startswith("pet_"): return texel_model(name)
+    return texel_model(name)
     d = json.load(open(f"{RP}/models/item/{name}.json")); ts = d.get("texture_size", [16, 16]); texs = d["textures"]
     quads = []
     for e in d["elements"]:
