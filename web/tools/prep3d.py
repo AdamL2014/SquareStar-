@@ -8,6 +8,7 @@ def tex(name):
     n = name.split(":")[-1].replace("item/", "")
     if n not in tex_cache:
         p = f"{RP}/textures/item/{n}.png"
+        if name.startswith("minecraft:"): p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "vanilla", n + ".png")   # originální textura z Minecraftu
         if not os.path.exists(p): p = f"/tmp/rp/assets/squarestar/textures/item/{n}.png"
         if not os.path.exists(p):
             print("chybí textura", name)
