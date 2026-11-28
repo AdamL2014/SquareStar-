@@ -288,6 +288,7 @@ export function startStage(canvas) {
   function frame(now) {
     if (!run) return;
     const W = canvas.clientWidth, H = canvas.clientHeight, dpr = Math.min(1.5, devicePixelRatio || 1);
+    if (!W || !H) { requestAnimationFrame(frame); return; }   // šatník je skrytý (jiná stránka) – počkej, až bude vidět
     if (canvas.width !== W * dpr || canvas.height !== H * dpr) { canvas.width = W * dpr; canvas.height = H * dpr; }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     let t = 0;
