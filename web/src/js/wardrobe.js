@@ -105,7 +105,7 @@ function card(it) {
   const own = W.owned.has(it.id), on = eq()[it.slot] === it.id, sel = W.sel === it.id, [rn, rc] = RAR[it.r || "b"];
   return `<button class="wc${sel ? " sel" : ""}${on ? " on" : ""}" style="--rc:${rc}" data-wd="item" data-v="${it.id}" aria-label="${esc(it.n)}">
     <span class="wc-r">${rn}</span>${it.isNew && !own ? '<span class="wc-new">Novinka</span>' : ""}
-    <div class="wc-art"><i class="wc-glow"></i>${it.icon ? `<img class="mdl pix" style="image-rendering:pixelated;width:64%;height:64%" src="${it.icon}" alt="">` : it.model ? `<img class="mdl" src="${modelThumb(it.model)}" alt="">` : it.banner ? bannerSvg(it.banner) : sprite(it.sp, colOf(it))}</div>
+    <div class="wc-art"><i class="wc-glow"></i>${it.icon ? `<img class="mdl pix" style="image-rendering:pixelated;width:auto;height:62%;aspect-ratio:1;object-fit:contain" src="${it.icon}" alt="">` : it.model ? `<img class="mdl" src="${modelThumb(it.model)}" alt="">` : it.banner ? bannerSvg(it.banner) : sprite(it.sp, colOf(it))}</div>
     ${it.colors && it.colors.length > 1 ? `<div class="wc-dots">${it.colors.map((c) => `<i style="background:${c}"></i>`).join("")}</div>` : ""}
     <b>${esc(it.n)}</b>
     <span class="wc-foot">${own ? (on ? '<em class="ok">Nasazeno</em>' : '<em>Vlastníš</em>') : `${it.price < 0 ? '<em class="adv">Adventní kalendář</em>' : `<span class="price">${it.price ? coin(it.price) : "Zdarma"}</span>`}`}</span></button>`;

@@ -337,9 +337,32 @@ export function startStage(canvas) {
     // stopa: částice zůstávají na zemi tam, kudy postava šla
     if (st.trail) {
       const tp = TRAILP[st.trail.id] || "rod";
-      if (walk && Math.random() < .7) { const hue = (now / 15) % 360, col = tp === "note" ? `hsl(${(Math.random() * 360) | 0},90%,55%)` : tp === "totem" ? (Math.random() < .5 ? "#8ee84a" : "#ffe05a") : `hsl(${hue | 0},100%,55%)`; parts.push({ type: tp, p: [P[0] + (Math.random() - .5) * 4, 2 + Math.random() * 2, P[2] + (Math.random() - .5) * 3], l: 1, d: .018, sz: 1, col, v: [(Math.random() - .5) * .004, tp === "leaf" || tp === "snow" ? -.001 : tp === "rod" || tp === "totem" ? 0 : .003 + Math.random() * .003, (Math.random() - .5) * .004] }); }
-      parts = parts.filter((p) => (p.l -= p.d) > 0);
-      for (const p of parts) { p.p[0] += p.v[0] * B16; p.p[1] += p.v[1] * B16; p.p[2] += p.v[2] * B16; ex.push({ p: p.p, draw: ((pp) => (cx, x, y, sc) => drawAuraParticle(cx, x, y, sc, pp))(p) }); }
+      /* jako Cosmetics.tickTrails: každé 2 ticky 2 částice u nohou (offset 0.2/0.05/0.2, rychlost 0.01), chování a život podle vanilla částic (ticky) */
+      const PH = { flame: [8, 20, 0, -.04], soul: [8, 20, 0, -.04], heart: [16, 16, .1, 0], note: [6, 6, 0, 0], rod: [60, 72, -.0003, .02], leaf: [100, 140, -.006, 0], witch: [8, 16, .02, 0], rainbow: [10, 20, 0, 0],
+        snow: [80, 120, -.002, 0], spark: [7, 11, 0, 0], cloud: [8, 20, .004, 0], sculk: [40, 40, .002, 0], sga: [30, 40, -.02, 0], glowp: [12, 40, 0, 0], portal: [40, 50, .005, 0], totem: [60, 72, .01, 0], happy: [20, 30, 0, 0] }[tp] || [20, 20, 0, 0];
+      api._tt = api._tt || now;
+      if (now - api._tt > 400) api._tt = now;
+      while (api._tt + 100 <= now) {
+        api._tt += 100;
+        if (!walk) continue;
+        const hue = (now / 15) % 360;
+        for (let k = 0; k < 2; k++) {
+          const g = () => { let s = 0; for (let i = 0; i < 4; i++) s += Math.random(); return (s - 2) * .5; };   // gaussovský rozptyl jako ve hře
+          const col = tp === "note" ? `hsl(${(Math.random() * 360) | 0},90%,55%)` : tp === "totem" ? (Math.random() < .5 ? "#8ee84a" : "#ffe05a") : `hsl(${hue | 0},100%,55%)`;
+          const life = PH[0] + Math.random() * (PH[1] - PH[0]), sp = .01;
+          parts.push({ type: tp, p: [P[0] + g() * .2 * 2 * B16, 2.4 + g() * .05 * 2 * B16, P[2] + g() * .2 * 2 * B16], l: 1, d: 1 / life, sz: tp === "rod" || tp === "totem" ? 1 - Math.random() * .3 : 1, col,
+            v: [g() * sp, (PH[3] ? 0 : g() * sp) + Math.abs(PH[3]) * .25, g() * sp], gy: PH[2] });
+        }
+      }
+      const dk = Math.min(4, (now - (api._ln || now)) / 50);
+      parts = parts.filter((p) => (p.l -= p.d * dk) > 0);
+      for (const p of parts) {
+        p.v[1] -= p.gy * .05 * dk; if (p.type === "leaf") { p.v[0] += Math.sin(now / 300 + p.p[2]) * .0004; }
+        p.p[0] += p.v[0] * B16 * dk; p.p[1] = Math.max(.3, p.p[1] + p.v[1] * B16 * dk); p.p[2] += p.v[2] * B16 * dk;
+        if (p.p[1] <= .3) { p.v[0] *= .5; p.v[2] *= .5; }
+        if (p.type === "flame" || p.type === "soul") p.sz = 1 - (1 - p.l) * (1 - p.l) * .5;   // plamen se zmenšuje jako ve hře
+        ex.push({ p: p.p, draw: ((pp) => (cx, x, y, sc) => drawAuraParticle(cx, x, y, sc, pp))(p) });
+      }
     } else parts = [];
     const proj = draw(ctx, q, { w: W, h: H, cy: H * .86 - 16 * H / (st.trail ? 64 : 52), oy: 16, yaw, pitch, scale: H / (st.trail ? 64 : 52) }, ex);
     // provázek balónku
