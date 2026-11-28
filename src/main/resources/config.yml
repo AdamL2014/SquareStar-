@@ -38,6 +38,7 @@ lobby:
 
 # odpocet pred startem hry (sekundy)
 countdown: 15
+lobby-countdown: 30      # odpočet v čekárně minihry (sekundy) – delší, ať se stihne připojit víc hráčů
 # kolik her muze bezet najednou (na slabem free serveru dej 2-3)
 max-arenas: 4
 # kolik bloku za tick se stavi pri tvorbe map (mensi = mene lagu)

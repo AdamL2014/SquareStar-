@@ -1,7 +1,7 @@
 import { $, pixelHead } from "./util.js";
 import { ICON } from "./icons.js";
 // hra -> ikona z resource packu serveru
-const GICON = { "1v1": "pvp1v1", "Všichni proti všem": "pvp", "5v5": "pvp5v5", "10v10": "pvp10v10", Sumo: "sumo", BedWars: "bedwars", SkyWars: "skywars", Zombies: "zombies", Schovka: "hideseek", "Vrah mezi námi": "murder", "Stavitelská bitva": "buildbattle", Parkour: "parkour", Dropper: "dropper", "Rover závod": "rover", Speedrun: "speedrun", Spleef: "spleef", "Útěk před TNT": "tntrun", "Lucky Tower": "luckytower" };
+const GICON = { "1v1": "pvp1v1", "Všichni proti všem": "pvp", "5v5": "pvp5v5", "10v10": "pvp10v10", Sumo: "sumo", BedWars: "bedwars", SkyWars: "skywars", Zombies: "zombies", Schovka: "hideseek", "Vrah mezi námi": "murder", "Stavitelská bitva": "buildbattle", Parkour: "parkour", Dropper: "dropper", "Rover závod": "rover", Speedrun: "speedrun", Spleef: "spleef", "Útěk před TNT": "tntrun", "Lucky Tower": "luckytower", "The Bridge": "bridge", EggWars: "eggwars", AnniRun: "annirun", Duels: "duels", "UHC Run": "uhcrun", "Only Up": "onlyup", Beat: "beat" };
 
 // Ikony miniher (24×24, tahy)
 export const GI = {

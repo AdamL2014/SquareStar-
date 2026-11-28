@@ -38,6 +38,7 @@ public final class Commands implements CommandExecutor, TabCompleter {
                 if (a.length > 1 && (a[1].equalsIgnoreCase("hlasovat") || a[1].equalsIgnoreCase("vote"))) pl.redstone.visit(p, 0);
                 else if (a.length > 2 && (a[1].equalsIgnoreCase("pridat") || a[1].equalsIgnoreCase("add"))) pl.redstone.trust(p, a[2], true);
                 else if (a.length > 2 && (a[1].equalsIgnoreCase("odebrat") || a[1].equalsIgnoreCase("remove"))) pl.redstone.trust(p, a[2], false);
+                else if (a.length > 1 && (a[1].equalsIgnoreCase("seznam") || a[1].equalsIgnoreCase("list"))) pl.redstone.trustList(p);
                 else if (a.length > 2 && (a[1].equalsIgnoreCase("navstivit") || a[1].equalsIgnoreCase("visit"))) pl.redstone.visitPlayer(p, a[2]);
                 else pl.redstone.join(p);
             }
@@ -142,7 +143,7 @@ public final class Commands implements CommandExecutor, TabCompleter {
         else if ((a.length == 3 && a[0].equalsIgnoreCase("give")) || (a.length == 2 && a[0].equalsIgnoreCase("key")))
             for (Player p : Bukkit.getOnlinePlayers()) out.add(p.getName());
         else if (a.length == 3 && a[0].equalsIgnoreCase("key")) out.addAll(pl.crates.types.keySet());
-        else if (a.length == 2 && a[0].equalsIgnoreCase("redstone")) out.addAll(List.of("hlasovat", "pridat", "odebrat", "navstivit"));
+        else if (a.length == 2 && a[0].equalsIgnoreCase("redstone")) out.addAll(List.of("hlasovat", "pridat", "odebrat", "navstivit", "seznam"));
         else if (a.length == 3 && a[0].equalsIgnoreCase("redstone")) for (Player p : Bukkit.getOnlinePlayers()) out.add(p.getName());
         else if (a.length == 2 && a[0].equalsIgnoreCase("rank")) for (Player p : Bukkit.getOnlinePlayers()) out.add(p.getName());
         else if (a.length == 3 && a[0].equalsIgnoreCase("rank")) for (Ranks.Rank r : Ranks.Rank.values()) out.add(r.name().toLowerCase(Locale.ROOT));

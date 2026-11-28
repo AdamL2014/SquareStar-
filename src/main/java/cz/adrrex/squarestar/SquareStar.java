@@ -109,6 +109,7 @@ public final class SquareStar extends JavaPlugin {
         bind("event", events, events);
         bind("fly", fly, null);
         pm.registerEvents(new CmdGuard(this), this);
+        pm.registerEvents(new Protect(this), this);
         org.bukkit.command.CommandExecutor toLobby = (s, c, l, a) -> { if (s instanceof Player p) { if (games.of(p) != null) games.leave(p); else lobby.send(p); } return true; };
         bind("spawn", toLobby, null);
         Basic basic = new Basic(this); pm.registerEvents(basic, this);

@@ -748,7 +748,8 @@ public final class Lang {
         a("Polštář", "Pillow");
         a("Zabij hlavy", "Kill heads"); a("Běž k raketě!", "Run to the rocket!"); a("Čas:", "Time:");
         a("Hra:", "Game:");
-        a("Mapa:", "Map:");
+        a("Mapa:", "Map:"); a("zatím nikdo nehlasoval", "nobody voted yet"); a("hlasů", "votes"); a("Vede:", "Leading:"); a("hlasuj mapou v hotbaru", "vote with the map in your hotbar");
+        a("Za stavbu, na které se podílíš, hlasovat nemůžeš.", "You cannot vote for a build you worked on."); a("Spoluhráči na tvém pozemku:", "Co-builders on your plot:"); a("Stavíš spolu s", "You are building together with");
         a("hlasuje se", "voting");
         a("Start za:", "Starting in:");
         a("Čekáme na", "Waiting for");

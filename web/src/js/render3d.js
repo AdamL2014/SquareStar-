@@ -99,18 +99,59 @@ export function makeSkin(nick) {
   SKINS.set(nick, px); return px;
 }
 
-/* ---------- aury (podle Cosmetics.Aura na serveru) ---------- */
-function auraPts(id, c, now, P) {
-  const o = [], t = now / 1000, at = (x, y, z, g, s = 1) => o.push({ p: [P[0] + x, y, P[2] + z], g, c, s });
-  if (id === "ORBIT") for (let i = 0; i < 3; i++) { const a = t * 2.2 + i * 2.09; at(Math.cos(a) * 8, 15 + Math.sin(t * 3 + i) * 2, Math.sin(a) * 8, "●", 1.4); }
-  else if (id === "HALO") for (let i = 0; i < 16; i++) { const a = t * 1.5 + i * Math.PI / 8; at(Math.cos(a) * 4.5, 34, Math.sin(a) * 4.5, "●", .7); }
-  else if (id === "FLAMES") for (let i = 0; i < 12; i++) { const k = (t * .6 + i / 12) % 1, a = i * 2.4 + t * 2; at(Math.cos(a) * 6, k * 30, Math.sin(a) * 6, "▲", 1 - k * .6); }
-  else if (id === "STORM") { for (let i = 0; i < 10; i++) { const a = t * 4 + i * .63; at(Math.cos(a) * 9, 33 + Math.sin(i) * 1.5, Math.sin(a) * 9, "☁", 1); } if ((now / 120 | 0) % 9 === 0) for (let k = 0; k < 6; k++) at(Math.sin(k * 3) * 2, 32 - k * 5, 0, "⚡", 1.2); }
-  else if (id === "GALAXY") for (let i = 0; i < 24; i++) { const r = 2 + (i % 12) * .8, a = t * 1.4 + (i % 12) * .45 + (i < 12 ? 0 : Math.PI); at(Math.cos(a) * r, 1, Math.sin(a) * r, "✦", .9); }
-  else if (id === "LOVE") for (let i = 0; i < 6; i++) { const a = t * 1.6 + i * 1.047; at(Math.cos(a) * 9, 16 + Math.sin(t * 2 + i) * 4, Math.sin(a) * 9, "❤", 1.2); }
-  else if (id === "SAKURA") for (let i = 0; i < 14; i++) { const k = (t * .25 + i / 14) % 1; at(Math.sin(i * 7.3 + t) * 10, 36 - k * 36, Math.cos(i * 3.1) * 10, "✿", 1); }
-  else if (id === "FROST") for (let i = 0; i < 10; i++) { const a = -t * 1.2 + i * .628; at(Math.cos(a) * 10, 6 + (i % 5) * 6, Math.sin(a) * 10, "❄", 1.1); }
-  return o;
+/* ---------- aury: přesný port Cosmetics.tickAuras (částice, 10× za sekundu, 1 blok = 16 jednotek) ---------- */
+const B16 = 16;
+function emitAura(id, tk, P, out) {
+  const t = tk * .18, M = Math.random;
+  const add = (type, x, y, z, o = {}) => out.push({ type, p: [P[0] + x * B16, y * B16, P[2] + z * B16], v: o.v || [0, 0, 0], l: 1, d: 1 / (o.life || 20), col: o.col, sz: o.sz || 1 });
+  const dust = (x, y, z, col, sc, life = 22, sp = 0) => add("dust", x + (M() - .5) * sp, y, z + (M() - .5) * sp, { col, sz: sc, life: life * (.6 + M() * .8) });
+  if (id === "ORBIT") for (let k = 0; k < 3; k++) { const an = t + k * Math.PI * 2 / 3; add("rod", Math.cos(an) * 1.1, 1 + Math.sin(t * .7 + k) * .5, Math.sin(an) * 1.1, { life: 34, v: [0, -.002, 0] }); }
+  else if (id === "HALO") for (let k = 0; k < 10; k++) { const an = t + k * Math.PI / 5; dust(Math.cos(an) * .45, 2.25, Math.sin(an) * .45, "#ffe15a", .8, 12); }
+  else if (id === "FLAMES") for (let k = 0; k < 2; k++) { const an = t * 1.4 + k * Math.PI, y = (tk * .04 + k) % 2; add("flame", Math.cos(an) * .8, y, Math.sin(an) * .8, { life: 14, v: [0, .004, 0] }); }
+  else if (id === "STORM") {
+    for (let n = 0; n < 2; n++) dust(Math.cos(t) * .9, 2.6, Math.sin(t) * .9, "#5a5a6e", 1.8, 30, .5);
+    if (tk % 4 === 0) for (let n = 0; n < 2; n++) {
+      let x = Math.cos(M() * 6.283) * .5, y = .2 + M() * 1.6, z = Math.sin(M() * 6.283) * .5; const ang = M() * 6.283, dx = Math.cos(ang) * .18, dz = Math.sin(ang) * .18; x = Math.cos(ang) * .5; z = Math.sin(ang) * .5;
+      for (let seg = 0; seg < 4; seg++) {
+        const qx = x + dx + (M() - .5) * .25, qy = y - .22 - M() * .12, qz = z + dz + (M() - .5) * .25;
+        for (let i = 0; i <= 4; i++) add("spark", x + (qx - x) * i / 4, y + (qy - y) * i / 4, z + (qz - z) * i / 4, { life: 6 });
+        x = qx; y = qy; z = qz;
+      }
+    }
+  }
+  else if (id === "GALAXY") for (let k = 0; k < 3; k++) { const an = t * 1.2 + k * 2.1, y = (tk * .03 + k * .7) % 2.2, rr = .5 + y * .35; dust(Math.cos(an) * rr, y, Math.sin(an) * rr, k % 2 ? "#50a0ff" : "#9650ff", 1.1, 26); }
+  else if (id === "LOVE") {
+    for (let k = 0; k < 2; k++) { const an = t * 1.3 + k * Math.PI; add("heart", Math.cos(an) * .8, .6 + (tk * .04 + k) % 1.6, Math.sin(an) * .8, { life: 22, v: [0, .006, 0] }); }
+    if (tk % 8 === 0) for (let n = 0; n < 4; n++) dust(0, 2.3, 0, "#ff5a96", 1.2, 22, .6);
+  }
+  else if (id === "SAKURA") add("leaf", (M() - .5) * 1.4, 2.3, (M() - .5) * 1.4, { life: 60, v: [(M() - .5) * .004, -.016, (M() - .5) * .004] });
+  else if (id === "FROST") for (let k = 0; k < 2; k++) { const an = -t + k * Math.PI, y = .2 + (tk * .03 + k) % 2; add("snow", Math.cos(an) * .9, y, Math.sin(an) * .9, { life: 30, v: [0, -.004, 0] }); }
+}
+/* originální textury částic z Minecraftu 1.21 (assets/minecraft/textures/particle) */
+const PTX_SRC = {
+  glitter: ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAE0lEQVR4XmNgGITg/////+nsLADFUQP9uE9MVgAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAH0lEQVR4XmNgoD/4////f2RbmZA5MEl0RSgAryRZAAATYQ/zy/2AgQAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAIklEQVR4XmNgoDlgRLbh/////2F8RkZGsBwTIScQVEA5AABdaQQG3QX1mAAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAL0lEQVR4XmNgoDr4////f2RDmZA5MElkRXAF6DphfLgCRkZGRmTT0PlwgG4SQQAAp50X9/Bb8AMAAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAALklEQVR4XmNgoBQwIhvw/////zA+IyMjWI4JJoAsCQIwPlwBLkC8Apid6G4gCAB0iwwKAYBAPAAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAOElEQVR4XmNgIBX8////P7IeJmQOTBJZEVwBuk4YnxFkArokhhWMjIxghegAJA63Al0RLk0Y1gEArNsb/nNDDL8AAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAALklEQVR4XmNgoBQwIhvw/////zA+IyMjWI4JJoAsCQIwPlwBLkC8Apid6G4gCAB0iwwKAYBAPAAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAOElEQVR4XmNgIBX8////P7IeJmQOTBJZEVwBuk4YnxFkArokhhWMjIxghegAJA63Al0RLk0Y1gEArNsb/nNDDL8AAAAASUVORK5CYII="],
+  generic: ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAE0lEQVR4XmNgGITg/////+nsLADFUQP9uE9MVgAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAF0lEQVR4XmNgoC/4////f4I2EqWIugAAHSQH+QJ/ttEAAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAG0lEQVR4XmNgoC/4////f4I2ghQRpRAnIFk3AI7OD/GjaMWnAAAAAElFTkSuQmCC","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAJElEQVR4XmNgoAn4////f6wG45RABiBFyAqZ0CUJupkoa5ABAJvAF+v68gERAAAAAElFTkSuQmCC","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAKElEQVR4XmNgoCr4////f5CBMBoDgCRwSsIAuiImZGOQdeO1hiSPAQDf0CPfOQEjJwAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAALElEQVR4XmNgoCr4////f5CBMBoDgCRwKkKWQDaBEdkYdKMZGRkR8gTtxwUAqO8r2v+33F0AAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAANElEQVR4XmNgIBX8////P1Y9IAmYJLIiRmTVMAlGRkZGFJPQdRM0AQZAJsE56PZjdSw2QQB5YzvP21LuugAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAPElEQVR4Xm2OMQ4AMAgCpf//M40DDWKZFOW0ykSS3j/5oGtpLLs5SL90Jwcl0x46ugMASVs/CL1OpOGkC1+SZ58Z6iKqAAAAAElFTkSuQmCC"],
+  cherry: ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAIklEQVR4XmNkYGBg+L7zzv8f7z4yMIIYIAEQYIIxON1VGAEaYgpn7kaiqQAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAIElEQVR4XmNkYGBgeDHz8H+GTz8ZGMEMKGCCMSTSbRkB73EJMxQS3oAAAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAIklEQVR4XmNkYGBgeFC27v+vrz8YGEEMkAAIMMEYCl1BjAD/hQnvv0n+EAAAAABJRU5ErkJggg==","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAIElEQVR4XmNkYGBg+L7zzn8QzQRjgDk/3n0EMzjdVRgB508KaBHFtXcAAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAIElEQVR4XmNkYGBgeDHz8H8QzQRjgDkMn36CGRLptowAzQUJNJt11JQAAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAIElEQVR4XmNkYGBgeFC27j+IZoIxwJxfX3+AGQpdQYwAy2EJ8LiXjUgAAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAJElEQVR4XmP4vvPOfxBmYGBgYAIRIAASYOJ0V2EEcX68+8gAADkDDfKMH3DoAAAAAElFTkSuQmCC","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAI0lEQVR4XmN4MfPwfxBmYGBgYAIRIAASYJJIt2UE8z79ZAAAIDsMdvP3s+AAAAAASUVORK5CYII=","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAJElEQVR4XmN4ULbuPwgzMDAwMIEIEAAJMCl0BTGCOL++/mAAABGEDPJfa3qLAAAAAElFTkSuQmCC","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAJElEQVR4XmN4v/zs/+877/xnYGBgYIQxQICJ012FEcxiYGAAAEbPCvHPGzYIAAAAAElFTkSuQmCC","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAJElEQVR4XmN40b3n/4uZh/8zMDAwMMIYIMAkkW7LCGYxMDAAADJvCnWzQuvYAAAAAElFTkSuQmCC","data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAI0lEQVR4XmO4lb3s/4Oydf8ZGBgYGGEMEGBS6ApiBLMYGBgAHTAJ8QJe7/kAAAAASUVORK5CYII="],
+  flame: ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAARUlEQVR4XmNgQAL/GUAIFTChcLPAKjAUwcH/Gwz//2ehKkA1AR8A6QSbcAOHFWDJr8cgipCswbRC9hgDQx4Wu5CtQDYBACNIKVn+pWopAAAAAElFTkSuQmCC"], heart: ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAX0lEQVR4XmNgIAZc1tL6D8Iwtch8RhBHJyqK4eOLFwyP9+0Dqzn94QOYfv3rFwMLiAGThEkgA7AJyLpgAKQbBJh0r11jRHcnTLL8zRtGuGSniAjckSAAksTwIEgRukIAWZw0No3q2mIAAAAASUVORK5CYII="], glow: ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAx0lEQVR4XjVPuQ2FUAzz4z4aGgZgA6gYAomKaViBhhFYgAkYgYolOAsaQIBA+cpD31ISRbGdRKRpinmecV0XmqahJEmEqqoQQuB9X2iczvMEw/M8SWSCYRiyV/q+h67rqKqKeFgUBbHovm9M0wSM40jrutIfwzDQsizUdR2FYQgRxzGe50FZlhQEAdq2RZ7nwrIsaJoGEUURbNvGcRyo65qyLBNEBEVRvvB9H/u+y6u5Mljpui4cx/lWsMO2bZLEatM05Yvs8AONDWrqiDtPSAAAAABJRU5ErkJggg=="],
+};
+const PTX = typeof Image === "undefined" ? {} : Object.fromEntries(Object.entries(PTX_SRC).map(([k, a]) => [k, a.map((s) => { const i = new Image(); i.src = s; return i; })]));
+const TINT = new Map();
+function tinted(img, col) {
+  const k = img.src.length + img.src.slice(-24) + col; let c = TINT.get(k); if (c) return c;
+  c = document.createElement("canvas"); c.width = img.width; c.height = img.height; const x = c.getContext("2d");
+  x.drawImage(img, 0, 0); x.globalCompositeOperation = "multiply"; x.fillStyle = col; x.fillRect(0, 0, c.width, c.height);
+  x.globalCompositeOperation = "destination-in"; x.drawImage(img, 0, 0); TINT.set(k, c); return c;
+}
+/* typ částice → [sada textur, velikost v 1/16 bloku, barva (tint), snímky podle stáří] */
+const PK = { rod: ["glitter", 2.8, null, 1], flame: ["flame", 2.4], heart: ["heart", 3.2], snow: ["generic", 2.2, "#f2f8ff", 1], leaf: ["cherry", 1.7], spark: ["glow", 2, "#fff6c8"], dust: ["generic", 1.9, null, 1] };
+function drawAuraParticle(cx, x, y, sc, a) {
+  const [set, U, tint, aged] = PK[a.type], arr = PTX[set]; if (!arr) return;
+  const img = aged ? arr[Math.min(arr.length - 1, Math.floor((1 - a.l) * arr.length))] : arr[a.f ?? (a.f = Math.random() * arr.length | 0)];
+  if (!img.complete || !img.width) return;
+  const s = Math.max(2, Math.round(U * a.sz * sc)), col = a.type === "dust" ? a.col : tint;
+  cx.imageSmoothingEnabled = false; cx.globalAlpha = a.type === "leaf" ? Math.min(1, a.l * 3) : 1;
+  cx.drawImage(col ? tinted(img, col) : img, Math.round(x - s / 2), Math.round(y - s / 2), s, s);
+  cx.globalAlpha = 1;
 }
 
 /* ---------- banner (plášť ze serveru: barva + vzor) 20×40 px ---------- */
@@ -232,7 +273,7 @@ export const EMOTE_LEN = Object.fromEntries(Object.entries(RIG.anims).map(([k, v
  */
 export function startStage(canvas) {
   const ctx = canvas.getContext("2d");
-  let pitch = 14 * D, walkW = 0, st = {}, emote = null, t0 = 0, yaw = -20 * D, run = true, parts = [], syms = [];
+  let pitch = 14 * D, walkW = 0, st = {}, emote = null, t0 = 0, yaw = -20 * D, run = true, parts = [], syms = [], aps = [], auraT = 0, auraId = null;
   const api = {
     set(s) { st = s; }, get yaw() { return yaw; }, set yaw(v) { yaw = v; }, get pitch() { return pitch; }, set pitch(v) { pitch = Math.max(-35 * D, Math.min(60 * D, v)); },
     play(id) { emote = RIG.anims[id] ? id : null; t0 = performance.now(); api.emoteId = id; },
@@ -277,9 +318,16 @@ export function startStage(canvas) {
     }
     // pet (obrázek) u hlavy
     if (st.pet) { const hpnt = ap(mats.h_ph_head, [9, 30 + Math.sin(now / 500) * 1.5, -1]); ex.push({ p: hpnt, draw: (c, x, y, sc) => { const z = 9 * sc; c.imageSmoothingEnabled = false; c.drawImage(st.pet, x - z / 2, y - z / 2, z, z); } }); }
-    // aura podle typu
+    // aura: stejné částice jako na serveru (Cosmetics.tickAuras běží každé 2 ticky = 10× za sekundu)
     const glyph = (g, c, s) => (cx, x, y, sc) => { cx.fillStyle = c; cx.shadowColor = c; cx.shadowBlur = 8; cx.font = `${Math.max(6, sc * 2.2 * s)}px sans-serif`; cx.textAlign = "center"; cx.textBaseline = "middle"; cx.fillText(g, x, y); cx.shadowBlur = 0; cx.textAlign = "start"; cx.textBaseline = "alphabetic"; };
-    if (st.aura) for (const a of auraPts(st.aura.id, st.aura.color, now, P)) ex.push({ p: a.p, draw: glyph(a.g, a.c, a.s) });
+    const aid = st.aura ? st.aura.id : null;
+    if (aid !== auraId) { auraId = aid; aps = []; auraT = now; }
+    if (aid) {
+      if (now - auraT > 600) auraT = now;
+      while (auraT + 100 <= now) { auraT += 100; emitAura(aid, Math.round(auraT / 100) * 2, P, aps); }
+      const dtk = Math.min(4, (now - (api._ln || now)) / 50); aps = aps.filter((a) => (a.l -= a.d * dtk) > 0);
+    }
+    for (const a of aps) { const dk = Math.min(4, (now - (api._ln || now)) / 50); a.p[0] += a.v[0] * B16 * dk; a.p[1] += a.v[1] * B16 * dk; a.p[2] += a.v[2] * B16 * dk; ex.push({ p: a.p, draw: (cx, x, y, sc) => drawAuraParticle(cx, x, y, sc, a) }); }
     // stopa: částice zůstávají na zemi tam, kudy postava šla
     if (st.trail) {
       if (walk && Math.random() < .7) parts.push({ p: [P[0] + (Math.random() - .5) * 4, .5, P[2] + (Math.random() - .5) * 3], l: 1, vy: .02 + Math.random() * .05 });
@@ -293,7 +341,7 @@ export function startStage(canvas) {
     if (emote && SYM[emote] && Math.random() < .05) { const h = proj(ap(mats.h_ph_head, [0, 32, 0])); syms.push({ x: h[0] + (Math.random() - .5) * 30, y: h[1], l: 1, s: SYM[emote] }); }
     syms = syms.filter((s) => (s.l -= .01) > 0);
     for (const s of syms) { s.y -= .6; ctx.globalAlpha = s.l; ctx.fillStyle = "#ffd23a"; ctx.font = "bold 18px sans-serif"; ctx.textAlign = "center"; ctx.fillText(s.s, s.x, s.y); ctx.textAlign = "start"; }
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1; api._ln = now;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

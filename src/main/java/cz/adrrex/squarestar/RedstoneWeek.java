@@ -76,6 +76,8 @@ public final class RedstoneWeek implements Listener {
             String name = data.getString("names." + best.get().getKey(), "?");
             data.set("last-winner", name + " (" + best.get().getValue() + " bodů)");
             data.set("pending-reward", best.get().getKey());
+            var all = new ArrayList<String>(); all.add(best.get().getKey()); all.addAll(data.getStringList("trust." + best.get().getKey()));
+            data.set("pending-reward-all", all);     // odměna jde vlastníkovi i spoluhráčům
             U.all("&c&l⚡ REDSTONE TÝDEN &7- vítěz: &e&l" + name + " &7(" + best.get().getValue() + " bodů)! Nové téma: &6" + theme());
         }
         data.set("votes", null);
@@ -156,12 +158,15 @@ public final class RedstoneWeek implements Listener {
         String lw = data.getString("last-winner");
         if (lw != null) U.msg(p, "&7Minulý vítěz: &6" + lw);
         // odměna pro vítěze minulého týdne
-        if (p.getUniqueId().toString().equals(data.getString("pending-reward"))) {
+        var rewarded = new ArrayList<>(data.getStringList("pending-reward-all"));
+        if (data.getString("pending-reward") != null && !rewarded.contains(data.getString("pending-reward"))) rewarded.add(data.getString("pending-reward"));
+        if (rewarded.contains(p.getUniqueId().toString())) {
             ItemStack k = pl.crates.key("legendary", 2);
             if (k != null) p.getInventory().addItem(k);
             U.title(p, "&6&l✦ VYHRÁL JSI REDSTONE TÝDEN ✦", "&e2x legendární klíč");
             pl.levels.add(p, 500, "Redstone týden");
-            data.set("pending-reward", null); save();
+            rewarded.remove(p.getUniqueId().toString());
+            data.set("pending-reward-all", rewarded); data.set("pending-reward", null); save();
         }
     }
 
@@ -198,7 +203,7 @@ public final class RedstoneWeek implements Listener {
             if (n == null) { var plots = data.getConfigurationSection("plots"); if (plots != null && cur >= 0) n = plots.getInt(new ArrayList<>(plots.getKeys(false)).get(cur)); }
             String owner = n == null ? null : ownerOf(n);
             if (owner == null) { U.msg(p, "&cStůj na něčím pozemku."); return; }
-            if (owner.equals(p.getUniqueId().toString())) { U.msg(p, "&cZa svou stavbu hlasovat nemůžeš."); return; }
+            if (owner.equals(p.getUniqueId().toString()) || data.getStringList("trust." + owner).contains(p.getUniqueId().toString())) { U.msg(p, "&cZa stavbu, na které se podílíš, hlasovat nemůžeš."); return; }
             int v = Integer.parseInt(t.substring(4));
             data.set("votes." + p.getUniqueId() + "." + owner, v); save();
             U.msg(p, "&aHlas &e" + v + " ★ &apro &f" + data.getString("names." + owner, "?"));
@@ -207,13 +212,39 @@ public final class RedstoneWeek implements Listener {
     }
 
     // ---------------- ochrana: stavět jen na svém pozemku ----------------
+    /** je hráč vlastník pozemku, na kterém leží lokace, nebo jeho spoluhráč? */
+    private boolean member(Player p, Location l) {
+        Integer n = plotAt(l);
+        if (n == null) return false;
+        String owner = ownerOf(n);
+        return owner != null && (owner.equals(p.getUniqueId().toString()) || data.getStringList("trust." + owner).contains(p.getUniqueId().toString()));
+    }
     private boolean mayEdit(Player p, Block b) {
         if (p.hasPermission("squarestar.admin") && p.isSneaking()) return true;
         if (voting()) return false;
-        Integer n = plotAt(b.getLocation());
-        if (n == null || b.getY() <= Y || b.getY() >= Y + 40 || b.getType() == Material.BARRIER) return false;
-        String owner = ownerOf(n);
-        return owner != null && (owner.equals(p.getUniqueId().toString()) || data.getStringList("trust." + owner).contains(p.getUniqueId().toString()));
+        if (b.getY() <= Y || b.getY() >= Y + 40 || b.getType() == Material.BARRIER) return false;
+        return member(p, b.getLocation());
+    }
+    private boolean adminOverride(Player p) { return p.hasPermission("squarestar.admin") && p.isSneaking(); }
+    /** v neděli (hlasování) se smí zkoušet cizí stavby: páky, tlačítka, dveře, desky... ale ne truhly ani nic stavět */
+    private static boolean testable(Material m) {
+        String n = m.name();
+        return m == Material.LEVER || m == Material.NOTE_BLOCK || m == Material.BELL || n.endsWith("_BUTTON") || n.endsWith("_DOOR") || n.endsWith("_TRAPDOOR") || n.endsWith("_FENCE_GATE") || n.endsWith("_PRESSURE_PLATE");
+    }
+    private static final java.util.Set<Material> DENY_ITEMS = new java.util.HashSet<>();
+    static {
+        for (Material m : Material.values()) {
+            String n = m.name();
+            if (n.contains("COMMAND_BLOCK") || n.equals("STRUCTURE_BLOCK") || n.equals("STRUCTURE_VOID") || n.equals("JIGSAW") || n.equals("BARRIER") || n.equals("LIGHT") || n.equals("DEBUG_STICK") || n.equals("SPAWNER")
+                    || n.equals("TRIAL_SPAWNER") || n.equals("VAULT") || n.endsWith("_SPAWN_EGG") || n.equals("KNOWLEDGE_BOOK") || n.equals("BEDROCK") || n.equals("END_PORTAL_FRAME") || n.equals("REINFORCED_DEEPSLATE")
+                    || n.equals("COMMAND_BLOCK_MINECART") || n.equals("TEST_BLOCK") || n.equals("TEST_INSTANCE_BLOCK")) DENY_ITEMS.add(m);
+        }
+    }
+    private static boolean placesEntity(Material m) {
+        String n = m.name();
+        return n.endsWith("_BUCKET") || n.endsWith("_SPAWN_EGG") || n.endsWith("_BOAT") || n.endsWith("_CHEST_BOAT") || n.endsWith("MINECART") || n.equals("ARMOR_STAND") || n.endsWith("ITEM_FRAME") || n.equals("PAINTING")
+                || n.equals("END_CRYSTAL") || n.equals("FLINT_AND_STEEL") || n.equals("FIRE_CHARGE") || n.equals("BONE_MEAL") || n.equals("ENDER_PEARL") || n.equals("ENDER_EYE") || n.equals("EGG") || n.equals("SNOWBALL")
+                || n.equals("SPLASH_POTION") || n.equals("LINGERING_POTION") || n.equals("WIND_CHARGE") || n.equals("TRIDENT") || n.equals("FIREWORK_ROCKET") || n.equals("BOW") || n.equals("CROSSBOW");
     }
 
     /** kooperace: /ss redstone pridat|odebrat <hráč> – kamarád může stavět na tvém pozemku */
@@ -234,6 +265,16 @@ public final class RedstoneWeek implements Listener {
         data.set("trust." + me, l); save();
     }
 
+    /** /ss redstone seznam – kdo smí stavět na tvém pozemku a na čích pozemcích stavíš ty */
+    public void trustList(Player p) {
+        String me = p.getUniqueId().toString();
+        var mine = data.getStringList("trust." + me);
+        U.msg(p, "&a&l⚙ Spoluhráči na tvém pozemku: &f" + (mine.isEmpty() ? "nikdo &7(přidej: /ss redstone pridat <hráč>)" : mine.stream().map(id -> data.getString("names." + id, "?")).collect(java.util.stream.Collectors.joining("&7, &f"))));
+        var plots = data.getConfigurationSection("plots");
+        if (plots != null) for (String owner : plots.getKeys(false)) if (data.getStringList("trust." + owner).contains(me))
+            U.msg(p, "&a&l⚙ Stavíš spolu s &e" + data.getString("names." + owner, "?") + " &7(/ss redstone navstivit " + data.getString("names." + owner, "?") + ")");
+    }
+
     /** teleport na pozemek kamaráda (spolupráce) */
     public void visitPlayer(Player p, String name) {
         Player t = Bukkit.getPlayerExact(name);
@@ -245,11 +286,80 @@ public final class RedstoneWeek implements Listener {
         p.teleport(new org.bukkit.Location(world, o[0] + PLOT / 2.0, Y + 1, o[1] - 2.0));
         U.msg(p, "&aJsi na pozemku hráče &e" + name);
     }
+    // ---------------- ochrana: používat / ničit / pokládat jde jen na svém (nebo spoluhráčově) pozemku ----------------
+    @EventHandler(priority = EventPriority.HIGH) public void guard(PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        if (p.getWorld() != world || adminOverride(p)) return;
+        if (U.tagOf(e.getItem(), "ss_rs") != null) return;                       // menu předměty (zpět, hlasování)
+        Block b = e.getClickedBlock();
+        Material held = e.getItem() == null ? Material.AIR : e.getItem().getType();
+        boolean mine = b != null && member(p, b.getLocation());
+        if (e.getAction() == org.bukkit.event.block.Action.PHYSICAL) {
+            if (b != null && !mine && !(voting() && testable(b.getType()))) e.setCancelled(true);   // cizí tlačítkové desky / zašlapání
+            return;
+        }
+        if (b == null) {                                                           // klik do vzduchu: žádné házení, střílení ani pití
+            if (placesEntity(held)) { e.setUseItemInHand(org.bukkit.event.Event.Result.DENY); }
+            return;
+        }
+        if (!mine) {
+            if (!(voting() && testable(b.getType()))) e.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);   // páky, dveře, truhly, dispensery... cizí nejdou
+            if (e.getItem() != null) e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
+        } else if (e.getItem() != null && DENY_ITEMS.contains(held)) e.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
+    }
+    @EventHandler(priority = EventPriority.HIGH) public void bucket(org.bukkit.event.player.PlayerBucketEmptyEvent e) { if (e.getBlock().getWorld() == world && !adminOverride(e.getPlayer()) && !mayEdit(e.getPlayer(), e.getBlock())) e.setCancelled(true); }
+    @EventHandler(priority = EventPriority.HIGH) public void bucketFill(org.bukkit.event.player.PlayerBucketFillEvent e) { if (e.getBlock().getWorld() == world && !adminOverride(e.getPlayer()) && !mayEdit(e.getPlayer(), e.getBlock())) e.setCancelled(true); }
+    @EventHandler(priority = EventPriority.HIGH) public void hangPlace(org.bukkit.event.hanging.HangingPlaceEvent e) { if (e.getBlock().getWorld() == world && (e.getPlayer() == null || (!adminOverride(e.getPlayer()) && !mayEdit(e.getPlayer(), e.getBlock())))) e.setCancelled(true); }
+    @EventHandler(priority = EventPriority.HIGH) public void hangBreak(org.bukkit.event.hanging.HangingBreakByEntityEvent e) {
+        if (e.getEntity().getWorld() != world) return;
+        if (!(e.getRemover() instanceof Player p) || (!adminOverride(p) && !mayEdit(p, e.getEntity().getLocation().getBlock()))) e.setCancelled(true);
+    }
+    @EventHandler(priority = EventPriority.HIGH) public void stand(org.bukkit.event.player.PlayerArmorStandManipulateEvent e) { if (e.getPlayer().getWorld() == world && !adminOverride(e.getPlayer()) && !member(e.getPlayer(), e.getRightClicked().getLocation())) e.setCancelled(true); }
+    @EventHandler(priority = EventPriority.HIGH) public void entityUse(org.bukkit.event.player.PlayerInteractEntityEvent e) {
+        Player p = e.getPlayer();
+        if (p.getWorld() == world && !adminOverride(p) && !member(p, e.getRightClicked().getLocation())) e.setCancelled(true);   // frame, vagónek, loď, truhlový vozík cizího
+    }
+    @EventHandler(priority = EventPriority.HIGH) public void hit(org.bukkit.event.entity.EntityDamageByEntityEvent e) {
+        if (e.getEntity().getWorld() != world) return;
+        Player d = e.getDamager() instanceof Player dp ? dp : (e.getDamager() instanceof org.bukkit.entity.Projectile pr && pr.getShooter() instanceof Player sp ? sp : null);
+        if (d == null) { if (e.getEntity() instanceof Player) e.setCancelled(true); return; }
+        if (e.getEntity() instanceof Player) { e.setCancelled(true); return; }                                        // žádné PvP
+        if (!adminOverride(d) && !member(d, e.getEntity().getLocation())) e.setCancelled(true);                         // cizí věci neřeš
+    }
+    @EventHandler public void damage(org.bukkit.event.entity.EntityDamageEvent e) { if (e.getEntity() instanceof Player && e.getEntity().getWorld() == world && e.getCause() != org.bukkit.event.entity.EntityDamageEvent.DamageCause.VOID) e.setCancelled(true); }
+    @EventHandler public void launch(org.bukkit.event.entity.ProjectileLaunchEvent e) { if (e.getEntity().getWorld() == world && !(e.getEntity().getShooter() instanceof Player sp && adminOverride(sp))) e.setCancelled(true); }
+    @EventHandler public void dropItem(org.bukkit.event.player.PlayerDropItemEvent e) { if (e.getPlayer().getWorld() == world && !adminOverride(e.getPlayer())) e.setCancelled(true); }
+    @EventHandler public void creativeItems(org.bukkit.event.inventory.InventoryCreativeEvent e) {
+        if (e.getWhoClicked().getWorld() != world || adminOverride((Player) e.getWhoClicked())) return;
+        ItemStack c = e.getCursor();
+        if (c != null && DENY_ITEMS.contains(c.getType())) { e.setCancelled(true); }
+    }
+    @EventHandler public void blockBoom(BlockExplodeEvent e) { if (e.getBlock().getWorld() == world) e.blockList().clear(); }
+    @EventHandler public void ignite(BlockIgniteEvent e) { if (e.getBlock().getWorld() == world && (e.getPlayer() == null || !mayEdit(e.getPlayer(), e.getBlock()))) e.setCancelled(true); }
+    @EventHandler public void burn(BlockBurnEvent e) { if (e.getBlock().getWorld() == world) e.setCancelled(true); }
+    @EventHandler public void spread(BlockSpreadEvent e) { if (e.getBlock().getWorld() == world && e.getSource().getType() == Material.FIRE) e.setCancelled(true); }
+    /** dispenser a dropper nesmí střílet / pokládat věci mimo svůj pozemek */
+    @EventHandler public void dispense(BlockDispenseEvent e) {
+        Block d = e.getBlock();
+        if (d.getWorld() != world) return;
+        if (d.getBlockData() instanceof org.bukkit.block.data.Directional dir) { Block t = d.getRelative(dir.getFacing()); if (!samePlot(d, t)) e.setCancelled(true); }
+    }
+    private boolean samePlot(Block a, Block b) { Integer x = plotAt(a.getLocation()), y = plotAt(b.getLocation()); return x != null && x.equals(y); }
+    private boolean inBounds(Block b) { return b.getY() > Y && b.getY() < Y + 40; }
+    @EventHandler public void pistonOut(BlockPistonExtendEvent e) {
+        Block p = e.getBlock(); if (p.getWorld() != world) return;
+        boolean ok = samePlot(p, p.getRelative(e.getDirection(), e.getBlocks().size() + 1)) && inBounds(p.getRelative(e.getDirection(), e.getBlocks().size() + 1));
+        if (ok) for (Block b : e.getBlocks()) if (!samePlot(p, b) || !inBounds(b)) { ok = false; break; }
+        if (!ok) e.setCancelled(true);
+    }
+    @EventHandler public void pistonIn(BlockPistonRetractEvent e) {
+        Block p = e.getBlock(); if (p.getWorld() != world) return;
+        for (Block b : e.getBlocks()) if (!samePlot(p, b) || !samePlot(p, b.getRelative(e.getDirection())) || !inBounds(b)) { e.setCancelled(true); return; }
+    }
     @EventHandler(priority = EventPriority.HIGH) public void brk(BlockBreakEvent e) { if (e.getBlock().getWorld() == world && !mayEdit(e.getPlayer(), e.getBlock())) e.setCancelled(true); }
     @EventHandler(priority = EventPriority.HIGH) public void place(BlockPlaceEvent e) { if (e.getBlock().getWorld() == world && !mayEdit(e.getPlayer(), e.getBlock())) e.setCancelled(true); }
     @EventHandler public void spawn(CreatureSpawnEvent e) { if (e.getLocation().getWorld() == world) e.setCancelled(true); }
     @EventHandler public void boom(EntityExplodeEvent e) { if (e.getLocation().getWorld() == world) e.blockList().clear(); }
-    @EventHandler public void piston(BlockPistonExtendEvent e) { if (e.getBlock().getWorld() == world && plotAt(e.getBlock().getRelative(e.getDirection(), e.getBlocks().size() + 1).getLocation()) == null) e.setCancelled(true); }
     @EventHandler public void flow(BlockFromToEvent e) { if (e.getBlock().getWorld() == world && plotAt(e.getToBlock().getLocation()) == null) e.setCancelled(true); }
     /** pád pod pozemek -> zpátky nahoru (místo smrti v prázdnu) */
     @EventHandler public void fall(org.bukkit.event.player.PlayerMoveEvent e) {

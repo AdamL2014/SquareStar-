@@ -237,7 +237,7 @@ public abstract class Game {
         if (!kits().isEmpty()) p.getInventory().setItem(0, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.CHEST, 1, "&6&lVyber kit &7(pravý klik)", "&7Tvůj kit: &f" + kitOf(p)), "ss_game", "kit"), "icon_menu_kit"));
         if (!teamNames().isEmpty()) p.getInventory().setItem(2, cz.adrrex.squarestar.Gui.skin(p, U.tag(U.item(Material.WHITE_WOOL, 1, "&b&lVyber tým &7(pravý klik)", "&7S kým chceš hrát?"), "ss_game", "team"), "icon_menu_team"));
         if (state == State.BUILDING) U.msg(p, "&ePřipravuji čekárnu... &7(" + type.display + ")");
-        else p.teleport(waitSpot());
+        else { p.teleport(waitSpot()); U.msg(p, "&7Mapa: &a" + waitMap() + (allMaps().size() > 1 ? " &8| &7hlasuj mapou v hotbaru" : "")); }
         if (hideNames()) gm.hideName(p, true);
         pl.applyGravity(p);
         onJoin(p);
@@ -268,7 +268,18 @@ public abstract class Game {
 
     void checkStart() {
         if (eventHold) return;
-        if (state == State.WAITING && players.size() >= type.min) { state = State.COUNTDOWN; countdown = pl.getConfig().getInt("countdown", 15); }
+        if (state == State.WAITING && players.size() >= type.min) { state = State.COUNTDOWN; countdown = pl.getConfig().getInt("lobby-countdown", 30); }   // 30 s: stihne se dorazit víc hráčů
+    }
+
+    /** mapa v čekárně: jediná mapa, nebo ta, která teď vede v hlasování */
+    String waitMap() {
+        List<String> m = allMaps();
+        if (m.size() <= 1) return m.get(0);
+        int[] c = new int[m.size()];
+        for (int v : votes.values()) if (v >= 0 && v < c.length) c[v]++;
+        int best = 0;
+        for (int i = 1; i < c.length; i++) if (c[i] > c[best]) best = i;
+        return c[best] == 0 ? m.get(0) + " &7(zatím nikdo nehlasoval)" : m.get(best) + " &7(" + c[best] + " hlasů)";
     }
 
     // ---------------- sidebar vpravo (jako na Hypixelu) ----------------
@@ -283,6 +294,7 @@ public abstract class Game {
         l.add("&fHra: &6" + type.display);
         if (state == State.WAITING || state == State.COUNTDOWN) {
             l.add("&fMapa: &a" + (allMaps().size() > 1 ? "hlasuje se" : maps().get(0)));
+            if (allMaps().size() > 1) l.add("&fVede: &a" + waitMap().replaceAll("&7\\(.*\\)", "").trim());
             l.add("&fHráči: &a" + players.size() + "&7/" + maxPlayers());
             if (event) l.add("&d&l★ EVENT");
             l.add(state == State.COUNTDOWN ? "&fStart za: &e" + countdown + " s" : "&fČekáme na &e" + Math.max(0, type.min - players.size()) + " &fhráče");
@@ -331,12 +343,12 @@ public abstract class Game {
     private void tick() {
         for (Player p : players) updateBoard(p);
         switch (state) {
-            case WAITING -> { for (Player p : players) U.bar(p, "&eČekáme na hráče &f" + players.size() + "&7/&f" + type.min + " &8| &6" + type.display); }
+            case WAITING -> { for (Player p : players) U.bar(p, "&eČekáme na hráče &f" + players.size() + "&7/&f" + type.min + " &8| &6" + type.display + " &8| &aMapa: &f" + waitMap()); }
             case COUNTDOWN -> {
                 if (players.size() < type.min) { state = State.WAITING; broadcast("&cMálo hráčů, odpočet zrušen."); return; }
                 if (players.size() >= maxPlayers() && countdown > 5) countdown = 5;
                 for (Player p : players) {
-                    U.bar(p, "&aStart za &f" + countdown + " s &8| &6" + type.display);
+                    U.bar(p, "&aStart za &f" + countdown + " s &8| &6" + type.display + " &8| &aMapa: &f" + waitMap());
                     if (countdown <= 5) { U.title(p, "&6" + countdown, "&7" + type.display); U.sound(p, Sound.BLOCK_NOTE_BLOCK_HAT, 1.5f); }
                 }
                 if (--countdown < 0) begin();

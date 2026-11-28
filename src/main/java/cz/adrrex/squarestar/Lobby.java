@@ -347,6 +347,8 @@ public final class Lobby implements Listener {
     }
 
     boolean inLobby(Player p) { return p.getWorld() == pl.mars; }
+    /** předmět bez značek pluginu (obyčejný vanilla předmět) */
+    static boolean tagless(org.bukkit.inventory.ItemStack it) { return it == null || !it.hasItemMeta() || it.getItemMeta().getPersistentDataContainer().getKeys().isEmpty(); }
 
     @EventHandler public void join(PlayerJoinEvent e) {
         Player p = e.getPlayer();
